@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OtpPurpose {
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  FORGOT_PASSWORD
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  INVITED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+
+  email     String   @unique
+  phone     String?  @unique
+  name      String?
+  password  String?
+
+  parentId  Int?
+  parent    User?    @relation("UserTree", fields: [parentId], references: [id])
+  children  User[]   @relation("UserTree")
+
+  roleId    Int?
+  role      Role?    @relation("UserRole", fields: [roleId], references: [id])
+
+  isSuperAdmin Boolean @default(false)
+
+  accessTokens String[] @default([])
+
+  refreshTokens String[] @default([])
+
+  isEmailVerified Boolean @default(false)
+
+  status UserStatus   @default(INACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 👇 ADD THIS (important)
+  createdRoles Role[] @relation("RoleCreator")
+}
+
+model OtpVerification {
+  id         Int      @id @default(autoincrement())
+
+  email      String?
+
+  otp        String
+  purpose    OtpPurpose
+
+  expiresAt  DateTime
+  verifiedAt DateTime?
+
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+
+model Role {
+  id          Int   @id @default(autoincrement())
+
+  name        String
+  description String?
+
+  createdById Int
+  createdBy   User  @relation("RoleCreator", fields: [createdById], references: [id])
+
+  permissions RolePermission[]
+
+  // ✅ ADD THIS
+  users       User[] @relation("UserRole")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+
+  @@index([createdById])
+}
+
+model Module {
+  id   Int    @id     @default(autoincrement())
+
+  name  String
+
+  path  String @unique
+
+  icon  String?
+
+  description  String?
+
+  parent_id Int?
+
+  sort_order Int
+
+  permissions RolePermission[]
+}
+
+model RolePermission {
+  id        Int @id @default(autoincrement())
+
+  roleId    Int
+  moduleId  Int
+
+  canView   Boolean @default(false)
+  canCreate Boolean @default(false)
+  canEdit   Boolean @default(false)
+  canDelete Boolean @default(false)
+
+  role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  module     Module @relation(fields: [moduleId], references: [id])
+
+  @@unique([roleId, moduleId])
+  @@index([roleId])
+  @@index([moduleId])
+}
