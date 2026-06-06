@@ -4,7 +4,7 @@ import { PrismaFilter } from 'src/common/filters/prisma-filter.helper';
 
 @Injectable()
 export class UserFilterBuilder {
-    constructor() {}
+    constructor() { }
 
     build(dto: UserFilterDto, extra: { parentId: number }) {
 
@@ -19,6 +19,8 @@ export class UserFilterBuilder {
             name: PrismaFilter.contains(dto.name),
 
             email: PrismaFilter.contains(dto.email),
+
+            roleId: dto.roleId ? Number(dto.roleId) : undefined,
 
             status: dto.status,
         };

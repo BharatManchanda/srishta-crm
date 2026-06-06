@@ -50,6 +50,7 @@ export class UserService {
                 email: true,
                 phone: true,
                 role: true,
+                status: true,
                 createdAt: true,
                 updatedAt: true,
             },
