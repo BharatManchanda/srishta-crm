@@ -20,7 +20,7 @@ const modules = [
   },
   {
     name: 'Users',
-    path: '/users',
+    path: '/user',
     icon: 'UserCircleIcon',
     description: 'User management',
     parent_id: null,
@@ -44,24 +44,24 @@ const modules = [
   },
 ];
 
-export default  async function seedModules() {
-    for (const module of modules) {
-        await prisma.module.upsert({
-            where: {
-                path: module.path,
-            },
-            update: {
-                name: module.name,
-                icon: module.icon,
-                description: module.description,
-                sort_order: module.sort_order,
-                parent_id: module.parent_id,
-            },
-            create: module,
-        });
+export default async function seedModules() {
+  for (const module of modules) {
+    await prisma.module.upsert({
+      where: {
+        path: module.path,
+      },
+      update: {
+        name: module.name,
+        icon: module.icon,
+        description: module.description,
+        sort_order: module.sort_order,
+        parent_id: module.parent_id,
+      },
+      create: module,
+    });
 
-        console.log(`✓ ${module.name}`);
-    }
+    console.log(`✓ ${module.name}`);
+  }
 
-    console.log('Modules seeded successfully');
+  console.log('Modules seeded successfully');
 }

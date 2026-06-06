@@ -1,5 +1,8 @@
+import { UserStatus } from '@prisma/client';
 import {
   IsEmail,
+  IsEnum,
+  IsNumber,
   IsPhoneNumber,
   IsString,
   MinLength,
@@ -12,11 +15,14 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
-  @IsPhoneNumber('IN')
-  phone: string;
-
   @IsString()
   @MinLength(6)
   password: string;
+
+  @IsNumber()
+  roleId: number;
+
+  @IsEnum(UserStatus)
+  status: UserStatus
   
 }

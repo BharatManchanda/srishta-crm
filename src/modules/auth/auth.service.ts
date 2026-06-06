@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterDto } from './dto/register-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '../jwt/jwt.service';
@@ -13,6 +13,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleService } from './google.service';
 import { OtpPurpose } from '@prisma/client';
 import { UserStatus } from '@prisma/client';
+import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class AuthService {
     constructor(
@@ -41,10 +42,10 @@ export class AuthService {
             throw new BadRequestException('Invalid credentials');
         }
 
-        if (existingUser.status === UserStatus.ACTIVE) {
+        if (existingUser.status !== UserStatus.ACTIVE) {
             throw new BadRequestException('Account is deactivated');
         }
-
+        console.log(dto.email, dto.password, "::emailpass")
         const isPasswordValid = await bcrypt.compare(dto.password, existingUser.password ?? "");
         if (!isPasswordValid) {
             throw new BadRequestException('Invalid credentials');
@@ -65,12 +66,11 @@ export class AuthService {
         };
     }
 
-    async register(dto: RegisterDto): Promise<any> {
+    async register(dto: RegisterDto, authUserId: number): Promise<any> {
         const existingUser = await this.prisma.user.findFirst({
             where: {
                 OR: [
-                    { email: dto.email },
-                    { phone: dto.phone },
+                    { email: dto.email }
                 ],
             },
         });
@@ -83,22 +83,49 @@ export class AuthService {
             data: {
                 name: dto.name,
                 email: dto.email,
-                phone: dto.phone,
                 password: hashedPassword,
+                parentId: authUserId,
+                roleId: dto.roleId,
+                status: dto.status
             },
         });
-
-        // Send email verification OTP using sendOtp
-        await this.sendOtp({
-            email: dto.email,
-            purpose: OtpPurpose.EMAIL_VERIFICATION,
-        });
-
 
         const { password: _, accessTokens, refreshTokens, ...safeUser } = user;
         return {
             ...safeUser,
-            profileMedia: [],
+        };
+    }
+
+    async update(dto: UpdateUserDto, authUserId: number, userId: number): Promise<any> {
+        const existingUser = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    {
+                        id: userId,
+                        parentId: authUserId
+                    }
+                ],
+            },
+        });
+        if (!existingUser) {
+            throw new BadRequestException('User not found');
+        }
+
+        const user = await this.prisma.user.update({
+            where: {
+                id: existingUser.id
+            },
+            data: {
+                name: dto.name,
+                email: dto.email,
+                roleId: dto.roleId,
+                status: dto.status
+            },
+        });
+
+        const { password: _, accessTokens, refreshTokens, ...safeUser } = user;
+        return {
+            ...safeUser,
         };
     }
 
@@ -223,8 +250,27 @@ export class AuthService {
                     email,
                     password: await bcrypt.hash(password, 10),
                     isEmailVerified: true,
+                    isSuperAdmin: true,
+                    status: 'ACTIVE',
                 },
             });
+
+            const arrayOfRoles = [
+                {
+                    name: "CEO",
+                    description: "CEO of the organization",
+                    createdById: user.id,
+                },
+                {
+                    name: "Manager",
+                    description: "Manager of the organization",
+                    createdById: user.id,
+                }
+            ];
+
+            await this.prisma.role.createMany({
+                data: arrayOfRoles,
+            })
 
             await this.prisma.otpVerification.deleteMany({
                 where: {
@@ -232,8 +278,6 @@ export class AuthService {
                     purpose,
                 },
             });
-
-
 
             const { password: hashedPassword, accessTokens, refreshTokens, ...safeUser } = user;
             const { accessToken, refreshToken } = await this.jwtService.generateTokens(safeUser);
@@ -352,5 +396,4 @@ export class AuthService {
             },
         };
     }
-
 }

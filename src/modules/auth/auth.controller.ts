@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 import type { Request } from 'express';
 import { JwtService } from '../jwt/jwt.service';
 import { AuthGuard } from './guards/auth.guard';
@@ -15,18 +14,12 @@ import { OtpPurpose, Role } from '@prisma/client';
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService, private readonly jwtService: JwtService) {
-        
+
     }
 
     @Post('login')
     async login(@Body() dto: LoginDto) {
         return this.authService.login(dto);
-    }
-
-    @UseGuards(AuthGuard)
-    @Post('register')
-    async register(@Body() dto: RegisterDto) {
-        return this.authService.register(dto);
     }
 
     @UseGuards(AuthGuard)
@@ -47,13 +40,11 @@ export class AuthController {
 
     @Post('send-otp')
     async sendOtp(@Body() dto: SendOtpDto) {
-        console.log(dto,"::dto");
         return this.authService.sendOtp(dto);
     }
 
     @Post('verify-otp')
     async verifyOtp(@Body() dto: VerifyOtpDto) {
-        console.log(dto,"::dto");
         if (dto.purpose === OtpPurpose.EMAIL_VERIFICATION) {
             const result = await this.authService.verifyOtp(dto) as any;
             if (result) {
@@ -66,7 +57,7 @@ export class AuthController {
                     message: 'Invalid OTP',
                 };
             }
-        } 
+        }
     }
 
     @Post('reset-password')
