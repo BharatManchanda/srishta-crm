@@ -6,6 +6,8 @@ import { LeadFilterBuilder } from './lead-filter.builder';
 import { LeadCreateDto } from './dto/lead-create.dto';
 import { Prisma } from '@prisma/client';
 import { LeadUpdateDto } from './dto/lead-update.dto';
+// import { LeadPolicy } from './lead.policy';
+import { UserHierarchyService } from '../user/user-hierarchy.service';
 
 @Injectable()
 export class LeadService {
@@ -13,18 +15,22 @@ export class LeadService {
         private readonly prisma: PrismaService,
         private readonly paginationService: PaginationService,
         private readonly leadFilterBuilder: LeadFilterBuilder,
+        private readonly userHierarchyService: UserHierarchyService,
     ) { }
     async getList(dto: LeadFilterDto, currentUserId: number) {
+        const userIds = await this.userHierarchyService.getFamilyUserIds(currentUserId);
         const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
+
         const result = await this.paginationService.paginate(this.prisma.lead, {
             page: dto.page,
             perPage: dto.perPage,
-            where: this.leadFilterBuilder.build(dto),
-
+            where: {
+                ...this.leadFilterBuilder.build(dto),
+                createdById: {
+                    in: userIds,
+                },
+            },
             orderBy,
-            include: {
-                
-            }
         });
         return result;
     }
@@ -40,24 +46,30 @@ export class LeadService {
         });
     }
 
-    async get(id: number, authUserId: number) {
+    async get(id: number) {
         return this.prisma.lead.findFirst({
             where: {
                 id: id,
-                createdById: authUserId
             },
         });
     }
 
-    async update(dto: LeadUpdateDto, id: number, authUserId: number) {
+    async update(dto: LeadUpdateDto, id: number) {
         return this.prisma.lead.update({
             where: {
                 id: id,
-                createdById: authUserId
             },
             data: {
                 ...dto,
                 budget: dto.budget ? new Prisma.Decimal(dto.budget) : null,
+            },
+        });
+    }
+
+    async delete(id: number) {
+        return this.prisma.lead.delete({
+            where: {
+                id: id,
             },
         });
     }

@@ -8,8 +8,9 @@ export class ModuleController {
 
     @UseGuards(AuthGuard)
     @Get()
-    async getList() {
-        return this.moduleService.getList();
+    async getList(@Req() req: Request) {
+        const currentUser = req['user'];
+        return this.moduleService.getList(currentUser);
     }
 
     @UseGuards(AuthGuard)

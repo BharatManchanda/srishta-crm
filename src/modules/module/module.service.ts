@@ -6,11 +6,29 @@ export class ModuleService {
     constructor(
         private readonly prisma: PrismaService,
     ) { }
-    async getList() {
+    async getList(currentUser: any) {
+        console.log(currentUser,":::currentUser")
+        const roleId = currentUser.roleId;
+        const permissions = await this.prisma.rolePermission.findMany({
+            where: {
+                roleId,
+                isAllow: true,
+            },
+            select: {
+                moduleId: true,
+            },
+        });
+        // console.log(permissions,"::::permissions")
+        const moduleIds = permissions.map(p => p.moduleId);
         const modules = await this.prisma.module.findMany({
             orderBy: { sort_order: 'asc' },
+            where: {
+                id: {
+                    in: moduleIds,
+                },
+            }
         });
-        // Build a map of id -> module record
+
         const moduleMap = new Map<number, any>();
         modules.forEach(m => moduleMap.set(m.id, { ...m, subItems: [] }));
         const topLevel: any[] = [];
@@ -22,6 +40,7 @@ export class ModuleService {
                 name: m.name,
                 path: m.path ?? undefined,
                 subItems: [],
+                activeOn: m.activeOn ?? [],
             };
 
             if (m.parent_id) {
@@ -31,6 +50,7 @@ export class ModuleService {
                         name: m.name,
                         path: m.path,
                         pro: false,
+                        activeOn: m.activeOn ?? [],
                     });
                 }
             } else {
@@ -46,6 +66,7 @@ export class ModuleService {
                     name: sub.name,
                     path: sub.path,
                     pro: false,
+                    activeOn: sub.activeOn ?? [],
                 }));
             }
         });

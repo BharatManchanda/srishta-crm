@@ -6,10 +6,12 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 import { LeadFilterBuilder } from './lead-filter.builder';
 import { JwtModule } from '../jwt/jwt.module';
 import { AuthModule } from '../auth/auth.module';
+import { LeadPolicy } from './lead.policy';
+import { UserHierarchyService } from '../user/user-hierarchy.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, JwtModule],
   controllers: [LeadController],
-  providers: [LeadService, PaginationService, LeadFilterBuilder],
+  providers: [LeadService, PaginationService, LeadFilterBuilder, LeadPolicy, UserHierarchyService],
 })
 export class LeadModule {}

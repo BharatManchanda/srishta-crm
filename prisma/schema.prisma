@@ -138,6 +138,8 @@ model Module {
 
   path  String @unique
 
+  activeOn  String[]
+
   icon  String?
 
   description  String?

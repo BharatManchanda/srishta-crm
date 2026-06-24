@@ -51,7 +51,7 @@ export class JwtService {
         const payload = {
             id: user.id,
             email: user.email,
-            role: user.role,
+            roleId: user.roleId,
         };
 
         const accessToken = await this.generateAccessToken(payload);

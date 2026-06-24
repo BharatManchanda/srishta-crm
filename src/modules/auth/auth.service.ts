@@ -45,7 +45,6 @@ export class AuthService {
         if (existingUser.status !== UserStatus.ACTIVE) {
             throw new BadRequestException('Account is deactivated');
         }
-        console.log(dto.email, dto.password, "::emailpass")
         const isPasswordValid = await bcrypt.compare(dto.password, existingUser.password ?? "");
         if (!isPasswordValid) {
             throw new BadRequestException('Invalid credentials');
