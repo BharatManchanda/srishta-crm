@@ -14,6 +14,7 @@ import { GoogleService } from './google.service';
 import { OtpPurpose } from '@prisma/client';
 import { UserStatus } from '@prisma/client';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { LeadService } from '../lead/lead.service';
 @Injectable()
 export class AuthService {
     constructor(
@@ -21,6 +22,7 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly emailService: EmailService,
         private googleService: GoogleService,
+        private readonly leadService: LeadService
     ) { }
 
     private generateOtp(): string {
@@ -90,6 +92,7 @@ export class AuthService {
         });
 
         const { password: _, accessTokens, refreshTokens, ...safeUser } = user;
+        await this.leadService.createDefaultLeadView(user.id);
         return {
             ...safeUser,
         };

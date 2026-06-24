@@ -82,6 +82,8 @@ model User {
 
   status UserStatus   @default(INACTIVE)
 
+  tableViews UserTableView[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -149,6 +151,8 @@ model Module {
   sort_order Int
 
   permissions RolePermission[]
+
+  tableViews UserTableView[]
 }
 
 model RolePermission {
@@ -226,4 +230,41 @@ model Lead {
   @@index([source])
   @@index([assignedToId])
   @@index([nextFollowUpDate])
+}
+
+model UserTableView {
+  id          Int      @id @default(autoincrement())
+
+  userId      Int
+  moduleId    Int
+
+  name        String   // Default View, My Leads
+  isDefault   Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+  module      Module   @relation(fields: [moduleId], references: [id])
+
+  columns     TableColumn[]
+
+  @@unique([userId, moduleId, name])
+}
+
+model TableColumn {
+  id          Int @id @default(autoincrement())
+
+  tableViewId Int
+
+  field       String
+  label       String
+
+  visible     Boolean @default(true)
+
+  order       Int
+
+  tableView UserTableView @relation(fields: [tableViewId], references: [id])
+
+  @@index([tableViewId])
 }
