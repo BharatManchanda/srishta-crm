@@ -51,4 +51,10 @@ export class ModuleService {
         });
         return topLevel;
     }
+
+    async getStraightList() {
+        return this.prisma.module.findMany({
+            orderBy: { id: 'desc' },
+        });
+    }
 }

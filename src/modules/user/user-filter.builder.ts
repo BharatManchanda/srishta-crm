@@ -11,10 +11,19 @@ export class UserFilterBuilder {
         let idFilter: any = undefined;
 
         return {
+            OR: [
+                {
+                    parentId: extra.parentId,
+                },
+                {
+                    id: extra.parentId,
+                    parentId: null,
+                },
+            ],
 
             id: idFilter,
 
-            parentId: extra?.parentId,
+            // parentId: extra?.parentId,
 
             name: PrismaFilter.contains(dto.name),
 

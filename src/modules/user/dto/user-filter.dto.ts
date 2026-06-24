@@ -1,6 +1,6 @@
 import { UserStatus } from '@prisma/client';
 import { Type, Transform } from 'class-transformer';
-import { IsOptional, IsString, IsEnum, IsNumber } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsNumber, IsIn } from 'class-validator';
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
 export class UserFilterDto extends PaginationDto {
@@ -21,4 +21,12 @@ export class UserFilterDto extends PaginationDto {
     @IsNumber()
     @Transform(({ value }) => (value !== undefined && value !== '' ? Number(value) : undefined))
     roleId?: number
+
+    @IsOptional()
+    @IsString()
+    sortBy?: string;
+
+    @IsOptional()
+    @IsIn(['asc', 'desc'])
+    sortOrder?: 'asc' | 'desc';
 }

@@ -17,6 +17,7 @@ export class UserService {
     ) { }
 
     async getList(dto: UserFilterDto, currentUserId: number) {
+        const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
         const result = await this.paginationService.paginate(this.prisma.user, {
             page: dto.page,
             perPage: dto.perPage,
@@ -24,9 +25,7 @@ export class UserService {
                 parentId: currentUserId,
             }),
 
-            orderBy: {
-                id: 'desc',
-            },
+            orderBy,
             include: {
                 role: {
                     select: {

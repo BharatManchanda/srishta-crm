@@ -24,6 +24,39 @@ enum UserStatus {
   INVITED
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum LeadRating {
+  COLD
+  WARM
+  HOT
+}
+
+enum LeadSource {
+  WEBSITE
+  GOOGLE
+  FACEBOOK
+  LINKEDIN
+  REFERRAL
+  WHATSAPP
+  DIRECT
+  OTHER
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -54,6 +87,9 @@ model User {
 
   // 👇 ADD THIS (important)
   createdRoles Role[] @relation("RoleCreator")
+
+  createdLeads  Lead[] @relation("LeadCreator")
+  assignedLeads Lead[] @relation("LeadAssignee")
 }
 
 model OtpVerification {
@@ -119,6 +155,7 @@ model RolePermission {
   roleId    Int
   moduleId  Int
 
+  isAllow   Boolean @default(false)
   canView   Boolean @default(false)
   canCreate Boolean @default(false)
   canEdit   Boolean @default(false)
@@ -130,4 +167,61 @@ model RolePermission {
   @@unique([roleId, moduleId])
   @@index([roleId])
   @@index([moduleId])
+}
+
+model Lead {
+  id               Int       @id @default(autoincrement())
+  createdById Int
+  createdBy   User @relation("LeadCreator", fields: [createdById], references: [id])
+  
+
+  // Basic Information
+  name String
+  title String?
+  email String?   @unique
+  phone String?
+  website String?
+
+  // Address
+  city String?
+  state String?
+  pinCode String?
+  country String?
+  address String?
+
+  // Business Information
+  industry String?
+  budget Decimal?  @db.Decimal(12, 2)
+  requirement String?   @db.Text
+
+  // Lead Management
+  source LeadSource?
+  status LeadStatus @default(NEW)
+  priority LeadPriority @default(MEDIUM)
+  rating LeadRating?
+
+  leadScore Int? @default(0)
+  isQualified Boolean @default(false)
+  isConverted Boolean @default(false)
+
+  // Assignment
+  assignedToId Int?
+  assignedTo   User? @relation("LeadAssignee", fields: [assignedToId], references: [id])
+
+  // Follow-up
+  nextFollowUpDate DateTime?
+  lastFollowUpDate DateTime?
+
+  // Notes
+  description String?   @db.Text
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([status])
+  @@index([source])
+  @@index([assignedToId])
+  @@index([nextFollowUpDate])
 }

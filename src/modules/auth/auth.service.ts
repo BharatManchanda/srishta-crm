@@ -255,22 +255,58 @@ export class AuthService {
                 },
             });
 
-            const arrayOfRoles = [
-                {
-                    name: "CEO",
-                    description: "CEO of the organization",
+            const ceoRole = await this.prisma.role.create({
+                data: {
+                    name: 'CEO',
+                    description: 'CEO of the organization',
                     createdById: user.id,
                 },
-                {
-                    name: "Manager",
-                    description: "Manager of the organization",
-                    createdById: user.id,
-                }
-            ];
+            });
 
-            await this.prisma.role.createMany({
-                data: arrayOfRoles,
-            })
+            const managerRole = await this.prisma.role.create({
+                data: {
+                    name: 'Manager',
+                    description: 'Manager of the organization',
+                    createdById: user.id,
+                },
+            });
+
+            await this.prisma.user.update({
+                where: {
+                    id: user.id
+                },
+                data: {
+                    roleId: ceoRole.id,
+                },
+            });
+
+            const modules = await this.prisma.module.findMany();
+
+            // CEO -> Full permissions
+            await this.prisma.rolePermission.createMany({
+                data: modules.map((module) => ({
+                    roleId: ceoRole.id,
+                    moduleId: module.id,
+                    isAllow: true,
+                    canView: true,
+                    canCreate: true,
+                    canEdit: true,
+                    canDelete: true,
+                })),
+            });
+
+            // Manager -> No permissions
+            await this.prisma.rolePermission.createMany({
+                data: modules.map((module) => ({
+                    roleId: managerRole.id,
+                    moduleId: module.id,
+                    isAllow: false,
+                    canView: false,
+                    canCreate: false,
+                    canEdit: false,
+                    canDelete: false,
+                })),
+            });
 
             await this.prisma.otpVerification.deleteMany({
                 where: {
