@@ -6,24 +6,9 @@ import { PrismaFilter } from 'src/common/filters/prisma-filter.helper';
 export class UserFilterBuilder {
     constructor() { }
 
-    build(dto: UserFilterDto, extra: { parentId: number }) {
-
-        let idFilter: any = undefined;
+    build(dto: UserFilterDto) {
 
         return {
-            OR: [
-                {
-                    parentId: extra.parentId,
-                },
-                {
-                    id: extra.parentId,
-                    parentId: null,
-                },
-            ],
-
-            id: idFilter,
-
-            // parentId: extra?.parentId,
 
             name: PrismaFilter.contains(dto.name),
 

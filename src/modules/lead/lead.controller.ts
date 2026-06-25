@@ -5,6 +5,7 @@ import { LeadFilterDto } from './dto/lead-filter.dto';
 import { LeadCreateDto } from './dto/lead-create.dto';
 import { LeadUpdateDto } from './dto/lead-update.dto';
 import { LeadPolicy } from './lead.policy';
+import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 
 @UseGuards(AuthGuard)
 @Controller('lead')
@@ -23,6 +24,18 @@ export class LeadController {
         // await this.leadPolicy.authorize(req['user'], 'create');
         const authUserId = req['user'].id;
         return this.leadService.create(dto, authUserId);
+    }
+
+    @Get("view-setting")
+    async viewSetting(@Req() req: Request) {
+        const authUserId = req['user'].id;
+        return this.leadService.viewSetting(authUserId);
+    }
+
+    @Put("update-setting")
+    async updateSetting(@Body() dto: UpdateViewSettingDto, @Req() req: Request) {
+        const authUserId = req['user'].id;
+        return this.leadService.updateSetting(dto, authUserId);
     }
 
     @Get(":id")

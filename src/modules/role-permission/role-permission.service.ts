@@ -49,7 +49,20 @@ export class RolePermissionService {
     }
 
     async update(dto: CreateRolePermissionDto, authId: number) {
+        
         let { roleId, moduleId, isAllow, canView, canCreate, canEdit, canDelete } = dto;
+        if (roleId) {
+            const isSuperAdminPermission = await this.prismaService.user.findFirst({
+                where: {
+                    roleId,
+                    isSuperAdmin: true
+                }
+            })
+
+            if (isSuperAdminPermission) {
+                throw new Error('Super admin role cannot be updated');
+            }
+        }
 
         // If module access is disabled
         if (!isAllow || !canView) {

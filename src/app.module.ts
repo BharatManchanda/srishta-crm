@@ -12,9 +12,10 @@ import { MasterDataModule } from './modules/master-data/master-data.module';
 import { UserModule } from './modules/user/user.module';
 import { RolePermissionModule } from './modules/role-permission/role-permission.module';
 import { LeadModule } from './modules/lead/lead.module';
+import { ContactModule } from './modules/contact/contact.module';
 
 @Module({
-  imports: [AuthModule, UserModule, PrismaModule, JwtModule, ConfigModule.forRoot({ isGlobal: true }), ModuleModule, RoleModule, MasterDataModule, RolePermissionModule, LeadModule],
+  imports: [AuthModule, UserModule, PrismaModule, JwtModule, ConfigModule.forRoot({ isGlobal: true }), ModuleModule, RoleModule, MasterDataModule, RolePermissionModule, LeadModule, ContactModule],
   controllers: [AppController, ModuleController],
   providers: [AppService],
 })

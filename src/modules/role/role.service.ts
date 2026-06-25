@@ -2,14 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { UserHierarchyService } from '../user/user-hierarchy.service';
 
 @Injectable()
 export class RoleService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly userHierarchyService: UserHierarchyService
+    ) { }
     async getList(authUserId: number) {
         return await this.prisma.role.findMany({
             where: {
-                createdById: authUserId
+                createdById: {
+                    in: await this.userHierarchyService.getFamilyUserIds(authUserId)
+                }
             },
         });
     }

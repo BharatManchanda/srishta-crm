@@ -7,7 +7,6 @@ export class ModuleService {
         private readonly prisma: PrismaService,
     ) { }
     async getList(currentUser: any) {
-        console.log(currentUser,":::currentUser")
         const roleId = currentUser.roleId;
         const permissions = await this.prisma.rolePermission.findMany({
             where: {

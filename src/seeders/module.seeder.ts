@@ -13,6 +13,7 @@ export const DASHBOARD_MODULE_ID = 13;
 export const USER_MODULE_ID = 14;
 export const LEAD_MODULE_ID = 15;
 export const SETTINGS_MODULE_ID = 16;
+export const CONTACT_MODULE_ID = 17;
 
 const modules = [
   {
@@ -43,7 +44,17 @@ const modules = [
     description: 'Lead management',
     parent_id: null,
     sort_order: 3,
-    activeOn: ['/leads', '/leads/:id', "/leads/:id/edit"],
+    activeOn: ['/leads', '/leads/:id', "/leads/:id/edit", "/leads/create"],
+  },
+  {
+    id: CONTACT_MODULE_ID,
+    name: 'Contact',
+    path: '/contacts',
+    icon: 'Contact',
+    description: 'Contact management',
+    parent_id: null,
+    sort_order: 3,
+    activeOn: ['/contacts', '/contacts/:id', "/contacts/:id/edit", "/contacts/create"],
   },
   {
     id: SETTINGS_MODULE_ID,

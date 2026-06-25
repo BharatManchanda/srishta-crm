@@ -6,6 +6,7 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 import { UserFilterDto } from './dto/user-filter.dto';
 import { UserFilterBuilder } from './user-filter.builder';
 import { UpdateUserDto } from '../auth/dto/update-user.dto';
+import { UserPolicy } from './user.policy';
 
 @Injectable()
 export class UserService {
@@ -14,16 +15,22 @@ export class UserService {
         private readonly authService: AuthService,
         private readonly paginationService: PaginationService,
         private readonly userFilterBuilder: UserFilterBuilder,
+        private readonly userPolicy: UserPolicy,
     ) { }
 
     async getList(dto: UserFilterDto, currentUserId: number) {
         const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
+        const accessibleUserIds = await this.userPolicy.getAccessibleUserIds(currentUserId);
+
         const result = await this.paginationService.paginate(this.prisma.user, {
             page: dto.page,
             perPage: dto.perPage,
-            where: this.userFilterBuilder.build(dto, {
-                parentId: currentUserId,
-            }),
+            where: {
+                ...this.userFilterBuilder.build(dto),
+                id: {
+                    in: accessibleUserIds
+                }
+            },
 
             orderBy,
             include: {

@@ -87,8 +87,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // 👇 ADD THIS (important)
   createdRoles Role[] @relation("RoleCreator")
+  
+  createdContacts   Contact[] @relation("ContactCreator")
 
   createdLeads  Lead[] @relation("LeadCreator")
   assignedLeads Lead[] @relation("LeadAssignee")
@@ -267,4 +268,63 @@ model TableColumn {
   tableView UserTableView @relation(fields: [tableViewId], references: [id])
 
   @@index([tableViewId])
+}
+
+
+model Contact {
+  id                Int       @id @default(autoincrement())
+
+  createdById Int
+  createdBy   User  @relation("ContactCreator", fields: [createdById], references: [id])
+
+  name         String
+  title         String
+  email             String?   @unique
+  phone             String?   @unique
+
+  source LeadSource?
+  
+  fax               String?
+
+  assistant         String?
+  assistantPhone    String?
+
+  department        String?
+
+  dateOfBirth       DateTime?
+
+  skypeId           String?
+  twitter           String?
+
+  description       String?   @db.Text
+
+  mailingAddressId  Int?
+  mailingAddress    Address? @relation("MailingAddress", fields: [mailingAddressId], references: [id])
+
+  otherAddressId    Int?
+  otherAddress      Address? @relation("OtherAddress", fields: [otherAddressId], references: [id])
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+}
+
+model Address {
+  id                Int      @id @default(autoincrement())
+
+  country           String?
+
+  flatHouseNo       String?
+  streetAddress     String?
+
+  city              String?
+  stateProvince     String?
+
+  postalCode        String?
+
+  latitude          Decimal? @db.Decimal(10, 8)
+  longitude         Decimal? @db.Decimal(11, 8)
+
+  mailingContacts   Contact[] @relation("MailingAddress")
+  otherContacts     Contact[] @relation("OtherAddress")
 }
