@@ -28,6 +28,13 @@ export class ContactService {
                 createdById: {
                     in: await this.userHierarchyService.getFamilyUserIds(currentUserId),
                 },
+                id: {
+                    in: (dto.id !== undefined && dto.id) ? [dto?.id] : undefined
+                }
+            },
+            include: {
+                mailingAddress: true,
+                otherAddress: true,
             },
             orderBy,
         });

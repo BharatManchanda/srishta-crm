@@ -10,6 +10,8 @@ export class UserFilterBuilder {
 
         return {
 
+            // id: dto.id ? dto.id : undefined,
+
             name: PrismaFilter.contains(dto.name),
 
             email: PrismaFilter.contains(dto.email),

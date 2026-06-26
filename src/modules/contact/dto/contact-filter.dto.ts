@@ -1,13 +1,6 @@
 import { LeadSource } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import {
-  IsOptional,
-  IsString,
-  IsEnum,
-  IsIn,
-  IsInt,
-  IsDate,
-} from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsIn, IsInt, IsDate } from 'class-validator';
 
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
@@ -111,6 +104,9 @@ export class ContactFilterDto extends PaginationDto {
   ['mailingAddress.streetAddress']?: string;
 
   @IsOptional()
+  ['mailingAddress.postalCode']?: string;
+
+  @IsOptional()
   ['otherAddress.city']?: string;
 
   @IsOptional()
@@ -121,6 +117,9 @@ export class ContactFilterDto extends PaginationDto {
 
   @IsOptional()
   ['otherAddress.streetAddress']?: string;
+
+  @IsOptional()
+  ['otherAddress.postalCode']?: string;
 
   @IsOptional()
   @IsString()

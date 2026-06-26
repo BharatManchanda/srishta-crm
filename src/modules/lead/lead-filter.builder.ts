@@ -8,7 +8,6 @@ export class LeadFilterBuilder {
 
     build(dto: LeadFilterDto) {
         return {
-            id: dto.id ? Number(dto.id) : undefined,
             name: PrismaFilter.contains(dto.name),
             email: PrismaFilter.contains(dto.email),
             city: PrismaFilter.contains(dto.city),

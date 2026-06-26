@@ -4,6 +4,13 @@ import { IsOptional, IsString, IsEnum, IsNumber, IsIn } from 'class-validator';
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
 export class UserFilterDto extends PaginationDto {
+
+
+    @IsOptional()
+    @IsNumber()
+    @Transform(({ value }) => (value !== undefined && value !== '' ? Number(value) : undefined))
+    id?: number
+
     @IsOptional()
     @IsString()
     name?: string;

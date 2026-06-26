@@ -30,6 +30,9 @@ export class LeadService {
                 createdById: {
                     in: userIds,
                 },
+                id: {
+                    in: (dto.id !== undefined && dto.id) ? [dto?.id] : undefined
+                }
             },
             orderBy,
         });

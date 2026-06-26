@@ -7,6 +7,7 @@ export class LeadFilterDto extends PaginationDto {
 
     @IsOptional()
     @IsNumber()
+    @Transform(({ value }) => (value !== undefined && value !== '' ? Number(value) : undefined))
     id?: string;
 
     @IsOptional()
