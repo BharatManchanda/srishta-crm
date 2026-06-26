@@ -172,4 +172,12 @@ export class ContactService {
             console.log(error, "::::error")
         }
     }
+
+    async delete(id: number) {
+        return this.prisma.contact.delete({
+            where: {
+                id: id,
+            },
+        });
+    }
 }

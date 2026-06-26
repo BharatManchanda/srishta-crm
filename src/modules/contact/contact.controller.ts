@@ -58,7 +58,7 @@ export class ContactController {
     async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
         // await this.contactPolicy.authorize(req['user'], 'delete', id);
         const authUserId = req['user'].id;
-        // return this.contactService.delete(id);
+        return this.contactService.delete(id);
     }
     
 }
