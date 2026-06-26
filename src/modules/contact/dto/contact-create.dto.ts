@@ -14,9 +14,6 @@ import { LeadSource } from '@prisma/client';
 import { AddressDto } from './address.dto';
 
 export class ContactCreateDto {
-  @IsInt()
-  createdById: number;
-
   @IsString()
   name: string;
 
@@ -28,7 +25,7 @@ export class ContactCreateDto {
   email?: string;
 
   @IsOptional()
-  @IsPhoneNumber()
+  // @IsPhoneNumber()
   phone?: string;
 
   @IsOptional()
@@ -44,7 +41,7 @@ export class ContactCreateDto {
   assistant?: string;
 
   @IsOptional()
-  @IsPhoneNumber()
+  // @IsPhoneNumber()
   assistantPhone?: string;
 
   @IsOptional()

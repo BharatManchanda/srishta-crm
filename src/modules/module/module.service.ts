@@ -17,7 +17,6 @@ export class ModuleService {
                 moduleId: true,
             },
         });
-        // console.log(permissions,"::::permissions")
         const moduleIds = permissions.map(p => p.moduleId);
         const modules = await this.prisma.module.findMany({
             orderBy: { sort_order: 'asc' },

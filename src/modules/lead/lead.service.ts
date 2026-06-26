@@ -124,10 +124,17 @@ export class LeadService {
     }
 
     async viewSetting(authUserId: number) {
+        const leadModule = await this.prisma.module.findFirst({
+            where: {
+                path: '/leads',
+            },
+        })
+        if (!leadModule) return
         const viewSetting = await this.prisma.userTableView.findFirst({
             where: {
                 userId: authUserId,
                 isDefault: true,
+                moduleId: leadModule.id
             },
             include: {
                 columns: true,

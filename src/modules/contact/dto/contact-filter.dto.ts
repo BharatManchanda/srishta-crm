@@ -6,12 +6,12 @@ import {
   IsEnum,
   IsIn,
   IsInt,
+  IsDate,
 } from 'class-validator';
 
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
 export class ContactFilterDto extends PaginationDto {
-
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -34,8 +34,12 @@ export class ContactFilterDto extends PaginationDto {
   phone?: string;
 
   @IsOptional()
+  @IsString()
+  fax?: string;
+
+  @IsOptional()
   @IsEnum(LeadSource)
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(({ value }) => value || undefined)
   source?: LeadSource;
 
   @IsOptional()
@@ -46,6 +50,21 @@ export class ContactFilterDto extends PaginationDto {
   @IsString()
   assistant?: string;
 
+   // Date filters
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  dateOfBirthFrom?: Date;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  dateOfBirthTo?: Date;
+
+  @IsOptional()
+  @IsString()
+  assistantPhone?: string;
+
   @IsOptional()
   @IsString()
   skypeId?: string;
@@ -54,31 +73,54 @@ export class ContactFilterDto extends PaginationDto {
   @IsString()
   twitter?: string;
 
-  // Mailing Address Filters
   @IsOptional()
   @IsString()
-  mailingCountry?: string;
+  description?: string;
 
   @IsOptional()
-  @IsString()
-  mailingCity?: string;
+  @Type(() => Date)
+  @IsDate()
+  createdFrom?: Date;
 
   @IsOptional()
-  @IsString()
-  mailingState?: string;
-
-  // Other Address Filters
-  @IsOptional()
-  @IsString()
-  otherCountry?: string;
+  @Type(() => Date)
+  @IsDate()
+  createdTo?: Date;
 
   @IsOptional()
-  @IsString()
-  otherCity?: string;
+  @Type(() => Date)
+  @IsDate()
+  updatedFrom?: Date;
 
   @IsOptional()
-  @IsString()
-  otherState?: string;
+  @Type(() => Date)
+  @IsDate()
+  updatedTo?: Date;
+
+  // Relation filters
+  @IsOptional()
+  ['mailingAddress.city']?: string;
+
+  @IsOptional()
+  ['mailingAddress.country']?: string;
+
+  @IsOptional()
+  ['mailingAddress.stateProvince']?: string;
+
+  @IsOptional()
+  ['mailingAddress.streetAddress']?: string;
+
+  @IsOptional()
+  ['otherAddress.city']?: string;
+
+  @IsOptional()
+  ['otherAddress.country']?: string;
+
+  @IsOptional()
+  ['otherAddress.stateProvince']?: string;
+
+  @IsOptional()
+  ['otherAddress.streetAddress']?: string;
 
   @IsOptional()
   @IsString()

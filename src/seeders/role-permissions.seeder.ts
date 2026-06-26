@@ -61,15 +61,7 @@ export default async function seedRolePermissions() {
       skipDuplicates: true,
     });
 
-    console.log(
-      `✓ ${result.count} role permissions created`
-    );
   } catch (error) {
-    console.error(
-      '❌ Failed to seed role permissions:',
-      error
-    );
-
     throw error;
   } finally {
     await prisma.$disconnect();

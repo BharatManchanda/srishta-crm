@@ -84,9 +84,5 @@ export default async function seedModules() {
       },
       create: module,
     });
-
-    console.log(`✓ ${module.name}`);
   }
-
-  console.log('Modules seeded successfully');
 }

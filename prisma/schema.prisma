@@ -291,7 +291,7 @@ model Contact {
 
   department        String?
 
-  dateOfBirth       DateTime?
+  dateOfBirth       DateTime? @db.Date
 
   skypeId           String?
   twitter           String?
