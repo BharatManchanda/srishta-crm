@@ -77,18 +77,21 @@ export class RoleService {
     }
 
     async delete(id: number, authUserId: number) {
-        const isExistRole = await this.prisma.role.findFirst({
+        const assignedUsers = await this.prisma.user.count({
             where: {
-                id: id,
-                createdById: authUserId
+                roleId: id,
             },
-        })
-        if (!isExistRole) {
-            throw new Error('Role not found');
+        });
+
+        if (assignedUsers > 0) {
+            throw new Error(
+                'Cannot delete role because users are assigned to it'
+            );
         }
+
         return await this.prisma.role.delete({
             where: {
-                id: id
+                id,
             },
         });
     }

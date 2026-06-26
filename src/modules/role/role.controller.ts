@@ -26,7 +26,7 @@ export class RoleController {
         return this.roleService.update(dto, id, authUserId);
     }
 
-    @Delete()
+    @Delete(":id")
     async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
         const authUserId = req['user'].id;
         return this.roleService.delete(id, authUserId);

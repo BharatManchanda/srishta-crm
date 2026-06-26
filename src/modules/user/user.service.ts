@@ -63,10 +63,39 @@ export class UserService {
     }
 
     async delete(id: number) {
-        return this.prisma.user.delete({
-            where: {
-                id,
-            },
+        return this.prisma.$transaction(async (tx) => {
+            // Get all table view ids of this user
+            const tableViews = await tx.userTableView.findMany({
+                where: { userId: id },
+                select: { id: true },
+            });
+
+            const tableViewIds = tableViews.map(v => v.id);
+
+            // Delete grandchildren
+            if (tableViewIds.length) {
+                await tx.tableColumn.deleteMany({
+                    where: {
+                        tableViewId: {
+                            in: tableViewIds,
+                        },
+                    },
+                });
+            }
+
+            // Delete children
+            await tx.userTableView.deleteMany({
+                where: {
+                    userId: id,
+                },
+            });
+
+            // Delete parent
+            return tx.user.delete({
+                where: {
+                    id,
+                },
+            });
         });
     }
 

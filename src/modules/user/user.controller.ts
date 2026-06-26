@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseGuards, Delete, Put, Body, Param, Query, Req, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, Delete, Put, Body, Param, Query, Req, ParseIntPipe, HttpException, HttpStatus } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { UserService } from './user.service';
 import { RegisterDto } from '../auth/dto/register-user.dto';
@@ -39,8 +39,18 @@ export class UserController {
     @UseGuards(AuthGuard)
     @Delete(':id')
     async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-        await this.userPolicy.authorize(req['user'], 'delete', id);
-        return this.userService.delete(id);
+        try {
+            await this.userPolicy.authorize(req['user'], 'delete', id);
+            return this.userService.delete(id);
+        } catch (error) {
+            console.log(error, "::::error")
+            return error; //
+            // console.log(error.message,"::::error")
+            // throw new HttpException(
+            //     error.message || 'Failed to delete user',
+            //     error.status || HttpStatus.INTERNAL_SERVER_ERROR
+            // );
+        }
     }
 
     @UseGuards(AuthGuard)
