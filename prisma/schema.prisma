@@ -57,6 +57,30 @@ enum LeadSource {
   OTHER
 }
 
+enum AccountType {
+  CUSTOMER
+  PROSPECT
+  PARTNER
+  RESELLER
+  INVESTOR
+  COMPETITOR
+  OTHER
+}
+
+enum AccountRating {
+  HOT
+  WARM
+  COLD
+}
+
+enum OwnershipType {
+  PRIVATE
+  PUBLIC
+  SUBSIDIARY
+  GOVERNMENT
+  OTHER
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -90,6 +114,8 @@ model User {
   createdRoles Role[] @relation("RoleCreator")
   
   createdContacts   Contact[] @relation("ContactCreator")
+
+  createdAccounts Account[] @relation("AccountCreator")
 
   createdLeads  Lead[] @relation("LeadCreator")
   assignedLeads Lead[] @relation("LeadAssignee")
@@ -327,4 +353,66 @@ model Address {
 
   mailingContacts   Contact[] @relation("MailingAddress")
   otherContacts     Contact[] @relation("OtherAddress")
+
+  billingAccounts   Account[] @relation("BillingAddress")
+  shippingAccounts  Account[] @relation("ShippingAddress")
+}
+
+model Account {
+  id              Int      @id @default(autoincrement())
+
+  // Ownership
+  createdById     Int
+  createdBy       User     @relation("AccountCreator", fields: [createdById], references: [id])
+
+  // Basic Information
+  accountName     String
+  accountSite     String?
+
+  parentAccountId Int?
+  parentAccount   Account? @relation("ParentAccount", fields: [parentAccountId], references: [id])
+  childAccounts   Account[] @relation("ParentAccount")
+
+  accountNumber   String?  @unique
+
+  accountType     AccountType?
+
+  industry        String?
+
+  annualRevenue   Decimal? @db.Decimal(15, 2)
+
+  rating          AccountRating?
+
+  phone           String?
+  fax             String?
+
+  website         String?
+
+  tickerSymbol    String?
+
+  ownership       OwnershipType?
+
+  employees       Int?
+
+  sicCode         String?
+
+  // Addresses
+  billingAddressId Int?
+  billingAddress   Address? @relation("BillingAddress", fields: [billingAddressId], references: [id])
+
+  shippingAddressId Int?
+  shippingAddress   Address? @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+
+  // Notes
+  description     String? @db.Text
+
+  // Audit
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  @@index([createdById])
+  @@index([parentAccountId])
+  @@index([accountName])
+  @@index([industry])
 }

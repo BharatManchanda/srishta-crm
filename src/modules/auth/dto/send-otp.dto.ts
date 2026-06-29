@@ -1,10 +1,10 @@
-import { OtpPurpose } from "@prisma/client";
-import { IsEmail, IsEnum } from "class-validator";
+import { OtpPurpose } from '@prisma/client';
+import { IsEmail, IsEnum } from 'class-validator';
 
 export class SendOtpDto {
-    @IsEmail()
-    email: string;
+  @IsEmail()
+  email: string;
 
-    @IsEnum(OtpPurpose)
-    purpose: OtpPurpose;
+  @IsEnum(OtpPurpose)
+  purpose: OtpPurpose;
 }

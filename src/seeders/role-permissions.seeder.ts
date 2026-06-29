@@ -60,7 +60,6 @@ export default async function seedRolePermissions() {
       data: rows,
       skipDuplicates: true,
     });
-
   } catch (error) {
     throw error;
   } finally {

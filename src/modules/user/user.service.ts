@@ -10,100 +10,103 @@ import { UserPolicy } from './user.policy';
 
 @Injectable()
 export class UserService {
-    constructor(
-        private readonly prisma: PrismaService,
-        private readonly authService: AuthService,
-        private readonly paginationService: PaginationService,
-        private readonly userFilterBuilder: UserFilterBuilder,
-        private readonly userPolicy: UserPolicy,
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly authService: AuthService,
+    private readonly paginationService: PaginationService,
+    private readonly userFilterBuilder: UserFilterBuilder,
+    private readonly userPolicy: UserPolicy,
     ) { }
 
-    async getList(dto: UserFilterDto, currentUserId: number) {
-        const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
-        const accessibleUserIds = await this.userPolicy.getAccessibleUserIds(currentUserId);
-        const result = await this.paginationService.paginate(this.prisma.user, {
-            page: dto.page,
-            perPage: dto.perPage,
-            where: {
-                ...this.userFilterBuilder.build(dto),
-                id: {
-                    in: (dto.id !== undefined && dto.id) ? [dto?.id] : accessibleUserIds
-                }
+  async getList(dto: UserFilterDto, currentUserId: number) {
+    const orderBy = dto.sortBy
+      ? { [dto.sortBy]: dto.sortOrder || 'desc' }
+      : { id: 'desc' };
+    const accessibleUserIds =
+      await this.userPolicy.getAccessibleUserIds(currentUserId);
+    const result = await this.paginationService.paginate(this.prisma.user, {
+      page: dto.page,
+      perPage: dto.perPage,
+      where: {
+        ...this.userFilterBuilder.build(dto),
+        id: {
+          in: dto.id !== undefined && dto.id ? [dto?.id] : accessibleUserIds,
+        },
+      },
+
+      orderBy,
+      include: {
+        role: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+    return result;
+  }
+
+  async getOne(id: number) {
+    return this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async delete(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      // Get all table view ids of this user
+      const tableViews = await tx.userTableView.findMany({
+        where: { userId: id },
+        select: { id: true },
+      });
+
+      const tableViewIds = tableViews.map((v) => v.id);
+
+      // Delete grandchildren
+      if (tableViewIds.length) {
+        await tx.tableColumn.deleteMany({
+          where: {
+            tableViewId: {
+              in: tableViewIds,
             },
-
-            orderBy,
-            include: {
-                role: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-            }
+          },
         });
-        return result;
-    }
+      }
 
-    async getOne(id: number) {
-        return this.prisma.user.findUnique({
-            where: {
-                id,
-            },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                phone: true,
-                role: true,
-                status: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        });
-    }
+      // Delete children
+      await tx.userTableView.deleteMany({
+        where: {
+          userId: id,
+        },
+      });
 
-    async delete(id: number) {
-        return this.prisma.$transaction(async (tx) => {
-            // Get all table view ids of this user
-            const tableViews = await tx.userTableView.findMany({
-                where: { userId: id },
-                select: { id: true },
-            });
+      // Delete parent
+      return tx.user.delete({
+        where: {
+          id,
+        },
+      });
+    });
+  }
 
-            const tableViewIds = tableViews.map(v => v.id);
+  async update(dto: UpdateUserDto, authUserId: number, userId: number) {
+    return this.authService.update(dto, authUserId, userId);
+  }
 
-            // Delete grandchildren
-            if (tableViewIds.length) {
-                await tx.tableColumn.deleteMany({
-                    where: {
-                        tableViewId: {
-                            in: tableViewIds,
-                        },
-                    },
-                });
-            }
-
-            // Delete children
-            await tx.userTableView.deleteMany({
-                where: {
-                    userId: id,
-                },
-            });
-
-            // Delete parent
-            return tx.user.delete({
-                where: {
-                    id,
-                },
-            });
-        });
-    }
-
-    async update(dto: UpdateUserDto, authUserId: number, userId: number) {
-        return this.authService.update(dto, authUserId, userId);
-    }
-
-    async create(dto: RegisterDto, authUserId: number) {
-        return this.authService.register(dto, authUserId);
-    }
+  async create(dto: RegisterDto, authUserId: number) {
+    return this.authService.register(dto, authUserId);
+  }
 }

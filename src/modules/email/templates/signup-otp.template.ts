@@ -1,10 +1,10 @@
-import { EmailTemplate } from "../interfaces/email-template.interface";
+import { EmailTemplate } from '../interfaces/email-template.interface';
 
 export const signupOtpTemplate = (
-    otp: string,
-    expiresIn: number,
+  otp: string,
+  expiresIn: number,
 ): EmailTemplate => ({
-    subject: 'Verify Your Email Address',
+  subject: 'Verify Your Email Address',
   html: `
 <!DOCTYPE html>
 <html>

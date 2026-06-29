@@ -1,14 +1,14 @@
-import { IsArray, IsBoolean, IsInt } from "class-validator";
+import { IsArray, IsBoolean, IsInt } from 'class-validator';
 
 class ColumnDto {
-    @IsInt()
-    id: number;
+  @IsInt()
+  id: number;
 
-    @IsBoolean()
-    visible: boolean;
+  @IsBoolean()
+  visible: boolean;
 }
 
 export class UpdateViewSettingDto {
-    @IsArray()
-    columns: ColumnDto[];
+  @IsArray()
+  columns: ColumnDto[];
 }

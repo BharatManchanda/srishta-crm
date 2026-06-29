@@ -23,6 +23,6 @@ export class RegisterDto {
   roleId: number;
 
   @IsEnum(UserStatus)
-  status: UserStatus
+  status: UserStatus;
   
 }

@@ -1,5 +1,19 @@
-import { LeadPriority, LeadRating, LeadSource, LeadStatus } from "@prisma/client";
-import { IsBoolean, IsDate, IsEmail, IsEnum, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
+import {
+  LeadPriority,
+  LeadRating,
+  LeadSource,
+  LeadStatus,
+} from '@prisma/client';
+import {
+  IsBoolean,
+  IsDate,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class LeadUpdateDto {
   @IsString()
@@ -46,7 +60,7 @@ export class LeadUpdateDto {
   @IsOptional()
   @IsNumber()
   budget: number;
-  
+
   @IsOptional()
   @IsString()
   requirement: string;
@@ -65,7 +79,7 @@ export class LeadUpdateDto {
   @IsOptional()
   @IsEnum(LeadRating)
   rating: LeadRating;
-  
+
   @IsOptional()
   @IsNumber()
   leadScore: number;
@@ -82,13 +96,13 @@ export class LeadUpdateDto {
 
   @IsOptional()
   @IsDate()
-  nextFollowUpDate: Date
+  nextFollowUpDate: Date;
 
   @IsOptional()
   @IsDate()
-  lastFollowUpDate: Date
+  lastFollowUpDate: Date;
 
   @IsOptional()
   @IsString()
-  description: string
+  description: string;
 }

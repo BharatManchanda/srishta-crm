@@ -20,32 +20,23 @@ export class VerifyOtpDto {
   @IsEnum(OtpPurpose)
   purpose: OtpPurpose;
 
-  @ValidateIf(
-    (o) => o.purpose === OtpPurpose.EMAIL_VERIFICATION,
-  )
+  @ValidateIf((o) => o.purpose === OtpPurpose.EMAIL_VERIFICATION)
   @IsString()
   @IsNotEmpty()
   name?: string;
 
-  @ValidateIf(
-    (o) => o.purpose === OtpPurpose.EMAIL_VERIFICATION,
-  )
-  
+  @ValidateIf((o) => o.purpose === OtpPurpose.EMAIL_VERIFICATION)
+
   // @IsOptional()
   // @IsString()
   // @IsNotEmpty()
   // phone?: string;
-
-  @ValidateIf(
-    (o) => o.purpose === OtpPurpose.EMAIL_VERIFICATION,
-  )
+  @ValidateIf((o) => o.purpose === OtpPurpose.EMAIL_VERIFICATION)
   @IsString()
   @MinLength(6)
   password?: string;
 
-  @ValidateIf(
-    (o) => o.purpose === OtpPurpose.EMAIL_VERIFICATION,
-  )
+  @ValidateIf((o) => o.purpose === OtpPurpose.EMAIL_VERIFICATION)
   @IsString()
   @MinLength(6)
   confirmPassword?: string;

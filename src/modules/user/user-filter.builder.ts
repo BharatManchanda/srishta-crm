@@ -6,19 +6,19 @@ import { PrismaFilter } from 'src/common/filters/prisma-filter.helper';
 export class UserFilterBuilder {
     constructor() { }
 
-    build(dto: UserFilterDto) {
+  build(dto: UserFilterDto) {
 
-        return {
+    return {
 
-            // id: dto.id ? dto.id : undefined,
+      // id: dto.id ? dto.id : undefined,
 
-            name: PrismaFilter.contains(dto.name),
+      name: PrismaFilter.contains(dto.name),
 
-            email: PrismaFilter.contains(dto.email),
+      email: PrismaFilter.contains(dto.email),
 
-            roleId: dto.roleId ? Number(dto.roleId) : undefined,
+      roleId: dto.roleId ? Number(dto.roleId) : undefined,
 
-            status: dto.status,
-        };
-    }
+      status: dto.status,
+    };
+  }
 }

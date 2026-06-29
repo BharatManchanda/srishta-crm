@@ -13,10 +13,24 @@ import { UserModule } from './modules/user/user.module';
 import { RolePermissionModule } from './modules/role-permission/role-permission.module';
 import { LeadModule } from './modules/lead/lead.module';
 import { ContactModule } from './modules/contact/contact.module';
+import { AccountModule } from './modules/account/account.module';
 
 @Module({
-  imports: [AuthModule, UserModule, PrismaModule, JwtModule, ConfigModule.forRoot({ isGlobal: true }), ModuleModule, RoleModule, MasterDataModule, RolePermissionModule, LeadModule, ContactModule],
+  imports: [
+    AuthModule,
+    UserModule,
+    PrismaModule,
+    JwtModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    ModuleModule,
+    RoleModule,
+    MasterDataModule,
+    RolePermissionModule,
+    LeadModule,
+    ContactModule,
+    AccountModule,
+  ],
   controllers: [AppController, ModuleController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

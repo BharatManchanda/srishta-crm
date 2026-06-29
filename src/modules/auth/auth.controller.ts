@@ -17,58 +17,58 @@ export class AuthController {
 
     }
 
-    @Post('login')
-    async login(@Body() dto: LoginDto) {
-        return this.authService.login(dto);
-    }
+  @Post('login')
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
+  }
 
-    @UseGuards(AuthGuard)
-    @Post('logout')
-    async logout(@Req() req: Request, @Body() body: LogoutDto) {
-        const accessToken = req.headers.authorization as string;
-        const refreshToken = body.refreshToken;
-        const userId = (req['user'] as any).id;
-        return this.authService.logout(userId, accessToken, refreshToken);
-    }
+  @UseGuards(AuthGuard)
+  @Post('logout')
+  async logout(@Req() req: Request, @Body() body: LogoutDto) {
+    const accessToken = req.headers.authorization as string;
+    const refreshToken = body.refreshToken;
+    const userId = (req['user'] as any).id;
+    return this.authService.logout(userId, accessToken, refreshToken);
+  }
 
-    @UseGuards(AuthGuard)
-    @Get('profile')
-    async getProfile(@Req() req: Request) {
-        const user = req['user'];
-        return user;
-    }
+  @UseGuards(AuthGuard)
+  @Get('profile')
+  async getProfile(@Req() req: Request) {
+    const user = req['user'];
+    return user;
+  }
 
-    @Post('send-otp')
-    async sendOtp(@Body() dto: SendOtpDto) {
-        return this.authService.sendOtp(dto);
-    }
+  @Post('send-otp')
+  async sendOtp(@Body() dto: SendOtpDto) {
+    return this.authService.sendOtp(dto);
+  }
 
-    @Post('verify-otp')
-    async verifyOtp(@Body() dto: VerifyOtpDto) {
-        if (dto.purpose === OtpPurpose.EMAIL_VERIFICATION) {
+  @Post('verify-otp')
+  async verifyOtp(@Body() dto: VerifyOtpDto) {
+    if (dto.purpose === OtpPurpose.EMAIL_VERIFICATION) {
             const result = await this.authService.verifyOtp(dto) as any;
-            if (result) {
-                return {
-                    message: 'Email verified successfully',
-                    ...result,
-                };
-            } else {
-                return {
-                    message: 'Invalid OTP',
-                };
-            }
-        }
+      if (result) {
+        return {
+          message: 'Email verified successfully',
+          ...result,
+        };
+      } else {
+        return {
+          message: 'Invalid OTP',
+        };
+      }
     }
+  }
 
-    @Post('reset-password')
-    async resetPassword(@Body() dto: ResetPasswordDto) {
-        return this.authService.resetPassword(dto);
-    }
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
+  }
 
-    @Post('google')
+  @Post('google')
     async googleLogin(
         @Body() dto: GoogleLoginDto,
     ) {
-        return this.authService.googleLogin(dto.idToken);
-    }
+    return this.authService.googleLogin(dto.idToken);
+  }
 }

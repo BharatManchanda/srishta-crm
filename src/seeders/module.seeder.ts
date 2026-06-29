@@ -14,6 +14,7 @@ export const USER_MODULE_ID = 14;
 export const LEAD_MODULE_ID = 15;
 export const SETTINGS_MODULE_ID = 16;
 export const CONTACT_MODULE_ID = 17;
+export const ACCOUNT_MODULE_ID = 18;
 
 const modules = [
   {
@@ -34,7 +35,7 @@ const modules = [
     description: 'User management',
     parent_id: null,
     sort_order: 2,
-    activeOn: ['/user', '/user/:id', "/user/:id/edit"],
+    activeOn: ['/user', '/user/:id', '/user/:id/edit'],
   },
   {
     id: LEAD_MODULE_ID,
@@ -44,7 +45,7 @@ const modules = [
     description: 'Lead management',
     parent_id: null,
     sort_order: 3,
-    activeOn: ['/leads', '/leads/:id', "/leads/:id/edit", "/leads/create"],
+    activeOn: ['/leads', '/leads/:id', '/leads/:id/edit', '/leads/create'],
   },
   {
     id: CONTACT_MODULE_ID,
@@ -54,7 +55,27 @@ const modules = [
     description: 'Contact management',
     parent_id: null,
     sort_order: 3,
-    activeOn: ['/contacts', '/contacts/:id', "/contacts/:id/edit", "/contacts/create"],
+    activeOn: [
+      '/contacts',
+      '/contacts/:id',
+      '/contacts/:id/edit',
+      '/contacts/create',
+    ],
+  },
+  {
+    id: ACCOUNT_MODULE_ID,
+    name: 'Accounts',
+    path: '/accounts',
+    icon: 'BookUser',
+    description: 'Account management',
+    parent_id: null,
+    sort_order: 3,
+    activeOn: [
+      '/accounts',
+      '/accounts/:id',
+      '/accounts/:id/edit',
+      '/accounts/create',
+    ],
   },
   {
     id: SETTINGS_MODULE_ID,
@@ -64,7 +85,7 @@ const modules = [
     description: 'Application settings',
     parent_id: null,
     sort_order: 4,
-    activeOn: ['/settings', '/role-configs', "/role-configs/:id/edit"],
+    activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit'],
   },
 ];
 

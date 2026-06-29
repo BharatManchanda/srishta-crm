@@ -1,4 +1,4 @@
 export interface EmailTemplate {
-    subject: string;
-    html: string;
+  subject: string;
+  html: string;
 }

@@ -7,4 +7,4 @@ import { MasterDataService } from './master-data.service';
   providers: [MasterDataService],
   exports: [MasterDataService],
 })
-export class MasterDataModule { }
+export class MasterDataModule {}

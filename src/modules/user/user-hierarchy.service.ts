@@ -1,4 +1,4 @@
-    import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -7,68 +7,66 @@ export class UserHierarchyService {
 		private readonly prisma: PrismaService,
 	) {}
 
-	/**
-	 * Return:
-	 * - current user
-	 * - all parents
-	 * - all children recursively
-	 */
-	async getFamilyUserIds(userId: number): Promise<number[]> {
-		const users = await this.prisma.user.findMany({
-			select: {
-				id: true,
-				parentId: true,
-			},
-		});
+  /**
+   * Return:
+   * - current user
+   * - all parents
+   * - all children recursively
+   */
+  async getFamilyUserIds(userId: number): Promise<number[]> {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        parentId: true,
+      },
+    });
 
-		const result = new Set<number>();
+    const result = new Set<number>();
 
-		// parent lookup
-		const userMap = new Map(
-			users.map((u) => [u.id, u]),
-		);
+    // parent lookup
+    const userMap = new Map(users.map((u) => [u.id, u]));
 
-		// child lookup
-		const childMap = new Map<number, number[]>();
+    // child lookup
+    const childMap = new Map<number, number[]>();
 
-		for (const user of users) {
-			if (!user.parentId) continue;
+    for (const user of users) {
+      if (!user.parentId) continue;
 
-			if (!childMap.has(user.parentId)) {
-				childMap.set(user.parentId, []);
-			}
+      if (!childMap.has(user.parentId)) {
+        childMap.set(user.parentId, []);
+      }
 
-			childMap.get(user.parentId)!.push(user.id);
-		}
+      childMap.get(user.parentId)!.push(user.id);
+    }
 
-		// collect parents
-		let current = userMap.get(userId);
+    // collect parents
+    let current = userMap.get(userId);
 
-		while (current) {
-			result.add(current.id);
+    while (current) {
+      result.add(current.id);
 
-			if (!current.parentId) {
-				break;
-			}
+      if (!current.parentId) {
+        break;
+      }
 
-			current = userMap.get(current.parentId);
-		}
+      current = userMap.get(current.parentId);
+    }
 
-		// collect children
-		const collectChildren = (parentId: number) => {
-			const children = childMap.get(parentId) || [];
+    // collect children
+    const collectChildren = (parentId: number) => {
+      const children = childMap.get(parentId) || [];
 
-			for (const childId of children) {
-				if (result.has(childId)) continue;
+      for (const childId of children) {
+        if (result.has(childId)) continue;
 
-				result.add(childId);
+        result.add(childId);
 
-				collectChildren(childId);
-			}
-		};
+        collectChildren(childId);
+      }
+    };
 
-		collectChildren(userId);
+    collectChildren(userId);
 
-		return [...result];
-	}
+    return [...result];
+  }
 }

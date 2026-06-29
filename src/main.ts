@@ -17,9 +17,7 @@ async function bootstrap() {
         const formattedErrors = {};
 
         errors.forEach((error) => {
-          const firstError = Object.values(
-            error.constraints || {},
-          )[0];
+          const firstError = Object.values(error.constraints || {})[0];
 
           formattedErrors[error.property] = firstError;
         });

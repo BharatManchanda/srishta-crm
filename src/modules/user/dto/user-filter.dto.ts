@@ -4,36 +4,38 @@ import { IsOptional, IsString, IsEnum, IsNumber, IsIn } from 'class-validator';
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
 export class UserFilterDto extends PaginationDto {
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) =>
+    value !== undefined && value !== '' ? Number(value) : undefined,
+  )
+  id?: number;
 
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsNumber()
-    @Transform(({ value }) => (value !== undefined && value !== '' ? Number(value) : undefined))
-    id?: number
+  @IsOptional()
+  @IsString()
+  email?: string;
 
-    @IsOptional()
-    @IsString()
-    name?: string;
+  @IsOptional()
+  @IsEnum(UserStatus)
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  status?: UserStatus;
 
-    @IsOptional()
-    @IsString()
-    email?: string;
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) =>
+    value !== undefined && value !== '' ? Number(value) : undefined,
+  )
+  roleId?: number;
 
-    @IsOptional()
-    @IsEnum(UserStatus)
-    @Transform(({ value }) => value === '' ? undefined : value)
-    status?: UserStatus;
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
 
-    @IsOptional()
-    @IsNumber()
-    @Transform(({ value }) => (value !== undefined && value !== '' ? Number(value) : undefined))
-    roleId?: number
-
-    @IsOptional()
-    @IsString()
-    sortBy?: string;
-
-    @IsOptional()
-    @IsIn(['asc', 'desc'])
-    sortOrder?: 'asc' | 'desc';
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc';
 }

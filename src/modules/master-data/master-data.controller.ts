@@ -3,12 +3,10 @@ import { MasterDataService } from './master-data.service';
 
 @Controller('master-data')
 export class MasterDataController {
-    constructor(
-        private readonly masterDataService: MasterDataService
-    ) { }
+  constructor(private readonly masterDataService: MasterDataService) {}
 
-    @Get()
-    async get() {
-        return this.masterDataService.getList();
-    }
+  @Get()
+  async get() {
+    return this.masterDataService.getList();
+  }
 }

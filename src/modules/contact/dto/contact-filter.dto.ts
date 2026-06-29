@@ -1,6 +1,13 @@
 import { LeadSource } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { IsOptional, IsString, IsEnum, IsIn, IsInt, IsDate } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsDate,
+} from 'class-validator';
 
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
@@ -43,7 +50,7 @@ export class ContactFilterDto extends PaginationDto {
   @IsString()
   assistant?: string;
 
-   // Date filters
+  // Date filters
   @IsOptional()
   @Type(() => Date)
   @IsDate()

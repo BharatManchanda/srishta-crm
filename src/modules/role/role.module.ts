@@ -8,6 +8,6 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 @Module({
   imports: [PrismaModule, JwtModule],
   controllers: [RoleController],
-  providers: [RoleService, UserHierarchyService]
+  providers: [RoleService, UserHierarchyService],
 })
 export class RoleModule {}

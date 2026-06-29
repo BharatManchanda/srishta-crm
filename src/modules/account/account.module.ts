@@ -1,20 +1,20 @@
 import { Module } from '@nestjs/common';
-import { ContactService } from './contact.service';
-import { ContactController } from './contact.controller';
+import { AccountService } from './account.service';
+import { AccountController } from './account.controller';
 import { JwtModule } from '../jwt/jwt.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
-import { ContactFilterBuilder } from './contact-filter.builder';
+import { AccountFilterBuilder } from './account-filter.builder';
 
 @Module({
   imports: [PrismaModule, JwtModule],
   providers: [
-    ContactService,
+    AccountService,
     PaginationService,
     UserHierarchyService,
-    ContactFilterBuilder,
+    AccountFilterBuilder,
   ],
-  controllers: [ContactController],
+  controllers: [AccountController],
 })
-export class ContactModule {}
+export class AccountModule {}

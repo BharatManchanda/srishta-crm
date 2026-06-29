@@ -14,7 +14,6 @@ import { LeadSource } from '@prisma/client';
 import { AddressDto } from './address.dto';
 
 export class ContactUpdateDto {
-
   @IsString()
   name: string;
 

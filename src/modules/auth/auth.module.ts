@@ -11,7 +11,7 @@ import { LeadModule } from '../lead/lead.module';
 @Module({
   imports: [PrismaModule, JwtModule, EmailModule, LeadModule],
   controllers: [AuthController],
-  providers: [AuthService, GoogleService,],
+  providers: [AuthService, GoogleService],
   exports: [AuthService, GoogleService],
 })
 export class AuthModule {}

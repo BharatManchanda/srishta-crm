@@ -1,0 +1,371 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { AccountFilterDto } from './dto/account-filter.dto';
+import { PaginationService } from 'src/common/pagination/pagination.service';
+import { AccountFilterBuilder } from './account-filter.builder';
+import { UserHierarchyService } from '../user/user-hierarchy.service';
+import { UpdateViewSettingDto } from './dto/account-view-setting.dto';
+import { AccountCreateDto } from './dto/account-create.dto';
+import { AccountUpdateDto } from './dto/account-update.dto';
+
+@Injectable()
+export class AccountService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paginationService: PaginationService,
+    private readonly accountFilterBuilder: AccountFilterBuilder,
+    private readonly userHierarchyService: UserHierarchyService,
+  ) {}
+
+  async getList(dto: AccountFilterDto, currentUserId: number) {
+    const orderBy = dto.sortBy
+      ? { [dto.sortBy]: dto.sortOrder || 'desc' }
+      : { id: 'desc' };
+
+    const result = await this.paginationService.paginate(this.prisma.account, {
+      page: dto.page,
+      perPage: dto.perPage,
+      where: {
+        ...this.accountFilterBuilder.build(dto),
+        createdById: {
+          in: await this.userHierarchyService.getFamilyUserIds(currentUserId),
+        },
+        id: {
+          in: dto.id !== undefined && dto.id ? [dto.id] : undefined,
+        },
+      },
+      include: {
+        billingAddress: true,
+        shippingAddress: true,
+        parentAccount: true,
+      },
+      orderBy,
+    });
+    return result;
+  }
+
+  async viewSetting(authUserId: number) {
+    const accountModule = await this.prisma.module.findFirst({
+      where: {
+        path: '/accounts',
+      },
+    });
+    if (!accountModule) return;
+    const viewSetting = await this.prisma.userTableView.findFirst({
+      where: {
+        userId: authUserId,
+        isDefault: true,
+        moduleId: accountModule.id,
+      },
+      include: {
+        columns: true,
+      },
+    });
+
+    if (!viewSetting) {
+      await this.createDefaultAccountView(authUserId);
+      return this.prisma.userTableView.findFirst({
+        where: {
+          userId: authUserId,
+          isDefault: true,
+          moduleId: accountModule.id,
+        },
+        include: {
+          columns: true,
+        },
+      });
+    }
+    return viewSetting;
+  }
+
+  async updateSetting(dto: UpdateViewSettingDto, authUserId: number) {
+    const updatedColumns = await this.prisma.$transaction(
+      dto.columns.map((column) =>
+        this.prisma.tableColumn.update({
+          where: {
+            id: column.id,
+          },
+          data: {
+            visible: column.visible,
+          },
+        }),
+      ),
+    );
+
+    return updatedColumns;
+  }
+
+  async createDefaultAccountView(userId: number) {
+    const accountModule = await this.prisma.module.findUnique({
+      where: {
+        path: '/accounts',
+      },
+    });
+    if (!accountModule) return;
+    await this.prisma.userTableView.create({
+      data: {
+        userId: userId,
+        moduleId: accountModule.id,
+        name: 'Default',
+        isDefault: true,
+        columns: {
+          create: [
+            { field: 'id', label: 'ID', visible: true, order: 1 },
+            {
+              field: 'createdById',
+              label: 'Created By',
+              visible: false,
+              order: 2,
+            },
+            {
+              field: 'accountName',
+              label: 'Account Name',
+              visible: true,
+              order: 3,
+            },
+            {
+              field: 'accountSite',
+              label: 'Account Site',
+              visible: true,
+              order: 4,
+            },
+            {
+              field: 'parentAccountId',
+              label: 'Parent Account',
+              visible: false,
+              order: 5,
+            },
+            {
+              field: 'accountNumber',
+              label: 'Account Number',
+              visible: true,
+              order: 6,
+            },
+            {
+              field: 'accountType',
+              label: 'Account Type',
+              visible: true,
+              order: 7,
+            },
+            { field: 'industry', label: 'Industry', visible: true, order: 8 },
+            {
+              field: 'annualRevenue',
+              label: 'Annual Revenue',
+              visible: false,
+              order: 9,
+            },
+            { field: 'rating', label: 'Rating', visible: false, order: 10 },
+            { field: 'phone', label: 'Phone', visible: true, order: 11 },
+            { field: 'fax', label: 'Fax', visible: false, order: 12 },
+            { field: 'website', label: 'Website', visible: false, order: 13 },
+            {
+              field: 'tickerSymbol',
+              label: 'Ticker Symbol',
+              visible: false,
+              order: 14,
+            },
+            {
+              field: 'ownership',
+              label: 'Ownership',
+              visible: false,
+              order: 15,
+            },
+            {
+              field: 'employees',
+              label: 'Employees',
+              visible: false,
+              order: 16,
+            },
+            { field: 'sicCode', label: 'SIC Code', visible: false, order: 17 },
+            {
+              field: 'billingAddress.country',
+              label: 'Billing Country',
+              visible: false,
+              order: 18,
+            },
+            {
+              field: 'billingAddress.city',
+              label: 'Billing City',
+              visible: true,
+              order: 19,
+            },
+            {
+              field: 'billingAddress.stateProvince',
+              label: 'Billing State',
+              visible: false,
+              order: 20,
+            },
+            {
+              field: 'billingAddress.postalCode',
+              label: 'Billing Postal Code',
+              visible: false,
+              order: 21,
+            },
+            {
+              field: 'billingAddress.streetAddress',
+              label: 'Billing Address',
+              visible: false,
+              order: 22,
+            },
+            {
+              field: 'shippingAddress.country',
+              label: 'Shipping Country',
+              visible: false,
+              order: 23,
+            },
+            {
+              field: 'shippingAddress.city',
+              label: 'Shipping City',
+              visible: false,
+              order: 24,
+            },
+            {
+              field: 'shippingAddress.stateProvince',
+              label: 'Shipping State',
+              visible: false,
+              order: 25,
+            },
+            {
+              field: 'shippingAddress.postalCode',
+              label: 'Shipping Postal Code',
+              visible: false,
+              order: 26,
+            },
+            {
+              field: 'shippingAddress.streetAddress',
+              label: 'Shipping Address',
+              visible: false,
+              order: 27,
+            },
+            {
+              field: 'description',
+              label: 'Description',
+              visible: false,
+              order: 28,
+            },
+            {
+              field: 'createdAt',
+              label: 'Created At',
+              visible: false,
+              order: 29,
+            },
+            {
+              field: 'updatedAt',
+              label: 'Updated At',
+              visible: false,
+              order: 30,
+            },
+            { field: 'action', label: 'Action', visible: true, order: 31 },
+          ],
+        },
+      },
+    });
+  }
+
+  async get(id: number) {
+    return await this.prisma.account.findFirst({
+      where: {
+        id: id,
+      },
+      include: {
+        billingAddress: true,
+        shippingAddress: true,
+        parentAccount: true,
+        childAccounts: true,
+      },
+    });
+  }
+
+  async create(dto: AccountCreateDto, authUserId: number) {
+    try {
+      const { billingAddress, shippingAddress, ...accountData } = dto;
+
+      const [billingAddressRecord, shippingAddressRecord] = await Promise.all([
+        billingAddress
+          ? this.prisma.address.create({ data: billingAddress })
+          : null,
+        shippingAddress
+          ? this.prisma.address.create({ data: shippingAddress })
+          : null,
+      ]);
+
+      return this.prisma.account.create({
+        data: {
+          ...accountData,
+          createdById: authUserId,
+          billingAddressId: billingAddressRecord?.id,
+          shippingAddressId: shippingAddressRecord?.id,
+        },
+      });
+    } catch (error) {
+      console.log(error, '::::error');
+      throw error;
+    }
+  }
+
+  async update(id: number, dto: AccountUpdateDto) {
+    try {
+      const { billingAddress, shippingAddress, ...accountData } = dto;
+      const existingAccount = await this.prisma.account.findUnique({
+        where: { id },
+        include: { billingAddress: true, shippingAddress: true },
+      });
+
+      if (!existingAccount) {
+        throw new Error('Account not found');
+      }
+
+      // Update or create billing address
+      let billingAddressId = existingAccount.billingAddressId;
+      if (billingAddress) {
+        if (billingAddressId) {
+          await this.prisma.address.update({
+            where: { id: billingAddressId },
+            data: billingAddress,
+          });
+        } else {
+          const newAddress = await this.prisma.address.create({
+            data: billingAddress,
+          });
+          billingAddressId = newAddress.id;
+        }
+      }
+
+      // Update or create shipping address
+      let shippingAddressId = existingAccount.shippingAddressId;
+      if (shippingAddress) {
+        if (shippingAddressId) {
+          await this.prisma.address.update({
+            where: { id: shippingAddressId },
+            data: shippingAddress,
+          });
+        } else {
+          const newAddress = await this.prisma.address.create({
+            data: shippingAddress,
+          });
+          shippingAddressId = newAddress.id;
+        }
+      }
+
+      return this.prisma.account.update({
+        where: { id },
+        data: {
+          ...accountData,
+          billingAddressId,
+          shippingAddressId,
+        },
+      });
+    } catch (error) {
+      console.log(error, '::::error');
+      throw error;
+    }
+  }
+
+  async delete(id: number) {
+    return this.prisma.account.delete({
+      where: {
+        id: id,
+      },
+    });
+  }
+}

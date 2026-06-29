@@ -1,40 +1,40 @@
 export class PrismaFilter {
-    static contains(value?: string) {
-        if (!value) return undefined;
+  static contains(value?: string) {
+    if (!value) return undefined;
 
-        return {
-            contains: value,
-            mode: 'insensitive',
-        };
-    }
+    return {
+      contains: value,
+      mode: 'insensitive',
+    };
+  }
 
-    static equals(value?: any) {
-        return value ?? undefined;
-    }
+  static equals(value?: any) {
+    return value ?? undefined;
+  }
 
-    static in(values?: any[]) {
-        if (!values?.length) return undefined;
+  static in(values?: any[]) {
+    if (!values?.length) return undefined;
 
-        return {
-            in: values,
-        };
-    }
+    return {
+      in: values,
+    };
+  }
 
-    static range(min?: number, max?: number) {
-        const result: any = {};
+  static range(min?: number, max?: number) {
+    const result: any = {};
 
-        if (min !== undefined) result.gte = min;
-        if (max !== undefined) result.lte = max;
+    if (min !== undefined) result.gte = min;
+    if (max !== undefined) result.lte = max;
 
-        return Object.keys(result).length ? result : undefined;
-    }
+    return Object.keys(result).length ? result : undefined;
+  }
 
-    static dateRange(from?: Date, to?: Date) {
-        const result: any = {};
+  static dateRange(from?: Date, to?: Date) {
+    const result: any = {};
 
-        if (from) result.gte = from;
-        if (to) result.lte = to;
+    if (from) result.gte = from;
+    if (to) result.lte = to;
 
-        return Object.keys(result).length ? result : undefined;
-    }
+    return Object.keys(result).length ? result : undefined;
+  }
 }

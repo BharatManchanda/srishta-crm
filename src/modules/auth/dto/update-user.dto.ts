@@ -19,6 +19,5 @@ export class UpdateUserDto {
   roleId: number;
 
   @IsEnum(UserStatus)
-  status: UserStatus
-  
+  status: UserStatus;
 }

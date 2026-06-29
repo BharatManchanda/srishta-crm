@@ -1,7 +1,7 @@
 import {
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { USER_MODULE_ID } from 'src/seeders/module.seeder';
@@ -13,29 +13,29 @@ export class UserPolicy {
     ) {}
 
     private async hasPermission(roleId: number, action: 'canView' | 'canCreate' | 'canEdit' | 'canDelete') {
-        const permission = await this.prisma.rolePermission.findFirst({
-            where: {
-                roleId,
-                moduleId: USER_MODULE_ID,
-                isAllow: true,
-                [action]: true,
-            },
-        });
+    const permission = await this.prisma.rolePermission.findFirst({
+      where: {
+        roleId,
+        moduleId: USER_MODULE_ID,
+        isAllow: true,
+        [action]: true,
+      },
+    });
 
-        return !!permission;
-    }
+    return !!permission;
+  }
 
     async getAccessibleUserIds(
         currentUserId: number,
     ): Promise<number[]> {
-        const users = await this.prisma.user.findMany({
-            select: {
-                id: true,
-                parentId: true,
-            },
-        });
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        parentId: true,
+      },
+    });
 
-        const accessibleIds = new Set<number>();
+    const accessibleIds = new Set<number>();
 
         const collectParents = (
             userId: number,
@@ -44,156 +44,124 @@ export class UserPolicy {
                 (u) => u.id === userId,
             );
 
-            if (!user) {
-                return;
-            }
+      if (!user) {
+        return;
+      }
 
-            accessibleIds.add(
-                user.id,
-            );
+      accessibleIds.add(user.id);
 
-            if (user.parentId) {
-                collectParents(
-                    user.parentId,
-                );
-            }
-        };
+      if (user.parentId) {
+        collectParents(user.parentId);
+      }
+    };
 
-        const collectChildren = (
-            parentId: number,
-        ) => {
-            const children =
-                users.filter(
-                    (u) =>
-                        u.parentId === parentId,
-                );
+    const collectChildren = (parentId: number) => {
+      const children = users.filter((u) => u.parentId === parentId);
 
-            for (const child of children) {
-                accessibleIds.add(
-                    child.id,
-                );
+      for (const child of children) {
+        accessibleIds.add(child.id);
 
-                collectChildren(
-                    child.id,
-                );
-            }
-        };
+        collectChildren(child.id);
+      }
+    };
 
-        // Collect all ancestors
-        collectParents(
-            currentUserId,
-        );
+    // Collect all ancestors
+    collectParents(currentUserId);
 
-        // Expand children for every collected parent
-        for (const id of [
-            ...accessibleIds,
-        ]) {
-            collectChildren(id);
-        }
-
-        return [
-            ...accessibleIds,
-        ];
+    // Expand children for every collected parent
+    for (const id of [...accessibleIds]) {
+      collectChildren(id);
     }
 
-    private async canAccessUser(currentUser: any, targetUserId: number) {
-        const user = await this.prisma.user.findUnique({
-            where: {
-                id: targetUserId,
-            },
-            select: {
-                id: true,
-            },
-        });
+    return [...accessibleIds];
+  }
 
-        if (!user) {
-            throw new NotFoundException(
-                'User not found',
-            );
-        }
+  private async canAccessUser(currentUser: any, targetUserId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: targetUserId,
+      },
+      select: {
+        id: true,
+      },
+    });
 
-        const allowedIds =
-            await this.getAccessibleUserIds(
-                currentUser.id,
-            );
-
-        return allowedIds.includes(
-            targetUserId,
-        );
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
-    async canView(currentUser: any, userId?: number) {
-        const allowed = await this.hasPermission(currentUser.roleId, 'canView');
+    const allowedIds = await this.getAccessibleUserIds(currentUser.id);
 
-        if (!allowed) {
-            return false;
-        }
+    return allowedIds.includes(targetUserId);
+  }
 
-        if (!userId) {
-            return true;
-        }
+  async canView(currentUser: any, userId?: number) {
+    const allowed = await this.hasPermission(currentUser.roleId, 'canView');
 
-        return this.canAccessUser(
-            currentUser,
-            userId,
-        );
+    if (!allowed) {
+      return false;
     }
 
-    async canCreate(currentUser: any) {
-        return this.hasPermission(currentUser.roleId, 'canCreate');
+    if (!userId) {
+      return true;
     }
 
-    async canUpdate(currentUser: any, userId: number) {
-        const allowed = await this.hasPermission(currentUser.roleId, 'canEdit');
+    return this.canAccessUser(currentUser, userId);
+  }
 
-        if (!allowed) {
-            return false;
-        }
+  async canCreate(currentUser: any) {
+    return this.hasPermission(currentUser.roleId, 'canCreate');
+  }
 
-        return this.canAccessUser(
-            currentUser,
-            userId,
-        );
+  async canUpdate(currentUser: any, userId: number) {
+    const allowed = await this.hasPermission(currentUser.roleId, 'canEdit');
+
+    if (!allowed) {
+      return false;
     }
 
-    async canDelete(currentUser: any, userId: number) {
-        const allowed = await this.hasPermission(currentUser.roleId, 'canDelete');
+    return this.canAccessUser(currentUser, userId);
+  }
 
-        if (!allowed) {
-			return false;
-        }
+  async canDelete(currentUser: any, userId: number) {
+    const allowed = await this.hasPermission(currentUser.roleId, 'canDelete');
 
-        return this.canAccessUser(
-            currentUser,
-            userId,
-        );
+    if (!allowed) {
+      return false;
     }
 
-    async authorize(currentUser: any, action: | 'view' | 'create' | 'update' | 'delete', userId?: number ) {
-        let allowed = false;
+    return this.canAccessUser(currentUser, userId);
+  }
 
-        switch (action) {
-            case 'view':
-                allowed = await this.canView(currentUser, userId);
-                break;
+  async authorize(
+    currentUser: any,
+    action: 'view' | 'create' | 'update' | 'delete',
+    userId?: number,
+  ) {
+    let allowed = false;
 
-            case 'create':
-                allowed = await this.canCreate(currentUser);
-                break;
+    switch (action) {
+      case 'view':
+        allowed = await this.canView(currentUser, userId);
+        break;
 
-            case 'update':
-                allowed = await this.canUpdate(currentUser, userId!);
-                break;
+      case 'create':
+        allowed = await this.canCreate(currentUser);
+        break;
 
-            case 'delete':
-                allowed = await this.canDelete(currentUser, userId!);
-                break;
-        }
+      case 'update':
+        allowed = await this.canUpdate(currentUser, userId!);
+        break;
 
-        if (!allowed) {
-            throw new ForbiddenException(`You are not allowed to ${action} user`);
-        }
-
-        return true;
+      case 'delete':
+        allowed = await this.canDelete(currentUser, userId!);
+        break;
     }
+
+    if (!allowed) {
+      throw new ForbiddenException(`You are not allowed to ${action} user`);
+    }
+
+    return true;
+  }
 }

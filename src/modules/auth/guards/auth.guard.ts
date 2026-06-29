@@ -27,6 +27,6 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-	  return request.headers.authorization
+    return request.headers.authorization;
   }
 }

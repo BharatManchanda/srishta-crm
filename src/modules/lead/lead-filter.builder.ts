@@ -4,14 +4,14 @@ import { LeadFilterDto } from './dto/lead-filter.dto';
 
 @Injectable()
 export class LeadFilterBuilder {
-    constructor() { }
+  constructor() {}
 
-    build(dto: LeadFilterDto) {
-        return {
-            name: PrismaFilter.contains(dto.name),
-            email: PrismaFilter.contains(dto.email),
-            city: PrismaFilter.contains(dto.city),
-            status: dto.status,
-        };
-    }
+  build(dto: LeadFilterDto) {
+    return {
+      name: PrismaFilter.contains(dto.name),
+      email: PrismaFilter.contains(dto.email),
+      city: PrismaFilter.contains(dto.city),
+      status: dto.status,
+    };
+  }
 }

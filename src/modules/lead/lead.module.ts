@@ -11,7 +11,13 @@ import { LeadService } from './lead.service';
 @Module({
   imports: [PrismaModule, JwtModule],
   controllers: [LeadController],
-  providers: [LeadService, PaginationService, LeadFilterBuilder, LeadPolicy, UserHierarchyService],
+  providers: [
+    LeadService,
+    PaginationService,
+    LeadFilterBuilder,
+    LeadPolicy,
+    UserHierarchyService,
+  ],
   exports: [LeadService],
 })
-export class LeadModule { }
+export class LeadModule {}
