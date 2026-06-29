@@ -6,6 +6,7 @@ import { ContactFilterBuilder } from './contact-filter.builder';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UpdateViewSettingDto } from './dto/contact-view-setting.dto';
 import { ContactCreateDto } from './dto/contact-create.dto';
+import { ContactUpdateDto } from './dto/contact-update.dto';
 
 @Injectable()
 export class ContactService {
@@ -259,6 +260,65 @@ export class ContactService {
       });
     } catch (error) {
       console.log(error, '::::error');
+    }
+  }
+
+  async update(dto: ContactUpdateDto, id: number) {
+    try {
+      const { mailingAddress, otherAddress, ...contactData } = dto;
+      const existingContact = await this.prisma.contact.findUnique({
+        where: { id },
+        include: { mailingAddress: true, otherAddress: true },
+      });
+
+      if (!existingContact) {
+        throw new Error('Contact not found');
+      }
+
+      // Update or create mailing address
+      let mailingAddressId = existingContact.mailingAddressId;
+      if (mailingAddress) {
+        if (mailingAddressId) {
+          await this.prisma.address.update({
+            where: { id: mailingAddressId },
+            data: mailingAddress,
+          });
+        } else {
+          const newAddress = await this.prisma.address.create({
+            data: mailingAddress,
+          });
+          mailingAddressId = newAddress.id;
+        }
+      }
+
+      // Update or create other address
+      let otherAddressId = existingContact.otherAddressId;
+      if (otherAddress) {
+        if (otherAddressId) {
+          await this.prisma.address.update({
+            where: { id: otherAddressId },
+            data: otherAddress,
+          });
+        } else {
+          const newAddress = await this.prisma.address.create({
+            data: otherAddress,
+          });
+          otherAddressId = newAddress.id;
+        }
+      }
+
+      return this.prisma.contact.update({
+        where: { id },
+        data: {
+          ...contactData,
+          mailingAddressId,
+          otherAddressId,
+          dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
+        },
+      });
+    } catch (error) {
+      console.log(error, '::::error');
+      throw error;
     }
   }
 

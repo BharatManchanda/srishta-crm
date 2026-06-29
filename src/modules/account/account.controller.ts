@@ -17,20 +17,26 @@ import { AccountFilterDto } from './dto/account-filter.dto';
 import { AccountCreateDto } from './dto/account-create.dto';
 import { UpdateViewSettingDto } from './dto/account-view-setting.dto';
 import { AccountUpdateDto } from './dto/account-update.dto';
+import { AccountPolicy } from './account.policy';
 
 @UseGuards(AuthGuard)
 @Controller('account')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly accountPolicy: AccountPolicy,
+  ) {}
 
   @Get()
   async getList(@Query() dto: AccountFilterDto, @Req() req: Request) {
+    await this.accountPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
     return this.accountService.getList(dto, authUserId);
   }
 
   @Post()
   async create(@Body() dto: AccountCreateDto, @Req() req: Request) {
+    await this.accountPolicy.authorize(req['user'], 'create');
     const authUserId = req['user'].id;
     return this.accountService.create(dto, authUserId);
   }
@@ -49,6 +55,7 @@ export class AccountController {
 
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    await this.accountPolicy.authorize(req['user'], 'view', id);
     return this.accountService.get(id);
   }
 
@@ -58,11 +65,13 @@ export class AccountController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: Request,
   ) {
+    await this.accountPolicy.authorize(req['user'], 'update', id);
     return this.accountService.update(id, dto);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    await this.accountPolicy.authorize(req['user'], 'delete', id);
     return this.accountService.delete(id);
   }
 }

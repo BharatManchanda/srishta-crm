@@ -6,6 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { ContactFilterBuilder } from './contact-filter.builder';
+import { ContactPolicy } from './contact.policy';
 
 @Module({
   imports: [PrismaModule, JwtModule],
@@ -14,6 +15,7 @@ import { ContactFilterBuilder } from './contact-filter.builder';
     PaginationService,
     UserHierarchyService,
     ContactFilterBuilder,
+    ContactPolicy,
   ],
   controllers: [ContactController],
 })

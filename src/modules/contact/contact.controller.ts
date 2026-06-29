@@ -17,24 +17,26 @@ import { ContactFilterDto } from './dto/contact-filter.dto';
 import { ContactCreateDto } from './dto/contact-create.dto';
 import { UpdateViewSettingDto } from './dto/contact-view-setting.dto';
 import { ContactUpdateDto } from './dto/contact-update.dto';
+import { ContactPolicy } from './contact.policy';
+
 @UseGuards(AuthGuard)
 @Controller('contact')
 export class ContactController {
   constructor(
     private readonly contactService: ContactService,
-    // private readonly contactPolicy: ContactPolicy
+    private readonly contactPolicy: ContactPolicy,
   ) {}
 
   @Get()
   async getList(@Query() dto: ContactFilterDto, @Req() req: Request) {
-    // await this.contactPolicy.authorize(req['user'], 'viewAll');
+    await this.contactPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
     return this.contactService.getList(dto, authUserId);
   }
 
   @Post()
   async create(@Body() dto: ContactCreateDto, @Req() req: Request) {
-    // await this.contactPolicy.authorize(req['user'], 'create');
+    await this.contactPolicy.authorize(req['user'], 'create');
     const authUserId = req['user'].id;
     return this.contactService.create(dto, authUserId);
   }
@@ -53,9 +55,7 @@ export class ContactController {
 
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    // await this.contactPolicy.authorize(req['user'], 'view', id);
-    // const authUserId = req['user'].id;
-    // console.log(id,":::::id")
+    await this.contactPolicy.authorize(req['user'], 'view', id);
     return this.contactService.get(id);
   }
 
@@ -65,15 +65,13 @@ export class ContactController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: Request,
   ) {
-    // await this.contactPolicy.authorize(req['user'], 'update', id);
-    const authUserId = req['user'].id;
-    // return this.contactService.update(dto, id);
+    await this.contactPolicy.authorize(req['user'], 'update', id);
+    return this.contactService.update(dto, id);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    // await this.contactPolicy.authorize(req['user'], 'delete', id);
-    const authUserId = req['user'].id;
+    await this.contactPolicy.authorize(req['user'], 'delete', id);
     return this.contactService.delete(id);
   }
 }
