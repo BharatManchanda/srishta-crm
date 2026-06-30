@@ -15,6 +15,7 @@ import { LeadModule } from './modules/lead/lead.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { AccountModule } from './modules/account/account.module';
 import { NoteModule } from './modules/note/note.module';
+import { AttachmentModule } from './modules/attachment/attachment.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { NoteModule } from './modules/note/note.module';
     ContactModule,
     AccountModule,
     NoteModule,
+    AttachmentModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],
