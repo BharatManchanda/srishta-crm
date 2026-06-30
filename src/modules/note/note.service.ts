@@ -31,6 +31,9 @@ export class NoteService {
           in: dto.id !== undefined && dto.id ? [dto.id] : undefined,
         },
       },
+      include: {
+        createdBy: true,
+      },
       orderBy,
     });
     return result;

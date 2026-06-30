@@ -1,13 +1,13 @@
 import { IsOptional, IsString, IsNotEmpty, IsBoolean } from 'class-validator';
 
 export class NoteUpdateDto {
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
   content?: string;
 
   @IsOptional()

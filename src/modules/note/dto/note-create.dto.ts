@@ -14,7 +14,6 @@ export class NoteCreateDto {
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   content?: string;
 
   @IsOptional()
