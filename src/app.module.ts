@@ -14,6 +14,7 @@ import { RolePermissionModule } from './modules/role-permission/role-permission.
 import { LeadModule } from './modules/lead/lead.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { AccountModule } from './modules/account/account.module';
+import { NoteModule } from './modules/note/note.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AccountModule } from './modules/account/account.module';
     LeadModule,
     ContactModule,
     AccountModule,
+    NoteModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

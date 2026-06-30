@@ -81,6 +81,15 @@ enum OwnershipType {
   OTHER
 }
 
+enum NoteEntityType {
+  LEAD
+  CONTACT
+  ACCOUNT
+  DEAL
+  TASK
+  OPPORTUNITY
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -116,6 +125,8 @@ model User {
   createdContacts   Contact[] @relation("ContactCreator")
 
   createdAccounts Account[] @relation("AccountCreator")
+
+  createdNotes Note[] @relation("NoteCreator")
 
   createdLeads  Lead[] @relation("LeadCreator")
   assignedLeads Lead[] @relation("LeadAssignee")
@@ -178,6 +189,8 @@ model Module {
   sort_order Int
 
   permissions RolePermission[]
+
+  showInNavbar Boolean @default(true)
 
   tableViews UserTableView[]
 }
@@ -415,4 +428,26 @@ model Account {
   @@index([parentAccountId])
   @@index([accountName])
   @@index([industry])
+}
+
+model Note {
+  id Int @id @default(autoincrement())
+
+  entityType NoteEntityType
+  entityId Int
+
+  title String @db.Text
+  content String? @db.Text
+
+  isPinned Boolean @default(false)
+
+  createdById Int
+  createdBy User @relation("NoteCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([entityType, entityId])
+  @@index([createdById])
 }

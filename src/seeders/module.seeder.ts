@@ -15,6 +15,7 @@ export const LEAD_MODULE_ID = 15;
 export const SETTINGS_MODULE_ID = 16;
 export const CONTACT_MODULE_ID = 17;
 export const ACCOUNT_MODULE_ID = 18;
+export const NOTE_MODULE_ID = 19;
 
 const modules = [
   {
@@ -26,6 +27,7 @@ const modules = [
     parent_id: null,
     sort_order: 1,
     activeOn: ['/dashboard'],
+    showInNavbar: true,
   },
   {
     id: USER_MODULE_ID,
@@ -36,6 +38,7 @@ const modules = [
     parent_id: null,
     sort_order: 2,
     activeOn: ['/user', '/user/:id', '/user/:id/edit'],
+    showInNavbar: true,
   },
   {
     id: LEAD_MODULE_ID,
@@ -46,6 +49,7 @@ const modules = [
     parent_id: null,
     sort_order: 3,
     activeOn: ['/leads', '/leads/:id', '/leads/:id/edit', '/leads/create'],
+    showInNavbar: true,
   },
   {
     id: CONTACT_MODULE_ID,
@@ -61,6 +65,23 @@ const modules = [
       '/contacts/:id/edit',
       '/contacts/create',
     ],
+    showInNavbar: true,
+  },
+  {
+    id: NOTE_MODULE_ID,
+    name: 'Note',
+    path: '/notes',
+    icon: 'NotebookPen',
+    description: 'Notes management',
+    parent_id: null,
+    sort_order: 3,
+    activeOn: [
+      '/notes',
+      '/notes/:id',
+      '/notes/:id/edit',
+      '/notes/create',
+    ],
+    showInNavbar: false,
   },
   {
     id: ACCOUNT_MODULE_ID,
@@ -76,6 +97,7 @@ const modules = [
       '/accounts/:id/edit',
       '/accounts/create',
     ],
+    showInNavbar: true,
   },
   {
     id: SETTINGS_MODULE_ID,
@@ -86,6 +108,7 @@ const modules = [
     parent_id: null,
     sort_order: 4,
     activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit'],
+    showInNavbar: true,
   },
 ];
 
@@ -102,6 +125,7 @@ export default async function seedModules() {
         sort_order: module.sort_order,
         parent_id: module.parent_id,
         activeOn: module.activeOn,
+        showInNavbar: module.showInNavbar,
       },
       create: module,
     });

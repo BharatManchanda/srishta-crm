@@ -22,6 +22,7 @@ export class ModuleService {
         id: {
           in: moduleIds,
         },
+        showInNavbar: true,
       },
     });
 
