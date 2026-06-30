@@ -1,0 +1,21 @@
+First Name,Last Name,Company,Email,Phone,Mobile,Lead Source,Lead Status,Industry,Annual Revenue,Website,Street,City,State,Country,Zip Code,Description
+Aarav,Sharma,TechNova Pvt Ltd,aarav.sharma@technova.com,9876501001,9876502001,Website,Contacted,Software,5000000,https://technova.com,12 MG Road,Bengaluru,Karnataka,India,560001,Interested in CRM solution
+Priya,Verma,BlueSky Solutions,priya.verma@bluesky.com,9876501002,9876502002,Email Campaign,Not Contacted,Consulting,7500000,https://bluesky.com,44 Sector 18,Noida,Uttar Pradesh,India,201301,Requested demo
+Rahul,Gupta,FinEdge,rahul.gupta@finedge.com,9876501003,9876502003,Referral,Qualified,Finance,12000000,https://finedge.com,22 Connaught Place,New Delhi,Delhi,India,110001,Potential enterprise account
+Ananya,Singh,GreenWave,ananya.singh@greenwave.com,9876501004,9876502004,Cold Call,Contacted,Energy,6500000,https://greenwave.com,17 Park Street,Kolkata,West Bengal,India,700016,Looking for automation
+Rohan,Patel,NextGen Labs,rohan.patel@nextgenlabs.com,9876501005,9876502005,Website,Attempted Contact,Healthcare,9000000,https://nextgenlabs.com,78 SG Highway,Ahmedabad,Gujarat,India,380015,Follow up next week
+Sneha,Jain,CloudNest,sneha.jain@cloudnest.com,9876501006,9876502006,Partner,Qualified,Software,15000000,https://cloudnest.com,99 Cyber City,Gurugram,Haryana,India,122001,Interested in annual pricing
+Karan,Mehta,UrbanBuild,karan.mehta@urbanbuild.com,9876501007,9876502007,Trade Show,Contacted,Construction,3000000,https://urbanbuild.com,11 Ring Road,Delhi,Delhi,India,110024,Needs proposal
+Isha,Agarwal,MarketSphere,isha.agarwal@marketsphere.com,9876501008,9876502008,Email Campaign,Not Contacted,Marketing,4500000,https://marketsphere.com,56 Salt Lake,Kolkata,West Bengal,India,700091,Downloaded brochure
+Arjun,Reddy,SecureTech,arjun.reddy@securetech.com,9876501009,9876502009,Website,Qualified,Cybersecurity,17000000,https://securetech.com,32 Jubilee Hills,Hyderabad,Telangana,India,500033,Requested integration details
+Neha,Kapoor,VisionWorks,neha.kapoor@visionworks.com,9876501010,9876502010,Referral,Contacted,Education,2800000,https://visionworks.com,88 FC Road,Pune,Maharashtra,India,411004,Interested in onboarding
+Vikram,Malhotra,DataPulse,vikram.malhotra@datapulse.com,9876501011,9876502011,Cold Call,Contacted,Analytics,6000000,https://datapulse.com,20 Baner Road,Pune,Maharashtra,India,411045,Requested callback
+Meera,Yadav,FreshKart,meera.yadav@freshkart.com,9876501012,9876502012,Website,Qualified,Retail,8500000,https://freshkart.com,7 Hazratganj,Lucknow,Uttar Pradesh,India,226001,Looking for implementation
+Aditya,Nair,AlphaLogics,aditya.nair@alphalogics.com,9876501013,9876502013,Partner,Contacted,IT Services,7300000,https://alphalogics.com,40 Marine Drive,Mumbai,Maharashtra,India,400020,Interested in API access
+Pooja,Chopra,BuildCore,pooja.chopra@buildcore.com,9876501014,9876502014,Referral,Qualified,Real Estate,22000000,https://buildcore.com,101 Civil Lines,Jaipur,Rajasthan,India,302006,Requested quotation
+Manish,Kumar,ByteWorks,manish.kumar@byteworks.com,9876501015,9876502015,Website,Attempted Contact,Technology,4100000,https://byteworks.com,15 Boring Road,Patna,Bihar,India,800001,Lead created from form
+Ritika,Saxena,SmartGrid,ritika.saxena@smartgrid.com,9876501016,9876502016,Trade Show,Contacted,Utilities,14500000,https://smartgrid.com,23 Alkapuri,Vadodara,Gujarat,India,390007,Need pricing details
+Dev,Joshi,QuickServe,dev.joshi@quickserve.com,9876501017,9876502017,Cold Call,Not Contacted,Services,3100000,https://quickserve.com,77 Residency Road,Bengaluru,Karnataka,India,560025,Initial outreach pending
+Simran,Kaur,AutoEdge,simran.kaur@autoedge.com,9876501018,9876502018,Website,Qualified,Automotive,19000000,https://autoedge.com,19 Sector 34,Chandigarh,Chandigarh,India,160022,Interested in custom workflow
+Yash,Desai,CodeBridge,yash.desai@codebridge.com,9876501019,9876502019,Email Campaign,Contacted,Software,5200000,https://codebridge.com,63 Satellite,Ahmedabad,Gujarat,India,380015,Requested product demo
+Nidhi,Bansal,PrimeCare,nidhi.bansal@primecare.com,9876501020,9876502020,Referral,Qualified,Healthcare,25000000,https://primecare.com,14 MG Marg,Indore,Madhya Pradesh,India,452001,High value lead

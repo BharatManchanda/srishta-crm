@@ -1,16 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  Query,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { LeadService } from './lead.service';
 import { LeadFilterDto } from './dto/lead-filter.dto';
@@ -36,7 +24,7 @@ export class LeadController {
 
   @Post()
   async create(@Body() dto: LeadCreateDto, @Req() req: Request) {
-    // await this.leadPolicy.authorize(req['user'], 'create');
+    await this.leadPolicy.authorize(req['user'], 'create');
     const authUserId = req['user'].id;
     return this.leadService.create(dto, authUserId);
   }

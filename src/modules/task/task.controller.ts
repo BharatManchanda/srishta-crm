@@ -17,6 +17,7 @@ import { TaskFilterDto } from './dto/task-filter.dto';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { TaskPolicy } from './task.policy';
+import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 
 @UseGuards(AuthGuard)
 @Controller('task')
@@ -25,6 +26,18 @@ export class TaskController {
     private readonly taskService: TaskService,
     private readonly taskPolicy: TaskPolicy,
   ) {}
+
+  @Get('view-setting')
+  async viewSetting(@Req() req: Request) {
+    const authUserId = req['user'].id;
+    return this.taskService.viewSetting(authUserId);
+  }
+
+  @Put('update-setting')
+  async updateSetting(@Body() dto: UpdateViewSettingDto, @Req() req: Request) {
+    const authUserId = req['user'].id;
+    return this.taskService.updateSetting(dto, authUserId);
+  }
 
   @Get()
   async getList(@Query() dto: TaskFilterDto, @Req() req: Request) {

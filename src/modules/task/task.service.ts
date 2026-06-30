@@ -6,6 +6,7 @@ import { TaskFilterBuilder } from './task-filter.builder';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
+import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 
 @Injectable()
 export class TaskService {
@@ -91,5 +92,90 @@ export class TaskService {
         id,
       },
     });
+  }
+
+  async createDefaultTaskView(userId: number) {
+    const taskModule = await this.prisma.module.findUnique({
+      where: {
+        path: '/tasks',
+      },
+    });
+    if (!taskModule) return;
+    await this.prisma.userTableView.create({
+      data: {
+        userId: userId,
+        moduleId: taskModule.id,
+        name: 'Default',
+        isDefault: true,
+        columns: {
+          create: [
+            { field: 'id', label: 'ID', visible: true, order: 1 },
+            { field: 'subject', label: 'Subject', visible: true, order: 2 },
+            { field: 'dueDate', label: 'Due Date', visible: true, order: 3 },
+            { field: 'priority', label: 'Priority', visible: true, order: 4 },
+            { field: 'status', label: 'Status', visible: true, order: 5 },
+            { field: 'markAsComplete', label: 'Completed', visible: true, order: 6 },
+            { field: 'entityType', label: 'Related To Type', visible: true, order: 7 },
+            { field: 'entityId', label: 'Related To ID', visible: true, order: 8 },
+            { field: 'description', label: 'Description', visible: false, order: 9 },
+            { field: 'createdById', label: 'Created By ID', visible: false, order: 10 },
+            { field: 'createdAt', label: 'Created At', visible: false, order: 11 },
+            { field: 'updatedAt', label: 'Updated At', visible: false, order: 12 },
+            { field: 'action', label: 'Action', visible: true, order: 13 },
+          ],
+        },
+      },
+    });
+  }
+
+  async viewSetting(authUserId: number) {
+    const taskModule = await this.prisma.module.findFirst({
+      where: {
+        path: '/tasks',
+      },
+    });
+    if (!taskModule) return;
+    const viewSetting = await this.prisma.userTableView.findFirst({
+      where: {
+        userId: authUserId,
+        isDefault: true,
+        moduleId: taskModule.id,
+      },
+      include: {
+        columns: true,
+      },
+    });
+
+    if (!viewSetting) {
+      await this.createDefaultTaskView(authUserId);
+      return this.prisma.userTableView.findFirst({
+        where: {
+          userId: authUserId,
+          isDefault: true,
+          moduleId: taskModule.id,
+        },
+        include: {
+          columns: true,
+        },
+      });
+    }
+    return viewSetting;
+  }
+
+  async updateSetting(dto: UpdateViewSettingDto, authUserId: number) {
+    const updatedColumns = await this.prisma.$transaction(
+      dto.columns.map((column) =>
+        this.prisma.tableColumn.update({
+          where: {
+            id: column.id,
+          },
+          data: {
+            visible: column.visible,
+          },
+        }),
+      ),
+    );
+
+    return updatedColumns;
   }
 }

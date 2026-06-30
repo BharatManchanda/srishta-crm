@@ -131,7 +131,7 @@ const modules = [
       '/tasks/:id/edit',
       '/tasks/create',
     ],
-    showInNavbar: false,
+    showInNavbar: true,
   },
   {
     id: SETTINGS_MODULE_ID,
