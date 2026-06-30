@@ -90,6 +90,17 @@ enum NoteEntityType {
   OPPORTUNITY
 }
 
+enum AttachmentType {
+  FILE
+  LINK
+}
+
+enum AttachmentOwnerType {
+  LEAD
+  CONTACT
+  ACCOUNT
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -127,6 +138,7 @@ model User {
   createdAccounts Account[] @relation("AccountCreator")
 
   createdNotes Note[] @relation("NoteCreator")
+  createdAttachments Attachment[] @relation("AttachmentCreator")
 
   createdLeads  Lead[] @relation("LeadCreator")
   assignedLeads Lead[] @relation("LeadAssignee")
@@ -450,4 +462,34 @@ model Note {
 
   @@index([entityType, entityId])
   @@index([createdById])
+}
+
+model Attachment {
+  id Int @id @default(autoincrement())
+
+  entityType AttachmentOwnerType
+  entityId Int
+
+  // Attachment data
+  type AttachmentType
+
+  title String?
+
+  // FILE
+  fileName     String?
+  originalName String?
+  mimeType     String?
+  size         Int?
+  storageKey   String? // S3/supabase/local path
+
+  // LINK
+  url String?
+
+  createdById Int
+  createdBy   User @relation("AttachmentCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([entityType, entityId])
 }

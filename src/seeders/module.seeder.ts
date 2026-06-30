@@ -16,6 +16,7 @@ export const SETTINGS_MODULE_ID = 16;
 export const CONTACT_MODULE_ID = 17;
 export const ACCOUNT_MODULE_ID = 18;
 export const NOTE_MODULE_ID = 19;
+export const ATTACHMENT_MODULE_ID = 20;
 
 const modules = [
   {
@@ -80,6 +81,22 @@ const modules = [
       '/notes/:id',
       '/notes/:id/edit',
       '/notes/create',
+    ],
+    showInNavbar: false,
+  },
+  {
+    id: ATTACHMENT_MODULE_ID,
+    name: 'Attachment',
+    path: '/attachments',
+    icon: 'Paperclip',
+    description: 'Attachments management',
+    parent_id: null,
+    sort_order: 3,
+    activeOn: [
+      '/attachments',
+      '/attachments/:id',
+      '/attachments/:id/edit',
+      '/attachments/create',
     ],
     showInNavbar: false,
   },
