@@ -17,6 +17,7 @@ export const CONTACT_MODULE_ID = 17;
 export const ACCOUNT_MODULE_ID = 18;
 export const NOTE_MODULE_ID = 19;
 export const ATTACHMENT_MODULE_ID = 20;
+export const TASK_MODULE_ID = 22;
 
 const modules = [
   {
@@ -59,7 +60,7 @@ const modules = [
     icon: 'Contact',
     description: 'Contact management',
     parent_id: null,
-    sort_order: 3,
+    sort_order: 4,
     activeOn: [
       '/contacts',
       '/contacts/:id',
@@ -75,7 +76,7 @@ const modules = [
     icon: 'NotebookPen',
     description: 'Notes management',
     parent_id: null,
-    sort_order: 3,
+    sort_order: 5,
     activeOn: [
       '/notes',
       '/notes/:id',
@@ -91,7 +92,7 @@ const modules = [
     icon: 'Paperclip',
     description: 'Attachments management',
     parent_id: null,
-    sort_order: 3,
+    sort_order: 6,
     activeOn: [
       '/attachments',
       '/attachments/:id',
@@ -107,7 +108,7 @@ const modules = [
     icon: 'BookUser',
     description: 'Account management',
     parent_id: null,
-    sort_order: 3,
+    sort_order: 7,
     activeOn: [
       '/accounts',
       '/accounts/:id',
@@ -117,13 +118,29 @@ const modules = [
     showInNavbar: true,
   },
   {
+    id: TASK_MODULE_ID,
+    name: 'Tasks',
+    path: '/tasks',
+    icon: 'LayersMinus',
+    description: 'Task management',
+    parent_id: null,
+    sort_order: 7,
+    activeOn: [
+      '/tasks',
+      '/tasks/:id',
+      '/tasks/:id/edit',
+      '/tasks/create',
+    ],
+    showInNavbar: false,
+  },
+  {
     id: SETTINGS_MODULE_ID,
     name: 'Settings',
     path: '/settings',
     icon: 'PieChartIcon',
     description: 'Application settings',
     parent_id: null,
-    sort_order: 4,
+    sort_order: 8,
     activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit'],
     showInNavbar: true,
   },

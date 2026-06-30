@@ -40,10 +40,23 @@ enum LeadPriority {
   HIGH
 }
 
+enum PriorityType {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 enum LeadRating {
   COLD
   WARM
   HOT
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  DEFERRED
+  IN_PROGRESS
+  WAITING_FOR_INPUT
 }
 
 enum LeadSource {
@@ -82,6 +95,15 @@ enum OwnershipType {
 }
 
 enum NoteEntityType {
+  LEAD
+  CONTACT
+  ACCOUNT
+  DEAL
+  TASK
+  OPPORTUNITY
+}
+
+enum TaskEntityType {
   LEAD
   CONTACT
   ACCOUNT
@@ -141,6 +163,9 @@ model User {
   createdAttachments Attachment[] @relation("AttachmentCreator")
 
   createdLeads  Lead[] @relation("LeadCreator")
+
+  createdTasks  Task[] @relation("TaskCreator")
+
   assignedLeads Lead[] @relation("LeadAssignee")
 }
 
@@ -492,4 +517,28 @@ model Attachment {
   updatedAt DateTime @updatedAt
 
   @@index([entityType, entityId])
+}
+
+model Task {
+  id Int @id @default(autoincrement())
+
+  entityType TaskEntityType?
+  entityId Int?
+
+  createdById Int
+  createdBy   User @relation("TaskCreator", fields: [createdById], references: [id])
+
+  subject String
+  dueDate DateTime? @db.Date
+
+  priority PriorityType
+  status TaskStatus
+
+  description String?
+
+  markAsComplete Boolean @default(false)
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
