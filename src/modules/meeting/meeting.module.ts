@@ -1,0 +1,22 @@
+import { Module } from '@nestjs/common';
+import { MeetingService } from './meeting.service';
+import { MeetingController } from './meeting.controller';
+import { JwtModule } from '../jwt/jwt.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { PaginationService } from 'src/common/pagination/pagination.service';
+import { UserHierarchyService } from '../user/user-hierarchy.service';
+import { MeetingFilterBuilder } from './meeting-filter.builder';
+import { MeetingPolicy } from './meeting.policy';
+
+@Module({
+  imports: [PrismaModule, JwtModule],
+  providers: [
+    MeetingService,
+    PaginationService,
+    UserHierarchyService,
+    MeetingFilterBuilder,
+    MeetingPolicy,
+  ],
+  controllers: [MeetingController],
+})
+export class MeetingModule {}

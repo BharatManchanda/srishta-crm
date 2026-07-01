@@ -17,6 +17,8 @@ import { AccountModule } from './modules/account/account.module';
 import { NoteModule } from './modules/note/note.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
 import { TaskModule } from './modules/task/task.module';
+import { CallModule } from './modules/call/call.module';
+import { MeetingModule } from './modules/meeting/meeting.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { TaskModule } from './modules/task/task.module';
     NoteModule,
     AttachmentModule,
     TaskModule,
+    CallModule,
+    MeetingModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

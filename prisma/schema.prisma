@@ -184,6 +184,7 @@ enum AttachmentOwnerType {
   LEAD
   CONTACT
   ACCOUNT
+  TASK
 }
 
 model User {

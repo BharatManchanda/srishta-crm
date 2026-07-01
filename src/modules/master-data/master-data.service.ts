@@ -8,6 +8,16 @@ import {
   AccountType,
   AccountRating,
   OwnershipType,
+  PriorityType,
+  TaskStatus,
+  CallEntityType,
+  MeetingEntityType,
+  MeetingParticipantType,
+  MeetingStatus,
+  MeetingResponseStatus,
+  CallStatus,
+  CallResult,
+  CallPurpose,
 } from '@prisma/client';
 
 @Injectable()
@@ -25,6 +35,16 @@ export class MasterDataService {
         accountType: AccountType,
         accountRating: AccountRating,
         ownershipType: OwnershipType,
+        priorityType: PriorityType,
+        taskStatus: TaskStatus,
+        callEntityType: CallEntityType,
+        meetingEntityType: MeetingEntityType,
+        meetingParticipantType: MeetingParticipantType,
+        meetingStatus: MeetingStatus,
+        meetingResponseStatus: MeetingResponseStatus,
+        callStatus: CallStatus,
+        callResult: CallResult,
+        callPurpose: CallPurpose,
       },
     };
   }
