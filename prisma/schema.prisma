@@ -112,6 +112,69 @@ enum TaskEntityType {
   OPPORTUNITY
 }
 
+enum CallEntityType {
+  LEAD
+  CONTACT
+  ACCOUNT
+  DEAL
+  TASK
+  OPPORTUNITY
+}
+
+enum MeetingEntityType {
+  LEAD
+  CONTACT
+  ACCOUNT
+  DEAL
+  TASK
+  OPPORTUNITY
+}
+
+enum MeetingParticipantType {
+  USER
+  LEAD
+  CONTACT
+  ACCOUNT
+  EMAIL
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum MeetingResponseStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  TENTATIVE
+}
+
+enum CallStatus {
+  SCHEDULED
+  COMPLETED
+}
+
+enum CallResult {
+  INTERESTED
+  NOT_INTERESTED
+  NO_RESPONSE_BUSY
+  REQUESTED_MORE_INFO
+  REQUESTED_CALL_BACK
+  INVALID_NUMBER
+}
+
+enum CallPurpose {
+  PROSPECTING
+  ADMINISTRATIVE
+  NEGOTIATION
+  DEMO
+  PROJECT
+  DESK
+}
+
 enum AttachmentType {
   FILE
   LINK
@@ -165,6 +228,10 @@ model User {
   createdLeads  Lead[] @relation("LeadCreator")
 
   createdTasks  Task[] @relation("TaskCreator")
+
+  createdCalls  Call[] @relation("CallCreator")
+
+  meetingCalls  Meeting[] @relation("MeetingCreator")
 
   assignedLeads Lead[] @relation("LeadAssignee")
 }
@@ -541,4 +608,82 @@ model Task {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Call {
+  id  Int @id @default(autoincrement())
+
+  entityType CallEntityType?
+  entityId Int?
+
+  createdById Int
+  createdBy   User @relation("CallCreator", fields: [createdById], references: [id])
+
+  subject String
+
+  purpose CallPurpose?
+
+  agenda  String? @db.Text
+
+  description  String? @db.Text
+
+  result  CallResult?
+
+  callStartTime DateTime?
+
+  callDuration Int @default(0)
+
+  status CallStatus  @default(SCHEDULED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Meeting {
+  id  Int @id @default(autoincrement())
+
+  entityType MeetingEntityType?
+  entityId Int?
+
+  createdById Int
+  createdBy   User @relation("MeetingCreator", fields: [createdById], references: [id])
+
+  title String
+  description String?  @db.Text
+
+  location String?
+  url  String?
+
+  status MeetingStatus @default(SCHEDULED)
+
+  startTime   DateTime
+  endTime     DateTime
+
+  participants MeetingParticipant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MeetingParticipant {
+  id Int @id @default(autoincrement())
+
+  meetingId Int
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  participantType MeetingParticipantType
+
+  // LEAD / CONTACT / ACCOUNT / USER
+  participantId Int?
+
+  // Manual participant
+  name String?
+  email String?
+
+  responseStatus MeetingResponseStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  @@index([meetingId])
+  @@index([participantType, participantId])
 }

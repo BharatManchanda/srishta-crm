@@ -18,6 +18,8 @@ export const ACCOUNT_MODULE_ID = 18;
 export const NOTE_MODULE_ID = 19;
 export const ATTACHMENT_MODULE_ID = 20;
 export const TASK_MODULE_ID = 22;
+export const CALL_MODULE_ID = 23;
+export const MEETING_MODULE_ID = 24;
 
 const modules = [
   {
@@ -134,13 +136,45 @@ const modules = [
     showInNavbar: true,
   },
   {
+    id: CALL_MODULE_ID,
+    name: 'Calls',
+    path: '/calls',
+    icon: 'PhoneCall',
+    description: 'Task management',
+    parent_id: null,
+    sort_order: 8,
+    activeOn: [
+      '/calls',
+      '/calls/:id',
+      '/calls/:id/edit',
+      '/calls/create',
+    ],
+    showInNavbar: true,
+  },
+  {
+    id: MEETING_MODULE_ID,
+    name: 'Meeting',
+    path: '/meetings',
+    icon: 'Handshake',
+    description: 'Meeting management',
+    parent_id: null,
+    sort_order: 8,
+    activeOn: [
+      '/meetings',
+      '/meetings/:id',
+      '/meetings/:id/edit',
+      '/meetings/create',
+    ],
+    showInNavbar: true,
+  },
+  {
     id: SETTINGS_MODULE_ID,
     name: 'Settings',
     path: '/settings',
     icon: 'PieChartIcon',
     description: 'Application settings',
     parent_id: null,
-    sort_order: 8,
+    sort_order: 10,
     activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit'],
     showInNavbar: true,
   },

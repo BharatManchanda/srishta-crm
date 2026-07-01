@@ -33,10 +33,12 @@ export class TaskFilterDto extends PaginationDto {
 
   @IsOptional()
   @IsEnum(PriorityType)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   priority?: PriorityType;
 
   @IsOptional()
   @IsEnum(TaskStatus)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   status?: TaskStatus;
 
   @IsOptional()
