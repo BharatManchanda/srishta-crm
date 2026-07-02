@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ModuleName, SearchDto } from './dto/search.dto';
 
 @Injectable()
 export class ModuleService {
@@ -73,6 +74,139 @@ export class ModuleService {
   async getStraightList() {
     return this.prisma.module.findMany({
       orderBy: { id: 'desc' },
+    });
+  }
+
+  async globalSearch() {
+    
+  }
+
+   async search(dto: SearchDto) {
+    const { q, module } = dto;
+
+    // Search module names
+    const modules = await this.prisma.module.findMany({
+      where: {
+        name: {
+          contains: q,
+          mode: "insensitive",
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+
+    if (module) {
+      return {
+        modules,
+        results: await this.searchModule(module, q),
+      };
+    }
+
+    const [leads, contacts, accounts, meetings, calls ] = await Promise.all([
+      this.searchLead(q),
+      this.searchContact(q),
+      this.searchAccount(q),
+      this.searchMeeting(q),
+      this.searchCall(q),
+    ]);
+
+    return {
+      modules,
+      results: {
+        leads,
+        contacts,
+        accounts,
+        meetings,
+        calls,
+      },
+    };
+  }
+
+  private async searchModule(module: ModuleName, q: string) {
+    switch (module) {
+      case ModuleName.LEAD:
+        return this.searchLead(q);
+
+      case ModuleName.CONTACT:
+        return this.searchContact(q);
+
+      case ModuleName.ACCOUNT:
+        return this.searchAccount(q);
+
+      case ModuleName.MEETING:
+        return this.searchMeeting(q);
+
+      case ModuleName.CALL:
+        return this.searchCall(q);
+
+      default:
+        return [];
+    }
+  }
+
+  private searchLead(q: string) {
+    return this.prisma.lead.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { title: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+          { phone: { contains: q, mode: "insensitive" } },
+          { company: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      take: 5,
+    });
+  }
+
+  private searchContact(q: string) {
+    return this.prisma.contact.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { title: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+          { phone: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      take: 5,
+    });
+  }
+
+  private searchAccount(q: string) {
+    return this.prisma.account.findMany({
+      where: {
+        accountName: { contains: q, mode: "insensitive", },
+        accountNumber: { contains: q, mode: "insensitive", },
+      },
+      take: 5,
+    });
+  }
+
+  private searchMeeting(q: string) {
+    return this.prisma.meeting.findMany({
+      where: {
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      take: 5,
+    });
+  }
+
+  private searchCall(q: string) {
+    return this.prisma.call.findMany({
+      where: {
+        OR: [
+          { subject: { contains: q, mode: "insensitive" } },
+          { agenda: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      take: 5,
     });
   }
 }

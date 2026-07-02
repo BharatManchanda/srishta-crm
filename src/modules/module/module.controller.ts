@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { ModuleService } from './module.service';
+import { SearchDto } from './dto/search.dto';
 
 @Controller('module')
 export class ModuleController {
@@ -25,5 +26,10 @@ export class ModuleController {
   @Get('straight-list')
   async getStraightList() {
     return this.moduleService.getStraightList();
+  }
+
+  @Get()
+  async search(@Query() dto: SearchDto) {
+    return this.moduleService.search(dto);
   }
 }
