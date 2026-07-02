@@ -101,6 +101,8 @@ enum NoteEntityType {
   DEAL
   TASK
   OPPORTUNITY
+  CALL
+  MEETING
 }
 
 enum TaskEntityType {
@@ -185,6 +187,8 @@ enum AttachmentOwnerType {
   CONTACT
   ACCOUNT
   TASK
+  CALL
+  MEETING
 }
 
 model User {
