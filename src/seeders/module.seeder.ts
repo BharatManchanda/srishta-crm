@@ -20,6 +20,7 @@ export const ATTACHMENT_MODULE_ID = 20;
 export const TASK_MODULE_ID = 22;
 export const CALL_MODULE_ID = 23;
 export const MEETING_MODULE_ID = 24;
+export const IMPORT_MODULE_ID = 25;
 
 const modules = [
   {
@@ -176,6 +177,17 @@ const modules = [
     parent_id: null,
     sort_order: 10,
     activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit'],
+    showInNavbar: true,
+  },
+  {
+    id: IMPORT_MODULE_ID,
+    name: 'Imports',
+    path: '/imports',
+    icon: 'GridIcon',
+    description: 'Bulk import management',
+    parent_id: null,
+    sort_order: 9,
+    activeOn: ['/imports'],
     showInNavbar: true,
   },
 ];
