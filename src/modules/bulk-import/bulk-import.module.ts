@@ -6,6 +6,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CsvParserService } from 'src/common/csv-parse/csv-parser.service';
 import { JwtModule } from '../jwt/jwt.module';
 import { BullModule } from '@nestjs/bullmq';
+import { BulkImportProcessor } from './bulk-import.processor';
+import { LeadImporterService } from './importers/lead-importer.service';
+import { ContactImporterService } from './importers/contact-importer.service';
+import { AccountImporterService } from './importers/account-importer.service';
 
 @Module({
   imports: [
@@ -13,6 +17,6 @@ import { BullModule } from '@nestjs/bullmq';
     BullModule.registerQueue({ name: 'bulk-import' }),
   ],
   controllers: [BulkImportController],
-  providers: [BulkImportService, StorageService, PrismaService, CsvParserService],
+  providers: [BulkImportService, StorageService, PrismaService, CsvParserService, BulkImportProcessor, LeadImporterService, ContactImporterService, AccountImporterService],
 })
 export class BulkImportModule {}
