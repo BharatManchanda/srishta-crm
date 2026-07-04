@@ -3,7 +3,6 @@ import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CsvParserService } from 'src/common/csv-parse/csv-parser.service';
-import { StorageService } from 'src/common/storage/storage.service';
 import { ImportEntity, ImportStatus } from '@prisma/client';
 import { LeadImporterService } from './importers/lead-importer.service';
 import { ContactImporterService } from './importers/contact-importer.service';
@@ -49,17 +48,22 @@ export class BulkImportProcessor extends WorkerHost {
             const rows = await this.csvParserService.parse(importJob.storageKey);
             this.logger.log(`Import Job ${importJob.id} started processing.`);
 
+            let result = {
+                success: 0,
+                failed: 0,
+            };
+
             switch (importJob.entity) {
                 case ImportEntity.LEAD:
-                    await this.leadImporter.import(rows, importJob);
+                    result = await this.leadImporter.import(rows, importJob);
                     break;
 
                 case ImportEntity.CONTACT:
-                    await this.contactImporter.import(rows, importJob);
+                    result = await this.contactImporter.import(rows, importJob);
                     break;
 
                 case ImportEntity.ACCOUNT:
-                    await this.accountImporter.import(rows, importJob);
+                    result = await this.accountImporter.import(rows, importJob);
                     break;
 
                 default:
@@ -72,6 +76,9 @@ export class BulkImportProcessor extends WorkerHost {
                 },
                 data: {
                     status: ImportStatus.COMPLETED,
+                    totalRows: rows.length,
+                    successRows: result.success,
+                    failedRows: result.failed,
                 },
             });
 
@@ -80,14 +87,12 @@ export class BulkImportProcessor extends WorkerHost {
             }
         catch (error) {
             this.logger.error(error);
-
             await this.prisma.importJob.update({
                 where: {
                     id: importJob.id,
                 },
                 data: {
                     status: ImportStatus.FAILED,
-                    // errorMessage: error instanceof Error ? error.message : 'Unknown error',
                 },
             });
 

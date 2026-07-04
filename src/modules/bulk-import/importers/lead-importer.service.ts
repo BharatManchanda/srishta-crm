@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BulkImporter } from './importer.interface';
-import { ImportJob, LeadPriority, LeadSource, LeadStatus } from '@prisma/client';
+import { ImportJob, ImportRowStatus, LeadPriority, LeadSource, LeadStatus } from '@prisma/client';
 import { getMappedOptionalEnum, getMappedRequiredEnum, getMappedValue, hasKeyWithValue, isColumnMapping } from 'src/common/helpers/object.helper';
 
 @Injectable()
@@ -12,49 +12,84 @@ export class LeadImporterService implements BulkImporter {
     private readonly prisma: PrismaService,
   ) {}
 
-    async import(rows: Record<string, any>[], importJob: ImportJob): Promise<void> {
+    async import(rows: Record<string, any>[], importJob: ImportJob) {
         this.logger.log(`Importing ${rows.length} leads`);
         const mapColumn = importJob?.columnMapping ?? {};
         if (!isColumnMapping(mapColumn)) {
             throw new Error('Invalid column mapping');
         }
 
-        for (const row of rows) {
-            await this.prisma.lead.create({
-                data: {
-                    createdById: importJob.createdById,
-                    name: getMappedValue(row, mapColumn, 'name', ""),
-                    title: getMappedValue(row, mapColumn, 'title', "null"),
-                    email: getMappedValue(row, mapColumn, 'email', ""),
-                    phone: getMappedValue(row, mapColumn, 'phone', null),
-                    website: getMappedValue(row, mapColumn, 'website', null),
+        let successRows = 0;
+        let failedRows = 0;
 
-                    city: getMappedValue(row, mapColumn, 'city', null),
-                    state: getMappedValue(row, mapColumn, 'state', null),
-                    pinCode: getMappedValue(row, mapColumn, 'pinCode', null),
-                    country: getMappedValue(row, mapColumn, 'country', null),
-                    address: getMappedValue(row, mapColumn, 'address', null),
+        for (let index = 0; index < rows.length; index++) {
+            const row = rows[index];
+            try {
+                const lead = await this.prisma.lead.create({
+                    data: {
+                        createdById: importJob.createdById,
+                        name: getMappedValue(row, mapColumn, 'name', ""),
+                        title: getMappedValue(row, mapColumn, 'title', null),
+                        email: getMappedValue(row, mapColumn, 'email', ""),
+                        phone: getMappedValue(row, mapColumn, 'phone', null),
+                        website: getMappedValue(row, mapColumn, 'website', null),
+    
+                        city: getMappedValue(row, mapColumn, 'city', null),
+                        state: getMappedValue(row, mapColumn, 'state', null),
+                        pinCode: getMappedValue(row, mapColumn, 'pinCode', null),
+                        country: getMappedValue(row, mapColumn, 'country', null),
+                        address: getMappedValue(row, mapColumn, 'address', null),
+    
+                        industry: getMappedValue(row, mapColumn, 'industry', null),
+                        budget: getMappedValue(row, mapColumn, 'budget', null),
+                        requirement: getMappedValue(row, mapColumn, 'requirement', null),
+    
+                        source: getMappedOptionalEnum(row, mapColumn, 'source', LeadSource, null),
+                        status: getMappedRequiredEnum(row, mapColumn, 'status', LeadStatus, LeadStatus.NEW),
+                        priority: getMappedRequiredEnum(row, mapColumn, 'priority', LeadPriority, LeadPriority.MEDIUM),
+                        rating: getMappedValue(row, mapColumn, 'rating', null),
+    
+                        leadScore: getMappedValue(row, mapColumn, 'leadScore', 0),
+                        isQualified: getMappedValue(row, mapColumn, 'isQualified', false),
+                        isConverted: getMappedValue(row, mapColumn, 'isConverted', false),
+                        assignedToId: getMappedValue(row, mapColumn, 'assignedToId', null),
+    
+                        nextFollowUpDate: getMappedValue(row, mapColumn, 'nextFollowUpDate', null),
+                        lastFollowUpDate: getMappedValue(row, mapColumn, 'lastFollowUpDate', null),
+    
+                        description: getMappedValue(row, mapColumn, 'description', null),
+                    },
+                });
+                await this.prisma.importRow.create({
+                    data: {
+                        importJobId: importJob.id,
+                        rowNumber: index + 1,
+                        status: ImportRowStatus.SUCCESS,
+                        data: row,
+                        createdEntityId: lead.id,
+                    },
+                });
+                successRows++;
+            } catch (error) {
+                failedRows++;
 
-                    industry: getMappedValue(row, mapColumn, 'industry', null),
-                    budget: getMappedValue(row, mapColumn, 'budget', null),
-                    requirement: getMappedValue(row, mapColumn, 'requirement', null),
+                await this.prisma.importRow.create({
+                    data: {
+                        importJobId: importJob.id,
+                        rowNumber: index + 1,
+                        status: ImportRowStatus.FAILED,
+                        data: row,
+                        error: error instanceof Error ? error.message : 'Unknown error',
+                    },
+                });
 
-                    source: getMappedOptionalEnum(row, mapColumn, 'source', LeadSource, null),
-                    status: getMappedRequiredEnum(row, mapColumn, 'status', LeadStatus, LeadStatus.NEW),
-                    priority: getMappedRequiredEnum(row, mapColumn, 'priority', LeadPriority, LeadPriority.MEDIUM),
-                    rating: getMappedValue(row, mapColumn, 'rating', null),
+                this.logger.warn(`Row ${index + 1} failed: ${error instanceof Error ? error.message : error}`);
+            }
+        }
 
-                    leadScore: getMappedValue(row, mapColumn, 'leadScore', 0),
-                    isQualified: getMappedValue(row, mapColumn, 'isQualified', false),
-                    isConverted: getMappedValue(row, mapColumn, 'isConverted', false),
-                    assignedToId: getMappedValue(row, mapColumn, 'assignedToId', null),
-
-                    nextFollowUpDate: getMappedValue(row, mapColumn, 'nextFollowUpDate', null),
-                    lastFollowUpDate: getMappedValue(row, mapColumn, 'lastFollowUpDate', null),
-
-                    description: getMappedValue(row, mapColumn, 'description', null),
-                },
-            });
+        return {
+            success: successRows,
+            failed: failedRows,
         }
     }
 }
