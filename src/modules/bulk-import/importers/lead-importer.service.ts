@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BulkImporter } from './importer.interface';
-import { ImportJob, ImportRowStatus, LeadPriority, LeadSource, LeadStatus } from '@prisma/client';
+import { ImportJob, ImportRowStatus, LeadPriority, LeadRating, LeadSource, LeadStatus } from '@prisma/client';
 import { getMappedOptionalEnum, getMappedRequiredEnum, getMappedValue, hasKeyWithValue, isColumnMapping } from 'src/common/helpers/object.helper';
+import { parseDate } from 'src/common/helpers/date.helper';
+import { parseBoolean } from 'src/common/helpers/boolean.helper';
 
 @Injectable()
 export class LeadImporterService implements BulkImporter {
@@ -25,6 +27,8 @@ export class LeadImporterService implements BulkImporter {
         for (let index = 0; index < rows.length; index++) {
             const row = rows[index];
             try {
+                let leadScore = getMappedValue(row, mapColumn, 'leadScore', 0);
+                leadScore = Number(leadScore) ?? 0;
                 const lead = await this.prisma.lead.create({
                     data: {
                         createdById: importJob.createdById,
@@ -47,15 +51,14 @@ export class LeadImporterService implements BulkImporter {
                         source: getMappedOptionalEnum(row, mapColumn, 'source', LeadSource, null),
                         status: getMappedRequiredEnum(row, mapColumn, 'status', LeadStatus, LeadStatus.NEW),
                         priority: getMappedRequiredEnum(row, mapColumn, 'priority', LeadPriority, LeadPriority.MEDIUM),
-                        rating: getMappedValue(row, mapColumn, 'rating', null),
+                        rating: getMappedOptionalEnum(row, mapColumn, 'rating', LeadRating, null),
     
-                        leadScore: getMappedValue(row, mapColumn, 'leadScore', 0),
-                        isQualified: getMappedValue(row, mapColumn, 'isQualified', false),
-                        isConverted: getMappedValue(row, mapColumn, 'isConverted', false),
-                        assignedToId: getMappedValue(row, mapColumn, 'assignedToId', null),
-    
-                        nextFollowUpDate: getMappedValue(row, mapColumn, 'nextFollowUpDate', null),
-                        lastFollowUpDate: getMappedValue(row, mapColumn, 'lastFollowUpDate', null),
+                        leadScore: leadScore,
+                        isQualified: parseBoolean(getMappedValue(row, mapColumn, 'isQualified', false)),
+                        isConverted: parseBoolean(getMappedValue(row, mapColumn, 'isConverted', false)),
+                        
+                        nextFollowUpDate: parseDate(getMappedValue(row, mapColumn, 'nextFollowUpDate', null)),
+                        lastFollowUpDate: parseDate(getMappedValue(row, mapColumn, 'lastFollowUpDate', null)),
     
                         description: getMappedValue(row, mapColumn, 'description', null),
                     },

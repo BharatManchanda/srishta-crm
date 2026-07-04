@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { BulkImporter } from './importer.interface';
 import { ImportJob, ImportRowStatus, LeadSource } from '@prisma/client';
 import { getMappedOptionalEnum, getMappedValue, isColumnMapping } from 'src/common/helpers/object.helper';
+import { parseDate } from 'src/common/helpers/date.helper';
 
 @Injectable()
 export class ContactImporterService implements BulkImporter {
@@ -45,7 +46,7 @@ export class ContactImporterService implements BulkImporter {
                     }})
                 ]);
 
-                const dob = getMappedValue(row, mapColumn, 'dateOfBirth', null);
+                // const dob = getMappedValue(row, mapColumn, 'dateOfBirth', null);
                 const contact = await this.prisma.contact.create({
                     data: {
                         createdById: importJob.createdById,
@@ -58,7 +59,7 @@ export class ContactImporterService implements BulkImporter {
                         assistant: getMappedValue(row, mapColumn, 'assistant', null),
                         assistantPhone: getMappedValue(row, mapColumn, 'assistantPhone', null),
                         department: getMappedValue(row, mapColumn, 'department', null),
-                        dateOfBirth: dob ? new Date(dob) : undefined,
+                        dateOfBirth: parseDate(getMappedValue(row, mapColumn, 'dateOfBirth', null)),
                         skypeId: getMappedValue(row, mapColumn, 'skypeId', null),
                         twitter: getMappedValue(row, mapColumn, 'twitter', null),
                         description: getMappedValue(row, mapColumn, 'description', null),
