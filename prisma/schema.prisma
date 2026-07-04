@@ -191,6 +191,30 @@ enum AttachmentOwnerType {
   MEETING
 }
 
+enum ImportEntity {
+  LEAD
+  CONTACT
+  ACCOUNT
+  TASK
+  CALL
+  MEETING
+  NOTE
+  DEAL
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ImportRowStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -239,6 +263,8 @@ model User {
   meetingCalls  Meeting[] @relation("MeetingCreator")
 
   assignedLeads Lead[] @relation("LeadAssignee")
+
+  createdImportJob ImportJob[] @relation("ImportJobCreator")
 }
 
 model OtpVerification {
@@ -610,7 +636,6 @@ model Task {
 
   markAsComplete Boolean @default(false)
 
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -691,4 +716,59 @@ model MeetingParticipant {
 
   @@index([meetingId])
   @@index([participantType, participantId])
+}
+
+model ImportJob {
+  id             Int   @id @default(autoincrement())
+
+  entity         ImportEntity
+
+  fileName       String
+  mimeType     String
+  size         Int
+  storageKey   String
+  url String
+
+  totalRows      Int      @default(0)
+  processedRows  Int      @default(0)
+  successRows    Int      @default(0)
+  failedRows     Int      @default(0)
+
+  status         ImportStatus @default(PENDING)
+
+  // Store mapping JSON
+  columnMapping  Json
+
+  createdById    Int
+  createdBy      User @relation("ImportJobCreator", fields: [createdById], references: [id])
+
+  errorFilePath  String?
+
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  rows           ImportRow[]
+}
+
+model ImportRow {
+
+  id             Int   @id @default(autoincrement())
+
+  importJobId   Int
+  importJob     ImportJob @relation(fields: [importJobId], references: [id])
+
+  rowNumber     Int
+
+  status        ImportRowStatus
+
+  error         String?
+
+  data          Json
+
+  createdEntityId String?
+
+  createdAt DateTime @default(now())
 }

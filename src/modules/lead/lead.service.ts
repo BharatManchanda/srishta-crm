@@ -19,8 +19,7 @@ export class LeadService {
     private readonly userHierarchyService: UserHierarchyService,
   ) {}
   async getList(dto: LeadFilterDto, currentUserId: number) {
-    const userIds =
-      await this.userHierarchyService.getFamilyUserIds(currentUserId);
+    const userIds = await this.userHierarchyService.getFamilyUserIds(currentUserId);
     const orderBy = dto.sortBy
       ? { [dto.sortBy]: dto.sortOrder || 'desc' }
       : { id: 'desc' };

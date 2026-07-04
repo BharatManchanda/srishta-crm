@@ -28,8 +28,10 @@ export class ModuleController {
     return this.moduleService.getStraightList();
   }
 
-  @Get()
-  async search(@Query() dto: SearchDto) {
-    return this.moduleService.search(dto);
+  @UseGuards(AuthGuard)
+  @Get('search')
+  async search(@Query() dto: SearchDto, @Req() req: Request) {
+    const authUser = req['user'];
+    return this.moduleService.search(dto, authUser);
   }
 }

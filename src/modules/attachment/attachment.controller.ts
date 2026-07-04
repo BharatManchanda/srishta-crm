@@ -19,7 +19,7 @@ export class AttachmentController {
 
   @Post('upload-url')
   async uploadUrl(@Body() dto: AttachmentUploadUrlDto) {
-    return this.storage.createUploadUrl(dto.fileName, dto.mimeType);
+    return this.storage.createUploadUrl("attachments", dto.fileName, dto.mimeType);
   }
 
   @Get()

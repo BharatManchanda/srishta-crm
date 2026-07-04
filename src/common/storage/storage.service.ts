@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "crypto";
@@ -7,14 +7,16 @@ import { randomUUID } from "crypto";
 export class StorageService {
     private s3 = new S3Client({
         region: process.env.AWS_REGION,
+        endpoint: process.env.AWS_ENDPOINT,
+        forcePathStyle: true,
         credentials: {
             accessKeyId: process.env.AWS_ACCESS_KEY!,
             secretAccessKey: process.env.AWS_SECRET_KEY!,
         },
     });
 
-    async createUploadUrl(filename: string, mimeType: string) {
-        const key = `attachments/${Date.now()}-${randomUUID()}-${filename}`;
+    async createUploadUrl(folder: string, filename: string, mimeType: string) {
+        const key = `${folder}/${Date.now()}-${randomUUID()}-${filename}`;
 
         const command = new PutObjectCommand({
             Bucket: process.env.AWS_BUCKET,
@@ -30,7 +32,16 @@ export class StorageService {
         return {
             uploadUrl,
             key,
-            publicUrl: `https://${process.env.AWS_BUCKET}.s3.amazonaws.com/${key}`,
+            publicUrl: `${process.env.AWS_ENDPOINT}/${process.env.AWS_BUCKET}/${key}`,
         };
+    }
+
+    async getObject(key: string) {
+        const command = new GetObjectCommand({
+            Bucket: process.env.AWS_BUCKET,
+            Key: key,
+        });
+
+        return this.s3.send(command);
     }
 }

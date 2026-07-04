@@ -19,7 +19,8 @@ import { AttachmentModule } from './modules/attachment/attachment.module';
 import { TaskModule } from './modules/task/task.module';
 import { CallModule } from './modules/call/call.module';
 import { MeetingModule } from './modules/meeting/meeting.module';
-
+import { BulkImportModule } from './modules/bulk-import/bulk-import.module';
+import { BullModule } from '@nestjs/bullmq';
 @Module({
   imports: [
     AuthModule,
@@ -39,6 +40,13 @@ import { MeetingModule } from './modules/meeting/meeting.module';
     TaskModule,
     CallModule,
     MeetingModule,
+    BulkImportModule,
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT as unknown as number,
+      },
+    }),
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

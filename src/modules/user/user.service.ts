@@ -22,8 +22,7 @@ export class UserService {
     const orderBy = dto.sortBy
       ? { [dto.sortBy]: dto.sortOrder || 'desc' }
       : { id: 'desc' };
-    const accessibleUserIds =
-      await this.userPolicy.getAccessibleUserIds(currentUserId);
+    const accessibleUserIds = await this.userPolicy.getAccessibleUserIds(currentUserId);
     const result = await this.paginationService.paginate(this.prisma.user, {
       page: dto.page,
       perPage: dto.perPage,
