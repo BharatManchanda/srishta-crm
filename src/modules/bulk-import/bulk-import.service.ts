@@ -8,12 +8,14 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 import { ImportJobFilterDto } from './dto/import-job-filter.dto';
 import { ImportRowFilterDto } from './dto/import-row-filter.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { BulkImportFilterBuilder } from './bulk-import-filter.builder';
 
 @Injectable()
 export class BulkImportService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly paginationService: PaginationService,
+        private readonly filterBuilder: BulkImportFilterBuilder,
 
         @InjectQueue('bulk-import')
         private readonly bulkImportQueue: Queue,
@@ -49,24 +51,7 @@ export class BulkImportService {
             ? { [dto.sortBy]: dto.sortOrder || 'desc' }
             : { id: 'desc' };
 
-        const where: any = {
-            createdById: authUserId,
-        };
-
-        if (dto.entity) {
-            where.entity = dto.entity;
-        }
-
-        if (dto.status) {
-            where.status = dto.status;
-        }
-
-        if (dto.search) {
-            where.fileName = {
-                contains: dto.search,
-                mode: 'insensitive',
-            };
-        }
+        const where = this.filterBuilder.buildJob(dto, authUserId);
 
         return this.paginationService.paginate(this.prisma.importJob, {
             page: dto.page,
@@ -81,82 +66,9 @@ export class BulkImportService {
             ? { [dto.sortBy]: dto.sortOrder || 'desc' }
             : { id: 'desc' };
 
-        const where: any = {};
+        const where = this.filterBuilder.buildRow(dto);
 
-        if (dto.importJobId) {
-            where.importJobId = dto.importJobId;
-        }
-
-        if (dto.status) {
-            where.status = dto.status;
-        }
-
-        if (dto.entity) {
-            where.importJob = {
-                entity: dto.entity,
-            };
-        }
-
-        if (dto.search) {
-            where.OR = [
-                {
-                    error: {
-                        contains: dto.search,
-                        mode: 'insensitive',
-                    },
-                },
-                {
-                    data: {
-                        path: ['name'],
-                        string_contains: dto.search,
-                    },
-                },
-                {
-                    data: {
-                        path: ['Name'],
-                        string_contains: dto.search,
-                    },
-                },
-                {
-                    data: {
-                        path: ['email'],
-                        string_contains: dto.search,
-                    },
-                },
-                {
-                    data: {
-                        path: ['Email'],
-                        string_contains: dto.search,
-                    },
-                },
-                {
-                    data: {
-                        path: ['phone'],
-                        string_contains: dto.search,
-                    },
-                },
-                {
-                    data: {
-                        path: ['Phone'],
-                        string_contains: dto.search,
-                    },
-                },
-                {
-                    data: {
-                        path: ['accountName'],
-                        string_contains: dto.search,
-                    },
-                },
-                {
-                    data: {
-                        path: ['Account Name'],
-                        string_contains: dto.search,
-                    },
-                },
-            ];
-        }
-
-        return this.paginationService.paginate(this.prisma.importRow, {
+        const paginationResult = await this.paginationService.paginate(this.prisma.importRow, {
             page: dto.page,
             perPage: dto.perPage,
             where,
@@ -165,6 +77,60 @@ export class BulkImportService {
                 importJob: true,
             },
         });
+
+        const rows = paginationResult.data;
+
+        // Group createdEntityIds by entity type
+        const leadIds: number[] = [];
+        const contactIds: number[] = [];
+        const accountIds: number[] = [];
+
+        rows.forEach((row) => {
+            if (row.createdEntityId && row.importJob) {
+                if (row.importJob.entity === 'LEAD') {
+                    leadIds.push(row.createdEntityId);
+                } else if (row.importJob.entity === 'CONTACT') {
+                    contactIds.push(row.createdEntityId);
+                } else if (row.importJob.entity === 'ACCOUNT') {
+                    accountIds.push(row.createdEntityId);
+                }
+            }
+        });
+
+        // Fetch entities in parallel
+        const [leads, contacts, accounts] = await Promise.all([
+            leadIds.length ? this.prisma.lead.findMany({ where: { id: { in: leadIds } } }) : Promise.resolve([]),
+            contactIds.length ? this.prisma.contact.findMany({ where: { id: { in: contactIds } } }) : Promise.resolve([]),
+            accountIds.length ? this.prisma.account.findMany({ where: { id: { in: accountIds } } }) : Promise.resolve([]),
+        ]);
+
+        // Create quick lookup maps
+        const leadsMap = new Map<number, any>(leads.map((l) => [l.id, l] as [number, any]));
+        const contactsMap = new Map<number, any>(contacts.map((c) => [c.id, c] as [number, any]));
+        const accountsMap = new Map<number, any>(accounts.map((a) => [a.id, a] as [number, any]));
+
+        // Attach created entity data to each row
+        const mappedRows = rows.map((row) => {
+            let createdEntity: any = null;
+            if (row.createdEntityId && row.importJob) {
+                if (row.importJob.entity === 'LEAD') {
+                    createdEntity = leadsMap.get(row.createdEntityId);
+                } else if (row.importJob.entity === 'CONTACT') {
+                    createdEntity = contactsMap.get(row.createdEntityId);
+                } else if (row.importJob.entity === 'ACCOUNT') {
+                    createdEntity = accountsMap.get(row.createdEntityId);
+                }
+            }
+            return {
+                ...row,
+                createdEntity,
+            };
+        });
+
+        return {
+            ...paginationResult,
+            data: mappedRows,
+        };
     }
 
     async createDefaultImportView(userId: number) {

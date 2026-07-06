@@ -11,6 +11,7 @@ import { LeadImporterService } from './importers/lead-importer.service';
 import { ContactImporterService } from './importers/contact-importer.service';
 import { AccountImporterService } from './importers/account-importer.service';
 import { PaginationService } from 'src/common/pagination/pagination.service';
+import { BulkImportFilterBuilder } from './bulk-import-filter.builder';
 
 @Module({
   imports: [
@@ -18,6 +19,17 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
     BullModule.registerQueue({ name: 'bulk-import' }),
   ],
   controllers: [BulkImportController],
-  providers: [BulkImportService, StorageService, PrismaService, CsvParserService, BulkImportProcessor, LeadImporterService, ContactImporterService, AccountImporterService, PaginationService],
+  providers: [
+    BulkImportService,
+    StorageService,
+    PrismaService,
+    CsvParserService,
+    BulkImportProcessor,
+    LeadImporterService,
+    ContactImporterService,
+    AccountImporterService,
+    PaginationService,
+    BulkImportFilterBuilder,
+  ],
 })
 export class BulkImportModule {}
