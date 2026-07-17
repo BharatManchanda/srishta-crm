@@ -7,6 +7,8 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { CallCreateDto } from './dto/call-create.dto';
 import { CallUpdateDto } from './dto/call-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { ActivityService } from '../activity/activity.service';
+import { ActivityEntity } from '@prisma/client';
 
 @Injectable()
 export class CallService {
@@ -15,6 +17,7 @@ export class CallService {
     private readonly paginationService: PaginationService,
     private readonly callFilterBuilder: CallFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async getList(dto: CallFilterDto, currentUserId: number) {
@@ -58,30 +61,83 @@ export class CallService {
   }
 
   async create(dto: CallCreateDto, authUserId: number) {
-    return await this.prisma.call.create({
+    const newCall = await this.prisma.call.create({
       data: {
         ...dto,
         createdById: authUserId,
       },
     });
+
+    // 1. Log under Call itself
+    await this.activityService.create({
+      entityType: ActivityEntity.CALL,
+      entityId: newCall.id,
+      action: 'CALL_ADDED',
+      description: `Call logged: "${newCall.subject}"`,
+      metadata: newCall,
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (dto.entityType && dto.entityId) {
+      await this.activityService.create({
+        entityType: dto.entityType as any,
+        entityId: dto.entityId,
+        action: 'CALL_ADDED',
+        description: `Call logged: "${dto.subject}" (Purpose: ${dto.purpose || 'None'})`,
+        metadata: newCall,
+      }, authUserId);
+    }
+
+    return newCall;
   }
 
-  async update(dto: CallUpdateDto, id: number) {
-    const existingCall = await this.prisma.call.findUnique({
+  async update(dto: CallUpdateDto, id: number, authUserId: number) {
+    const oldCall = await this.prisma.call.findUnique({
       where: { id },
     });
 
-    if (!existingCall) {
+    if (!oldCall) {
       throw new NotFoundException('Call not found');
     }
 
-    return await this.prisma.call.update({
+    const updatedCall = await this.prisma.call.update({
       where: { id },
       data: dto,
     });
+
+    // 1. Log under Call itself
+    await this.activityService.create({
+      entityType: ActivityEntity.CALL,
+      entityId: updatedCall.id,
+      action: 'CALL_EDIT',
+      description: `Call "${updatedCall.subject}" updated.`,
+      metadata: {
+        before: oldCall,
+        after: updatedCall,
+      },
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (oldCall.entityType && oldCall.entityId) {
+      await this.activityService.create(
+        {
+          entityType: oldCall.entityType as any,
+          entityId: oldCall.entityId,
+          action: 'CALL_EDIT',
+          description: `Call updated: "${updatedCall.subject}" (Status: ${updatedCall.status})`,
+          metadata: {
+            before: oldCall,
+            after: updatedCall,
+          },
+        },
+        authUserId,
+      );
+    }
+
+    return updatedCall;
   }
 
-  async delete(id: number) {
+  async delete(id: number, authUserId: number) {
     const existingCall = await this.prisma.call.findUnique({
       where: { id },
     });
@@ -90,11 +146,33 @@ export class CallService {
       throw new NotFoundException('Call not found');
     }
 
-    return await this.prisma.call.delete({
+    const deletedCall = await this.prisma.call.delete({
       where: {
         id,
       },
     });
+
+    // 1. Log under Call itself
+    await this.activityService.create({
+      entityType: ActivityEntity.CALL,
+      entityId: deletedCall.id,
+      action: 'CALL_DELETED',
+      description: `Call deleted: "${deletedCall.subject}"`,
+      metadata: deletedCall,
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (existingCall.entityType && existingCall.entityId) {
+      await this.activityService.create({
+        entityType: existingCall.entityType as any,
+        entityId: existingCall.entityId,
+        action: 'CALL_DELETED',
+        description: `Call deleted: "${deletedCall.subject}"`,
+        metadata: deletedCall,
+      }, authUserId);
+    }
+
+    return deletedCall;
   }
 
   async createDefaultCallView(userId: number) {

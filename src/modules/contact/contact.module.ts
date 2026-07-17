@@ -7,9 +7,10 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { ContactFilterBuilder } from './contact-filter.builder';
 import { ContactPolicy } from './contact.policy';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule],
+  imports: [PrismaModule, JwtModule, ActivityModule],
   providers: [
     ContactService,
     PaginationService,
@@ -18,5 +19,6 @@ import { ContactPolicy } from './contact.policy';
     ContactPolicy,
   ],
   controllers: [ContactController],
+  exports: [ContactService],
 })
 export class ContactModule {}

@@ -49,12 +49,14 @@ export class AttachmentController {
     @Req() req: Request,
   ) {
     await this.attachmentPolicy.authorize(req['user'], 'update', id);
-    return this.attachmentService.update(dto, id);
+    const authUserId = req['user'].id
+    return this.attachmentService.update(dto, id, authUserId);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.attachmentPolicy.authorize(req['user'], 'delete', id);
-    return this.attachmentService.delete(id);
+    const authUserId = req['user'].id;
+    return this.attachmentService.delete(id, authUserId);
   }
 }

@@ -12,5 +12,6 @@ import { UserPolicy } from './user.policy';
   imports: [PrismaModule, JwtModule, AuthModule],
   controllers: [UserController],
   providers: [UserService, PaginationService, UserFilterBuilder, UserPolicy],
+  exports: [UserService],
 })
 export class UserModule {}

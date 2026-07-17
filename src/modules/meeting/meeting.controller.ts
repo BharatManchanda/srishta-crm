@@ -54,12 +54,14 @@ export class MeetingController {
     @Req() req: Request,
   ) {
     await this.meetingPolicy.authorize(req['user'], 'update', id);
-    return this.meetingService.update(dto, id);
+    const authUserId = req['user'].id;
+    return this.meetingService.update(dto, id, authUserId);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.meetingPolicy.authorize(req['user'], 'delete', id);
-    return this.meetingService.delete(id);
+    const authUserId = req['user'].id;
+    return this.meetingService.delete(id, authUserId);
   }
 }

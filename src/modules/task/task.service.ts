@@ -7,6 +7,8 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { ActivityService } from '../activity/activity.service';
+import { ActivityEntity } from '@prisma/client';
 
 @Injectable()
 export class TaskService {
@@ -15,6 +17,7 @@ export class TaskService {
     private readonly paginationService: PaginationService,
     private readonly taskFilterBuilder: TaskFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async getList(dto: TaskFilterDto, currentUserId: number) {
@@ -55,30 +58,83 @@ export class TaskService {
   }
 
   async create(dto: TaskCreateDto, authUserId: number) {
-    return await this.prisma.task.create({
+    const newTask = await this.prisma.task.create({
       data: {
         ...dto,
         createdById: authUserId,
       },
     });
+
+    // 1. Log under Task itself
+    await this.activityService.create({
+      entityType: ActivityEntity.TASK,
+      entityId: newTask.id,
+      action: 'TASK_ADDED',
+      description: `Task created: "${newTask.subject}"`,
+      metadata: newTask,
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (dto.entityType && dto.entityId) {
+      await this.activityService.create({
+        entityType: dto.entityType as any,
+        entityId: dto.entityId,
+        action: 'TASK_ADDED',
+        description: `Task created: "${dto.subject}"`,
+        metadata: newTask,
+      }, authUserId);
+    }
+
+    return newTask;
   }
 
-  async update(dto: TaskUpdateDto, id: number) {
-    const existingTask = await this.prisma.task.findUnique({
+  async update(dto: TaskUpdateDto, id: number, authUserId: number) {
+    const oldTask = await this.prisma.task.findUnique({
       where: { id },
     });
 
-    if (!existingTask) {
+    if (!oldTask) {
       throw new NotFoundException('Task not found');
     }
 
-    return await this.prisma.task.update({
+    const updatedTask = await this.prisma.task.update({
       where: { id },
       data: dto,
     });
+
+    // 1. Log under Task itself
+    await this.activityService.create({
+      entityType: ActivityEntity.TASK,
+      entityId: updatedTask.id,
+      action: 'TASK_EDIT',
+      description: `Task "${updatedTask.subject}" updated.`,
+      metadata: {
+        before: oldTask,
+        after: updatedTask,
+      },
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (oldTask.entityType && oldTask.entityId) {
+      await this.activityService.create(
+        {
+          entityType: oldTask.entityType as any,
+          entityId: oldTask.entityId,
+          action: 'TASK_EDIT',
+          description: `Task updated: "${updatedTask.subject}" (Status: ${updatedTask.status})`,
+          metadata: {
+            before: oldTask,
+            after: updatedTask,
+          },
+        },
+        authUserId,
+      );
+    }
+
+    return updatedTask;
   }
 
-  async delete(id: number) {
+  async delete(id: number, authUserId: number) {
     const existingTask = await this.prisma.task.findUnique({
       where: { id },
     });
@@ -87,11 +143,33 @@ export class TaskService {
       throw new NotFoundException('Task not found');
     }
 
-    return await this.prisma.task.delete({
+    const deletedTask = await this.prisma.task.delete({
       where: {
         id,
       },
     });
+
+    // 1. Log under Task itself
+    await this.activityService.create({
+      entityType: ActivityEntity.TASK,
+      entityId: deletedTask.id,
+      action: 'TASK_DELETED',
+      description: `Task deleted: "${deletedTask.subject}"`,
+      metadata: deletedTask,
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (existingTask.entityType && existingTask.entityId) {
+      await this.activityService.create({
+        entityType: existingTask.entityType as any,
+        entityId: existingTask.entityId,
+        action: 'TASK_DELETED',
+        description: `Task deleted: "${deletedTask.subject}"`,
+        metadata: deletedTask,
+      }, authUserId);
+    }
+
+    return deletedTask;
   }
 
   async createDefaultTaskView(userId: number) {

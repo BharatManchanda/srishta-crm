@@ -1,21 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { RolePermissionFilterDto } from './dto/role-permission-filter.dto';
 import { CreateRolePermissionDto } from './dto/create-role-permission.dto';
-
+import { UserHierarchyService } from '../user/user-hierarchy.service';
+import { ForbiddenException } from '@nestjs/common';
 @Injectable()
 export class RolePermissionService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly userHierarchyService: UserHierarchyService,
+  ) {}
   async get(roleId: number, authId: number) {
+    const familyUserIds = await this.userHierarchyService.getFamilyUserIds(authId)
     const isExistRole = await this.prismaService.role.findUnique({
       where: {
         id: roleId,
-        createdById: authId,
+        createdById: {
+          in: familyUserIds
+        },
       },
     });
 
     if (!isExistRole) {
-      throw new Error('Role not found');
+      throw new NotFoundException('Role not found');
     }
 
     return await this.prismaService.rolePermission.findMany({
@@ -58,7 +64,7 @@ export class RolePermissionService {
       });
 
       if (isSuperAdminPermission) {
-        throw new Error('Super admin role cannot be updated');
+        throw new ForbiddenException('Super admin role cannot be updated');
       }
     }
 
@@ -79,7 +85,7 @@ export class RolePermissionService {
     });
 
     if (!isExist) {
-      throw new Error('Role not found');
+      throw new NotFoundException('Role not found');
     }
 
     return this.prismaService.rolePermission.update({

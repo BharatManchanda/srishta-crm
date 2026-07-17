@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContactFilterDto } from './dto/contact-filter.dto';
 import { PaginationService } from 'src/common/pagination/pagination.service';
@@ -7,6 +7,8 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UpdateViewSettingDto } from './dto/contact-view-setting.dto';
 import { ContactCreateDto } from './dto/contact-create.dto';
 import { ContactUpdateDto } from './dto/contact-update.dto';
+import { ActivityEntity } from '@prisma/client';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class ContactService {
@@ -15,6 +17,7 @@ export class ContactService {
     private readonly paginationService: PaginationService,
     private readonly contactFilterBuilder: ContactFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async getList(dto: ContactFilterDto, currentUserId: number) {
@@ -249,7 +252,7 @@ export class ContactService {
           : null,
       ]);
 
-      return this.prisma.contact.create({
+      const contact = await this.prisma.contact.create({
         data: {
           ...contactData,
           createdById: authUserId,
@@ -258,12 +261,26 @@ export class ContactService {
           dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
         },
       });
+
+      await this.activityService.create({
+        entityType: ActivityEntity.CONTACT,
+        entityId: contact.id,
+        action: 'CONTACT_CREATED',
+        description: `Contact "${contact.name}" created.`,
+        metadata: {
+          name: contact.name,
+          email: contact.email,
+          title: contact.title,
+        },
+      }, authUserId);
+
+      return contact;
     } catch (error) {
       console.log(error, '::::error');
     }
   }
 
-  async update(dto: ContactUpdateDto, id: number) {
+  async update(dto: ContactUpdateDto, id: number, authUserId: number) {
     try {
       const { mailingAddress, otherAddress, ...contactData } = dto;
       const existingContact = await this.prisma.contact.findUnique({
@@ -272,7 +289,7 @@ export class ContactService {
       });
 
       if (!existingContact) {
-        throw new Error('Contact not found');
+        throw new NotFoundException('Contact not found');
       }
 
       // Update or create mailing address
@@ -307,7 +324,7 @@ export class ContactService {
         }
       }
 
-      return this.prisma.contact.update({
+      const contact = await this.prisma.contact.update({
         where: { id },
         data: {
           ...contactData,
@@ -316,17 +333,43 @@ export class ContactService {
           dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
         },
       });
+
+      await this.activityService.create({
+        entityType: ActivityEntity.CONTACT,
+        entityId: contact.id,
+        action: 'CONTACT_UPDATED',
+        description: `Contact "${contact.name}" updated.`,
+        metadata: {
+          before: existingContact,
+          after: contact,
+        },
+      }, authUserId);
+
+      return contact;
     } catch (error) {
       console.log(error, '::::error');
       throw error;
     }
   }
 
-  async delete(id: number) {
-    return this.prisma.contact.delete({
+  async delete(id: number, authUserId: number) {
+    const contact = await this.prisma.contact.delete({
       where: {
         id: id,
       },
     });
+
+    await this.activityService.create({
+      entityType: ActivityEntity.CONTACT,
+      entityId: contact.id,
+      action: 'CONTACT_DELETED',
+      description: `Contact "${contact.name}" deleted.`,
+      metadata: {
+        name: contact.name,
+        email: contact.email,
+      },
+    }, authUserId);
+
+    return contact;
   }
 }

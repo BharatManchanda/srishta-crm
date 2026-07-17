@@ -1,6 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CsvParserService } from 'src/common/csv-parse/csv-parser.service';
 import { ImportEntity, ImportStatus } from '@prisma/client';
@@ -33,7 +33,7 @@ export class BulkImportProcessor extends WorkerHost {
         });
 
         if (!importJob) {
-            throw new Error(`ImportJob ${job.data.importJobId} does not exist.`);
+            throw new BadRequestException(`ImportJob ${job.data.importJobId} does not exist.`);
         }
 
         try {
@@ -67,7 +67,7 @@ export class BulkImportProcessor extends WorkerHost {
                     break;
 
                 default:
-                    throw new Error(`Unsupported import entity: ${importJob.entity}`);
+                    throw new BadRequestException(`Unsupported import entity: ${importJob.entity}`);
             }
 
             await this.prisma.importJob.update({

@@ -1,6 +1,6 @@
 import { LeadStatus } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsOptional, IsString, IsEnum, IsIn, IsNumber } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsIn, IsNumber, IsBoolean } from 'class-validator';
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
 export class LeadFilterDto extends PaginationDto {

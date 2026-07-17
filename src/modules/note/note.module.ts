@@ -7,9 +7,10 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { NoteFilterBuilder } from './note-filter.builder';
 import { NotePolicy } from './note.policy';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule],
+  imports: [PrismaModule, JwtModule, ActivityModule],
   providers: [
     NoteService,
     PaginationService,

@@ -202,6 +202,17 @@ enum ImportEntity {
   DEAL
 }
 
+enum ActivityEntity {
+  LEAD
+  CONTACT
+  ACCOUNT
+  TASK
+  CALL
+  MEETING
+  NOTE
+  DEAL
+}
+
 enum ImportStatus {
   PENDING
   PROCESSING
@@ -265,6 +276,8 @@ model User {
   assignedLeads Lead[] @relation("LeadAssignee")
 
   createdImportJob ImportJob[] @relation("ImportJobCreator")
+
+  createdActivities Activity[] @relation("ActivityCreator")
 }
 
 model OtpVerification {
@@ -770,4 +783,24 @@ model ImportRow {
   createdEntityId Int?
 
   createdAt DateTime @default(now())
+}
+
+model Activity {
+  id          Int   @id @default(autoincrement())
+
+  entityType  ActivityEntity
+  entityId    Int
+
+  action      String
+
+  description String
+
+  metadata    Json?
+
+  createdById Int
+  createdBy   User @relation("ActivityCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
 }

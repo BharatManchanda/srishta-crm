@@ -4,11 +4,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { LeadFilterBuilder } from './lead-filter.builder';
 import { LeadCreateDto } from './dto/lead-create.dto';
-import { Prisma } from '@prisma/client';
+import { ActivityEntity, Prisma } from '@prisma/client';
 import { LeadUpdateDto } from './dto/lead-update.dto';
-// import { LeadPolicy } from './lead.policy';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class LeadService {
@@ -17,16 +17,15 @@ export class LeadService {
     private readonly paginationService: PaginationService,
     private readonly leadFilterBuilder: LeadFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly activityService: ActivityService,
   ) {}
   async getList(dto: LeadFilterDto, currentUserId: number) {
     const userIds = await this.userHierarchyService.getFamilyUserIds(currentUserId);
-    const orderBy = dto.sortBy
-      ? { [dto.sortBy]: dto.sortOrder || 'desc' }
-      : { id: 'desc' };
-
+    const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
     const result = await this.paginationService.paginate(this.prisma.lead, {
       page: dto.page,
       perPage: dto.perPage,
+      paginate: dto?.paginate,
       where: {
         ...this.leadFilterBuilder.build(dto),
         createdById: {
@@ -42,7 +41,7 @@ export class LeadService {
   }
 
   async create(dto: LeadCreateDto, authUserId: number) {
-    return this.prisma.lead.create({
+    const lead = await this.prisma.lead.create({
       data: {
         ...dto,
 
@@ -50,6 +49,20 @@ export class LeadService {
         createdById: authUserId,
       },
     });
+
+    await this.activityService.create({
+      entityType: ActivityEntity.LEAD,
+      entityId: lead.id,
+      action: 'LEAD_CREATED',
+      description: `Lead "${lead.name}" created.`,
+      metadata: {
+        name: lead.name,
+        email: lead.email,
+        status: lead.status,
+      },
+    }, authUserId );
+
+    return lead;
   }
 
   async get(id: number) {
@@ -60,24 +73,64 @@ export class LeadService {
     });
   }
 
-  async update(dto: LeadUpdateDto, id: number) {
-    return this.prisma.lead.update({
-      where: {
-        id: id,
-      },
+  // async update(dto: LeadUpdateDto, id: number) {
+  //   return this.prisma.lead.update({
+  //     where: {
+  //       id: id,
+  //     },
+  //     data: {
+  //       ...dto,
+  //       budget: dto.budget ? new Prisma.Decimal(dto.budget) : null,
+  //     },
+  //   });
+  // }
+
+  async update(dto: LeadUpdateDto, id: number, authUserId: number) {
+    const oldLead = await this.prisma.lead.findUnique({ where: { id } });
+
+    const lead = await this.prisma.lead.update({
+      where: { id },
       data: {
         ...dto,
         budget: dto.budget ? new Prisma.Decimal(dto.budget) : null,
       },
     });
+
+    await this.activityService.create(
+      {
+        entityType: ActivityEntity.LEAD,
+        entityId: lead.id,
+        action: 'LEAD_UPDATED',
+        description: `Lead "${lead.name}" updated.`,
+        metadata: {
+          before: oldLead,
+          after: lead,
+        },
+      },
+      authUserId,
+    );
+
+    return lead;
   }
 
-  async delete(id: number) {
-    return this.prisma.lead.delete({
-      where: {
-        id: id,
-      },
+  async delete(id: number, authUserId: number) {
+    const lead = await this.prisma.lead.delete({
+      where: { id },
     });
+
+    await this.activityService.create({
+      entityType: ActivityEntity.LEAD,
+      entityId: lead.id,
+      action: 'LEAD_DELETED',
+      description: `Lead "${lead.name}" deleted.`,
+      metadata: {
+        name: lead.name,
+        email: lead.email,
+      },
+    },
+    authUserId);
+
+    return lead;
   }
 
   async createDefaultLeadView(userId: number) {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -61,7 +61,7 @@ export class RoleService {
       },
     });
     if (!isExistRole) {
-      throw new Error('Role not found');
+      throw new NotFoundException('Role not found');
     }
 
     return await this.prisma.role.update({
@@ -84,7 +84,7 @@ export class RoleService {
     });
 
     if (assignedUsers > 0) {
-      throw new Error('Cannot delete role because users are assigned to it');
+      throw new ConflictException('Cannot delete role because users are assigned to it');
     }
 
     return await this.prisma.role.delete({

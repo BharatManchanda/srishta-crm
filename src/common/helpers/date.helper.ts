@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
@@ -82,7 +83,7 @@ export function parseDate(value: unknown): Date | null {
     }
 
     if (typeof value !== 'string') {
-        throw new Error(`Unsupported date type: ${typeof value}`);
+        throw new BadRequestException(`Unsupported date type: ${typeof value}`);
     }
 
     const input = value.trim();
@@ -103,5 +104,5 @@ export function parseDate(value: unknown): Date | null {
         }
     }
 
-    throw new Error(`Invalid date: ${value}`);
+    throw new BadRequestException(`Invalid date: ${value}`);
 }

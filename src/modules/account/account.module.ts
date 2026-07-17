@@ -7,9 +7,10 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { AccountFilterBuilder } from './account-filter.builder';
 import { AccountPolicy } from './account.policy';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule],
+  imports: [PrismaModule, JwtModule, ActivityModule],
   providers: [
     AccountService,
     PaginationService,
@@ -18,5 +19,6 @@ import { AccountPolicy } from './account.policy';
     AccountPolicy,
   ],
   controllers: [AccountController],
+  exports: [AccountService],
 })
 export class AccountModule {}

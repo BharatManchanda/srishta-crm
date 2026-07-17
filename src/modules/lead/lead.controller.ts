@@ -13,7 +13,7 @@ export class LeadController {
   constructor(
     private readonly leadService: LeadService,
     private readonly leadPolicy: LeadPolicy,
-  ) {}
+  ) { }
 
   @Get()
   async getList(@Query() dto: LeadFilterDto, @Req() req: Request) {
@@ -56,13 +56,13 @@ export class LeadController {
   ) {
     await this.leadPolicy.authorize(req['user'], 'update', id);
     const authUserId = req['user'].id;
-    return this.leadService.update(dto, id);
+    return this.leadService.update(dto, id, authUserId);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.leadPolicy.authorize(req['user'], 'delete', id);
     const authUserId = req['user'].id;
-    return this.leadService.delete(id);
+    return this.leadService.delete(id, authUserId);
   }
 }

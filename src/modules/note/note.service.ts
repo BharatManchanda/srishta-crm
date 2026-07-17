@@ -6,6 +6,7 @@ import { NoteFilterBuilder } from './note-filter.builder';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { NoteCreateDto } from './dto/note-create.dto';
 import { NoteUpdateDto } from './dto/note-update.dto';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class NoteService {
@@ -14,6 +15,7 @@ export class NoteService {
     private readonly paginationService: PaginationService,
     private readonly noteFilterBuilder: NoteFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async getList(dto: NoteFilterDto, currentUserId: number) {
@@ -54,30 +56,55 @@ export class NoteService {
   }
 
   async create(dto: NoteCreateDto, authUserId: number) {
-    return await this.prisma.note.create({
+    const newNote = await this.prisma.note.create({
       data: {
         ...dto,
         createdById: authUserId,
       },
     });
+
+    await this.activityService.create({
+      entityType: dto.entityType as any,
+      entityId: dto.entityId,
+      action: 'NOTE_ADDED',
+      description: `Note created: "${dto.title}"`,
+    }, authUserId);
+
+    return newNote;
   }
 
-  async update(dto: NoteUpdateDto, id: number) {
-    const existingNote = await this.prisma.note.findUnique({
+  async update(dto: NoteUpdateDto, id: number, authUserId: number) {
+    const oldNote = await this.prisma.note.findUnique({
       where: { id },
     });
 
-    if (!existingNote) {
+    if (!oldNote) {
       throw new NotFoundException('Note not found');
     }
 
-    return await this.prisma.note.update({
+    const updatedNote = await this.prisma.note.update({
       where: { id },
       data: dto,
     });
+
+    await this.activityService.create(
+      {
+        entityType: oldNote.entityType as any,
+        entityId: oldNote.entityId,
+        action: 'NOTE_EDIT',
+        description: `Note "${updatedNote.title}" updated.`,
+        metadata: {
+          before: oldNote,
+          after: updatedNote,
+        },
+      },
+      authUserId,
+    );
+
+    return updatedNote;
   }
 
-  async delete(id: number) {
+  async delete(id: number, authUserId: number) {
     const existingNote = await this.prisma.note.findUnique({
       where: { id },
     });
@@ -86,10 +113,19 @@ export class NoteService {
       throw new NotFoundException('Note not found');
     }
 
-    return await this.prisma.note.delete({
+    const deletedNote = await this.prisma.note.delete({
       where: {
         id,
       },
     });
+
+    await this.activityService.create({
+      entityType: existingNote.entityType as any,
+      entityId: existingNote.entityId,
+      action: 'NOTE_DELETED',
+      description: `Note deleted: "${deletedNote.title}"`,
+    }, authUserId);
+
+    return deletedNote;
   }
 }

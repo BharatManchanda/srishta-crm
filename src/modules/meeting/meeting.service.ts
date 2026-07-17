@@ -7,6 +7,8 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { MeetingCreateDto } from './dto/meeting-create.dto';
 import { MeetingUpdateDto } from './dto/meeting-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { ActivityEntity } from '@prisma/client';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class MeetingService {
@@ -15,6 +17,7 @@ export class MeetingService {
     private readonly paginationService: PaginationService,
     private readonly meetingFilterBuilder: MeetingFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async getList(dto: MeetingFilterDto, currentUserId: number) {
@@ -62,7 +65,7 @@ export class MeetingService {
   async create(dto: MeetingCreateDto, authUserId: number) {
     const { participants, ...meetingData } = dto;
 
-    return await this.prisma.meeting.create({
+    const meeting = await this.prisma.meeting.create({
       data: {
         ...meetingData,
         createdById: authUserId,
@@ -74,9 +77,39 @@ export class MeetingService {
         participants: true,
       },
     });
+
+    // 1. Log under Meeting itself
+    await this.activityService.create({
+      entityType: ActivityEntity.MEETING,
+      entityId: meeting.id,
+      action: 'MEETINGS_ADDED',
+      description: `Meeting "${meeting.title}" scheduled.`,
+      metadata: {
+        title: meeting.title,
+        startTime: meeting.startTime,
+        endTime: meeting.endTime,
+      },
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (meeting.entityType && meeting.entityId) {
+      await this.activityService.create({
+        entityType: meeting.entityType as any,
+        entityId: meeting.entityId,
+        action: 'MEETINGS_ADDED',
+        description: `Meeting scheduled: "${meeting.title}"`,
+        metadata: {
+          title: meeting.title,
+          startTime: meeting.startTime,
+          endTime: meeting.endTime,
+        },
+      }, authUserId);
+    }
+
+    return meeting;
   }
 
-  async update(dto: MeetingUpdateDto, id: number) {
+  async update(dto: MeetingUpdateDto, id: number, authUserId: number) {
     const { participants, ...meetingData } = dto;
 
     const existingMeeting = await this.prisma.meeting.findUnique({
@@ -87,7 +120,7 @@ export class MeetingService {
       throw new NotFoundException('Meeting not found');
     }
 
-    return await this.prisma.$transaction(async (tx) => {
+    const updatedMeeting = await this.prisma.$transaction(async (tx) => {
       if (participants !== undefined) {
         // Delete existing participants
         await tx.meetingParticipant.deleteMany({
@@ -113,9 +146,37 @@ export class MeetingService {
         },
       });
     });
+
+    // 1. Log under Meeting itself
+    await this.activityService.create({
+      entityType: ActivityEntity.MEETING,
+      entityId: updatedMeeting.id,
+      action: 'MEETINGS_EDIT',
+      description: `Meeting "${updatedMeeting.title}" updated.`,
+      metadata: {
+        before: existingMeeting,
+        after: updatedMeeting,
+      },
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (updatedMeeting.entityType && updatedMeeting.entityId) {
+      await this.activityService.create({
+        entityType: updatedMeeting.entityType as any,
+        entityId: updatedMeeting.entityId,
+        action: 'MEETINGS_EDIT',
+        description: `Meeting updated: "${updatedMeeting.title}" (Status: ${updatedMeeting.status})`,
+        metadata: {
+          before: existingMeeting,
+          after: updatedMeeting,
+        },
+      }, authUserId);
+    }
+
+    return updatedMeeting;
   }
 
-  async delete(id: number) {
+  async delete(id: number, authUserId: number) {
     const existingMeeting = await this.prisma.meeting.findUnique({
       where: { id },
     });
@@ -125,11 +186,37 @@ export class MeetingService {
     }
 
     // MeetingParticipant will be auto-deleted because of onDelete: Cascade in Prisma schema
-    return await this.prisma.meeting.delete({
+    const meeting = await this.prisma.meeting.delete({
       where: {
         id,
       },
     });
+
+    // 1. Log under Meeting itself
+    await this.activityService.create({
+      entityType: ActivityEntity.MEETING,
+      entityId: meeting.id,
+      action: 'MEETINGS_DELETED',
+      description: `Meeting "${meeting.title}" deleted.`,
+      metadata: {
+        title: meeting.title,
+      },
+    }, authUserId);
+
+    // 2. Log under parent entity if exists
+    if (existingMeeting.entityType && existingMeeting.entityId) {
+      await this.activityService.create({
+        entityType: existingMeeting.entityType as any,
+        entityId: existingMeeting.entityId,
+        action: 'MEETINGS_DELETED',
+        description: `Meeting deleted: "${meeting.title}"`,
+        metadata: {
+          title: meeting.title,
+        },
+      }, authUserId);
+    }
+
+    return meeting;
   }
 
   async createDefaultMeetingView(userId: number) {

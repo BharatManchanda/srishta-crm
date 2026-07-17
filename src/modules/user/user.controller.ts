@@ -17,7 +17,9 @@ import { RegisterDto } from '../auth/dto/register-user.dto';
 import { UserFilterDto } from './dto/user-filter.dto';
 import { UpdateUserDto } from '../auth/dto/update-user.dto';
 import { UserPolicy } from './user.policy';
+import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 
+@UseGuards(AuthGuard)
 @Controller('user')
 export class UserController {
   constructor(
@@ -25,7 +27,6 @@ export class UserController {
     private readonly userPolicy: UserPolicy,
     ) { }
 
-  @UseGuards(AuthGuard)
   @Get()
   async getList(@Query() dto: UserFilterDto, @Req() req: Request) {
     await this.userPolicy.authorize(req['user'], 'view');
@@ -33,7 +34,6 @@ export class UserController {
     return this.userService.getList(dto, authUserId);
   }
 
-  @UseGuards(AuthGuard)
   @Post()
   async create(@Body() dto: RegisterDto, @Req() req: Request) {
     await this.userPolicy.authorize(req['user'], 'create');
@@ -41,34 +41,34 @@ export class UserController {
     return this.userService.create(dto, authUserId);
   }
 
-  @UseGuards(AuthGuard)
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.userPolicy.authorize(req['user'], 'view', id);
     return this.userService.getOne(id);
   }
 
-  @UseGuards(AuthGuard)
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     try {
       await this.userPolicy.authorize(req['user'], 'delete', id);
       return this.userService.delete(id);
     } catch (error) {
-      return error; //
-      // console.log(error.message,"::::error")
-      // throw new HttpException(
-      //     error.message || 'Failed to delete user',
-      //     error.status || HttpStatus.INTERNAL_SERVER_ERROR
-      // );
+      return error;
     }
   }
 
-  @UseGuards(AuthGuard)
   @Put(':id')
     async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto, @Req() req: Request) {
     await this.userPolicy.authorize(req['user'], 'update', id);
     const authUserId = req['user'].id;
     return this.userService.update(dto, authUserId, id);
   }
+
+  @Put(":id/change-password")
+  async changePassword(@Param('id', ParseIntPipe) id: number, @Body() dto: ChangePasswordDto, @Req() req: Request) {
+    await this.userPolicy.authorize(req['user'], 'update', id);
+    const authUserId = req['user'].id;
+    return this.userService.changePassword(dto, authUserId, id);
+  }
+
 }

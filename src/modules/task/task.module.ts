@@ -7,9 +7,10 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { TaskFilterBuilder } from './task-filter.builder';
 import { TaskPolicy } from './task.policy';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule],
+  imports: [PrismaModule, JwtModule, ActivityModule],
   providers: [
     TaskService,
     PaginationService,

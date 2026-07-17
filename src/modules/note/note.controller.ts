@@ -53,12 +53,14 @@ export class NoteController {
     @Req() req: Request,
   ) {
     await this.notePolicy.authorize(req['user'], 'update', id);
-    return this.noteService.update(dto, id);
+    const authUserId = req['user'].id;
+    return this.noteService.update(dto, id, authUserId);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.notePolicy.authorize(req['user'], 'delete', id);
-    return this.noteService.delete(id);
+    const authUserId = req['user'].id;
+    return this.noteService.delete(id, authUserId);
   }
 }

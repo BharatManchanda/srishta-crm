@@ -66,12 +66,14 @@ export class TaskController {
     @Req() req: Request,
   ) {
     await this.taskPolicy.authorize(req['user'], 'update', id);
-    return this.taskService.update(dto, id);
+    const authUserId = req['user'].id;
+    return this.taskService.update(dto, id, authUserId);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.taskPolicy.authorize(req['user'], 'delete', id);
-    return this.taskService.delete(id);
+    const authUserId = req['user'].id;
+    return this.taskService.delete(id, authUserId);
   }
 }

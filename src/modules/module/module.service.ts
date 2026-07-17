@@ -126,8 +126,6 @@ export class ModuleService {
       this.searchUser(q, currentUser),
     ]);
 
-    console.log(leads, contacts, accounts, meetings, calls, tasks, users,":::leads, contacts, accounts, meetings, calls, tasks, users")
-
     return {
       modules,
       results: {

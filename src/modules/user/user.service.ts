@@ -7,6 +7,7 @@ import { UserFilterDto } from './dto/user-filter.dto';
 import { UserFilterBuilder } from './user-filter.builder';
 import { UpdateUserDto } from '../auth/dto/update-user.dto';
 import { UserPolicy } from './user.policy';
+import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 
 @Injectable()
 export class UserService {
@@ -60,6 +61,24 @@ export class UserService {
         status: true,
         createdAt: true,
         updatedAt: true,
+        _count: {
+          select: {
+            children: true,
+            tableViews: true,
+            createdRoles: true,
+            createdContacts: true,
+            createdAccounts: true,
+            createdNotes: true,
+            createdAttachments: true,
+            createdLeads: true,
+            createdTasks: true,
+            createdCalls: true,
+            meetingCalls: true,
+            assignedLeads: true,
+            createdImportJob: true,
+            createdActivities: true,
+          },
+        },
       },
     });
   }
@@ -107,5 +126,9 @@ export class UserService {
 
   async create(dto: RegisterDto, authUserId: number) {
     return this.authService.register(dto, authUserId);
+  }
+
+  async changePassword(dto: ChangePasswordDto, authUserId: number, userId: number) {
+    return this.authService.changePassword(dto, authUserId, userId);
   }
 }

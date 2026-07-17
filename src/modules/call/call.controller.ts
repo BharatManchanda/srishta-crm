@@ -54,12 +54,14 @@ export class CallController {
     @Req() req: Request,
   ) {
     await this.callPolicy.authorize(req['user'], 'update', id);
-    return this.callService.update(dto, id);
+    const authUserId = req['user'].id;
+    return this.callService.update(dto, id, authUserId);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.callPolicy.authorize(req['user'], 'delete', id);
-    return this.callService.delete(id);
+    const authUserId = req['user'].id;
+    return this.callService.delete(id, authUserId);
   }
 }

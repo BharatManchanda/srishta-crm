@@ -8,9 +8,10 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 import { StorageService } from 'src/common/storage/storage.service';
 import { AttachmentFilterBuilder } from './attachment-filter.builder';
 import { AttachmentPolicy } from './attachment.policy';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule],
+  imports: [PrismaModule, JwtModule, ActivityModule],
   controllers: [AttachmentController],
   providers: [
     AttachmentService,

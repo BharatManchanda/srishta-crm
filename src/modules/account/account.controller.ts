@@ -66,12 +66,14 @@ export class AccountController {
     @Req() req: Request,
   ) {
     await this.accountPolicy.authorize(req['user'], 'update', id);
-    return this.accountService.update(id, dto);
+    const authUserId = req['user'].id;
+    return this.accountService.update(id, dto, authUserId);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.accountPolicy.authorize(req['user'], 'delete', id);
-    return this.accountService.delete(id);
+    const authUserId = req['user'].id;
+    return this.accountService.delete(id, authUserId);
   }
 }

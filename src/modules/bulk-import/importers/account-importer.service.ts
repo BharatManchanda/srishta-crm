@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BulkImporter } from './importer.interface';
 import { AccountRating, AccountType, ImportJob, ImportRowStatus, OwnershipType } from '@prisma/client';
@@ -13,7 +13,7 @@ export class AccountImporterService implements BulkImporter {
         this.logger.log(`Importing ${rows.length} accounts`);
         const mapColumn = importJob?.columnMapping ?? {};
         if (!isColumnMapping(mapColumn)) {
-            throw new Error('Invalid column mapping');
+            throw new BadRequestException('Invalid column mapping');
         }
 
         let successRows = 0;

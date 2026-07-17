@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccountFilterDto } from './dto/account-filter.dto';
 import { PaginationService } from 'src/common/pagination/pagination.service';
@@ -7,6 +7,7 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UpdateViewSettingDto } from './dto/account-view-setting.dto';
 import { AccountCreateDto } from './dto/account-create.dto';
 import { AccountUpdateDto } from './dto/account-update.dto';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class AccountService {
@@ -15,6 +16,7 @@ export class AccountService {
     private readonly paginationService: PaginationService,
     private readonly accountFilterBuilder: AccountFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async getList(dto: AccountFilterDto, currentUserId: number) {
@@ -280,16 +282,22 @@ export class AccountService {
     try {
       const { billingAddress, shippingAddress, ...accountData } = dto;
 
+      if (dto.parentAccountId !== null) {
+        const existingAccount = await this.prisma.account.findFirst({
+          where: {
+            id: dto.parentAccountId,
+          },
+        })
+        if (!existingAccount){
+          throw new BadRequestException('Parent account not found');
+        }
+      }
       const [billingAddressRecord, shippingAddressRecord] = await Promise.all([
-        billingAddress
-          ? this.prisma.address.create({ data: billingAddress })
-          : null,
-        shippingAddress
-          ? this.prisma.address.create({ data: shippingAddress })
-          : null,
+        billingAddress ? this.prisma.address.create({ data: billingAddress }) : null,
+        shippingAddress ? this.prisma.address.create({ data: shippingAddress }) : null,
       ]);
 
-      return this.prisma.account.create({
+      const newAccount = await this.prisma.account.create({
         data: {
           ...accountData,
           createdById: authUserId,
@@ -297,26 +305,39 @@ export class AccountService {
           shippingAddressId: shippingAddressRecord?.id,
         },
       });
+
+      await this.activityService.create({
+        entityType: 'ACCOUNT',
+        entityId: newAccount.id,
+        action: 'ACCOUNT_CREATED',
+        description: `Account "${newAccount.accountName}" was created.`,
+      }, authUserId);
+
+      return newAccount;
     } catch (error) {
       console.log(error, '::::error');
       throw error;
     }
   }
 
-  async update(id: number, dto: AccountUpdateDto) {
+  async update(id: number, dto: AccountUpdateDto, authUserId: number) {
     try {
       const { billingAddress, shippingAddress, ...accountData } = dto;
-      const existingAccount = await this.prisma.account.findUnique({
+
+      const oldAccount = await this.prisma.account.findUnique({
         where: { id },
-        include: { billingAddress: true, shippingAddress: true },
+        include: {
+          billingAddress: true,
+          shippingAddress: true,
+        },
       });
 
-      if (!existingAccount) {
-        throw new Error('Account not found');
+      if (!oldAccount) {
+        throw new NotFoundException('Account not found');
       }
 
       // Update or create billing address
-      let billingAddressId = existingAccount.billingAddressId;
+      let billingAddressId = oldAccount.billingAddressId;
       if (billingAddress) {
         if (billingAddressId) {
           await this.prisma.address.update({
@@ -332,7 +353,7 @@ export class AccountService {
       }
 
       // Update or create shipping address
-      let shippingAddressId = existingAccount.shippingAddressId;
+      let shippingAddressId = oldAccount.shippingAddressId;
       if (shippingAddress) {
         if (shippingAddressId) {
           await this.prisma.address.update({
@@ -347,7 +368,7 @@ export class AccountService {
         }
       }
 
-      return this.prisma.account.update({
+      await this.prisma.account.update({
         where: { id },
         data: {
           ...accountData,
@@ -355,17 +376,62 @@ export class AccountService {
           shippingAddressId,
         },
       });
+
+      // Fetch updated account with addresses
+      const updatedAccount = await this.prisma.account.findUnique({
+        where: { id },
+        include: {
+          billingAddress: true,
+          shippingAddress: true,
+        },
+      });
+
+      if (!updatedAccount) {
+        throw new NotFoundException('Account not found');
+      }
+
+      await this.activityService.create(
+        {
+          entityType: 'ACCOUNT',
+          entityId: id,
+          action: 'ACCOUNT_UPDATED',
+          description: `Account "${updatedAccount.accountName}" was updated.`,
+          metadata: {
+            before: oldAccount,
+            after: updatedAccount,
+          },
+        },
+        authUserId,
+      );
+
+      return updatedAccount;
     } catch (error) {
-      console.log(error, '::::error');
       throw error;
     }
   }
 
-  async delete(id: number) {
-    return this.prisma.account.delete({
+  async delete(id: number, authUserId: number) {
+    const existingAccount = await this.prisma.account.findUnique({
+      where: { id },
+    });
+
+    if (!existingAccount) {
+      throw new NotFoundException('Account not found');
+    }
+
+    const deletedAccount = await this.prisma.account.delete({
       where: {
         id: id,
       },
     });
+
+    await this.activityService.create({
+      entityType: 'ACCOUNT',
+      entityId: deletedAccount.id,
+      action: 'ACCOUNT_DELETED',
+      description: `Account "${deletedAccount.accountName}" was deleted.`,
+    }, authUserId);
+
+    return deletedAccount;
   }
 }

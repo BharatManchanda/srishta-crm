@@ -19,6 +19,8 @@ import { OtpPurpose } from '@prisma/client';
 import { UserStatus } from '@prisma/client';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LeadService } from '../lead/lead.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UserHierarchyService } from '../user/user-hierarchy.service';
 @Injectable()
 export class AuthService {
   constructor(
@@ -26,7 +28,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private googleService: GoogleService,
-    private readonly leadService: LeadService
+    private readonly leadService: LeadService,
+    private readonly userHierarchyService: UserHierarchyService
     ) { }
 
   private generateOtp(): string {
@@ -396,7 +399,7 @@ export class AuthService {
     const payload = await this.googleService.verifyToken(idToken);
 
     if (!payload?.email) {
-      throw new Error('Invalid Google Token');
+      throw new BadRequestException('Invalid Google Token');
     }
 
     let user = await this.prisma.user.findUnique({
@@ -430,5 +433,25 @@ export class AuthService {
         ...safeUser,
       },
     };
+  }
+
+  async changePassword(dto: ChangePasswordDto, authUserId: number, userId: number) {
+    const familyUserIds = await this.userHierarchyService.getFamilyUserIds(authUserId);
+    
+    if (!familyUserIds.includes(userId)) {
+      throw new BadRequestException('User not found');
+    }
+
+    if (dto.password !== dto.confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+    return this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        password: await bcrypt.hash(dto.password, 10),
+      },
+    })
   }
 }

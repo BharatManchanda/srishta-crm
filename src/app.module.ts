@@ -21,6 +21,8 @@ import { CallModule } from './modules/call/call.module';
 import { MeetingModule } from './modules/meeting/meeting.module';
 import { BulkImportModule } from './modules/bulk-import/bulk-import.module';
 import { BullModule } from '@nestjs/bullmq';
+import { ExportModule } from './modules/export/export.module';
+import { ActivityModule } from './modules/activity/activity.module';
 @Module({
   imports: [
     AuthModule,
@@ -47,8 +49,10 @@ import { BullModule } from '@nestjs/bullmq';
         port: process.env.REDIS_PORT as unknown as number,
       },
     }),
+    ExportModule,
+    ActivityModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

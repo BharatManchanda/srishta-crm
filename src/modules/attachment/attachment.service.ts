@@ -6,6 +6,7 @@ import { AttachmentFilterBuilder } from './attachment-filter.builder';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { AttachmentCreateDto } from './dto/attachment-create.dto';
 import { AttachmentUpdateDto } from './dto/attachment-update.dto';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class AttachmentService {
@@ -14,6 +15,7 @@ export class AttachmentService {
     private readonly paginationService: PaginationService,
     private readonly attachmentFilterBuilder: AttachmentFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async getList(dto: AttachmentFilterDto, currentUserId: number) {
@@ -54,30 +56,54 @@ export class AttachmentService {
   }
 
   async create(dto: AttachmentCreateDto, authUserId: number) {
-    return await this.prisma.attachment.create({
+    const newAttachment = await this.prisma.attachment.create({
       data: {
         ...dto,
         createdById: authUserId,
       },
     });
+    await this.activityService.create({
+      entityType: dto.entityType as any,
+      entityId: dto.entityId,
+      action: 'ATTACHMENTS_ADDED',
+      description: `Attachment created: "${dto.title}"`,
+    }, authUserId);
+
+    return newAttachment;
   }
 
-  async update(dto: AttachmentUpdateDto, id: number) {
-    const existingAttachment = await this.prisma.attachment.findUnique({
+  async update(dto: AttachmentUpdateDto, id: number, authUserId: number) {
+    const oldAttachment = await this.prisma.attachment.findUnique({
       where: { id },
     });
 
-    if (!existingAttachment) {
+    if (!oldAttachment) {
       throw new NotFoundException('Attachment not found');
     }
 
-    return await this.prisma.attachment.update({
+    const updatedAttachment = await this.prisma.attachment.update({
       where: { id },
       data: dto,
     });
+
+    await this.activityService.create(
+      {
+        entityType: oldAttachment.entityType as any,
+        entityId: oldAttachment.entityId,
+        action: 'ATTACHMENTS_EDIT',
+        description: `Attachment "${updatedAttachment.title}" updated.`,
+        metadata: {
+          before: oldAttachment,
+          after: updatedAttachment,
+        },
+      },
+      authUserId,
+    );
+
+    return updatedAttachment;
   }
 
-  async delete(id: number) {
+  async delete(id: number, authUserId: number) {
     const existingAttachment = await this.prisma.attachment.findUnique({
       where: { id },
     });
@@ -86,10 +112,19 @@ export class AttachmentService {
       throw new NotFoundException('Attachment not found');
     }
 
-    return await this.prisma.attachment.delete({
+    const deleted = await this.prisma.attachment.delete({
       where: {
         id,
       },
     });
+
+    await this.activityService.create({
+      entityType: existingAttachment.entityType as any,
+      entityId: existingAttachment.entityId,
+      action: 'ATTACHMENTS_DELETED',
+      description: `Attachment deleted: "${existingAttachment.title || existingAttachment.fileName}"`,
+    }, authUserId);
+
+    return deleted;
   }
 }

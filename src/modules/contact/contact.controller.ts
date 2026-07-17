@@ -66,12 +66,14 @@ export class ContactController {
     @Req() req: Request,
   ) {
     await this.contactPolicy.authorize(req['user'], 'update', id);
-    return this.contactService.update(dto, id);
+    const authUserId = req['user'].id;
+    return this.contactService.update(dto, id, authUserId);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.contactPolicy.authorize(req['user'], 'delete', id);
-    return this.contactService.delete(id);
+    const authUserId = req['user'].id;
+    return this.contactService.delete(id, authUserId);
   }
 }
