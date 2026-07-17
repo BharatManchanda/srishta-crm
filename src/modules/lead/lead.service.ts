@@ -37,6 +37,49 @@ export class LeadService {
       },
       orderBy,
     });
+
+    const leadIds = result.data.map((lead: any) => lead.id);
+    if (leadIds.length > 0) {
+      const [tasks, calls, meetings] = await Promise.all([
+        this.prisma.task.findMany({
+          where: {
+            entityType: 'LEAD',
+            entityId: { in: leadIds },
+            status: { not: 'COMPLETED' },
+          },
+        }),
+        this.prisma.call.findMany({
+          where: {
+            entityType: 'LEAD',
+            entityId: { in: leadIds },
+            status: { not: 'COMPLETED' },
+          },
+        }),
+        this.prisma.meeting.findMany({
+          where: {
+            entityType: 'LEAD',
+            entityId: { in: leadIds },
+            endTime: { gte: new Date() },
+          },
+        }),
+      ]);
+
+      result.data = result.data.map((lead: any) => {
+        const leadTasks = tasks.filter((t) => t.entityId === lead.id);
+        const leadCalls = calls.filter((c) => c.entityId === lead.id);
+        const leadMeetings = meetings.filter((m) => m.entityId === lead.id);
+
+        return {
+          ...lead,
+          openActivities: {
+            tasks: leadTasks,
+            calls: leadCalls,
+            meetings: leadMeetings,
+          },
+        };
+      });
+    }
+
     return result;
   }
 
@@ -219,7 +262,8 @@ export class LeadService {
               visible: false,
               order: 26,
             },
-            { field: 'action', label: 'Action', visible: true, order: 27 },
+            { field: 'openActivity', label: 'Open Activity', visible: true, order: 27 },
+            { field: 'action', label: 'Action', visible: true, order: 28 },
           ],
         },
       },

@@ -43,6 +43,49 @@ export class AccountService {
       },
       orderBy,
     });
+
+    const accountIds = result.data.map((account: any) => account.id);
+    if (accountIds.length > 0) {
+      const [tasks, calls, meetings] = await Promise.all([
+        this.prisma.task.findMany({
+          where: {
+            entityType: 'ACCOUNT',
+            entityId: { in: accountIds },
+            status: { not: 'COMPLETED' },
+          },
+        }),
+        this.prisma.call.findMany({
+          where: {
+            entityType: 'ACCOUNT',
+            entityId: { in: accountIds },
+            status: { not: 'COMPLETED' },
+          },
+        }),
+        this.prisma.meeting.findMany({
+          where: {
+            entityType: 'ACCOUNT',
+            entityId: { in: accountIds },
+            endTime: { gte: new Date() },
+          },
+        }),
+      ]);
+
+      result.data = result.data.map((account: any) => {
+        const accountTasks = tasks.filter((t) => t.entityId === account.id);
+        const accountCalls = calls.filter((c) => c.entityId === account.id);
+        const accountMeetings = meetings.filter((m) => m.entityId === account.id);
+
+        return {
+          ...account,
+          openActivities: {
+            tasks: accountTasks,
+            calls: accountCalls,
+            meetings: accountMeetings,
+          },
+        };
+      });
+    }
+
     return result;
   }
 
@@ -257,7 +300,8 @@ export class AccountService {
               visible: false,
               order: 30,
             },
-            { field: 'action', label: 'Action', visible: true, order: 31 },
+            { field: 'openActivity', label: 'Open Activity', visible: true, order: 31 },
+            { field: 'action', label: 'Action', visible: true, order: 32 },
           ],
         },
       },
