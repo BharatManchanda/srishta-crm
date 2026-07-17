@@ -57,6 +57,7 @@ enum TaskStatus {
   DEFERRED
   IN_PROGRESS
   WAITING_FOR_INPUT
+  COMPLETED
 }
 
 enum LeadSource {
@@ -646,8 +647,6 @@ model Task {
   status TaskStatus
 
   description String?
-
-  markAsComplete Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

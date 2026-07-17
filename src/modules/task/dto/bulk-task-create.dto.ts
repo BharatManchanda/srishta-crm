@@ -28,8 +28,4 @@ export class BulkTaskCreateDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  markAsComplete?: boolean;
 }

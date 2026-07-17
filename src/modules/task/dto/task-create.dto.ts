@@ -29,8 +29,4 @@ export class TaskCreateDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  markAsComplete?: boolean;
 }

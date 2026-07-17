@@ -32,8 +32,4 @@ export class TaskUpdateDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  markAsComplete?: boolean;
 }

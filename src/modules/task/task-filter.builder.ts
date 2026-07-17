@@ -13,7 +13,6 @@ export class TaskFilterBuilder {
       priority: dto.priority,
       status: dto.status,
       description: PrismaFilter.contains(dto.description),
-      markAsComplete: PrismaFilter.equals(dto.markAsComplete),
       dueDate: PrismaFilter.dateRange(dto.dueDateFrom, dto.dueDateTo),
       createdAt: PrismaFilter.dateRange(dto.createdFrom, dto.createdTo),
       updatedAt: PrismaFilter.dateRange(dto.updatedFrom, dto.updatedTo),
