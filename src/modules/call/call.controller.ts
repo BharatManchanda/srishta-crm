@@ -6,6 +6,8 @@ import { CallCreateDto } from './dto/call-create.dto';
 import { CallUpdateDto } from './dto/call-update.dto';
 import { CallPolicy } from './call.policy';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
+import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
 
 @UseGuards(AuthGuard)
 @Controller('call')
@@ -63,5 +65,23 @@ export class CallController {
     await this.callPolicy.authorize(req['user'], 'delete', id);
     const authUserId = req['user'].id;
     return this.callService.delete(id, authUserId);
+  }
+
+  @Post('bulk-delete')
+  async bulkDelete(@Body() dto: BulkDeleteDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.callPolicy.authorize(req['user'], 'delete', id);
+    }
+    const authUserId = req['user'].id;
+    return this.callService.bulkDelete(dto.ids, authUserId);
+  }
+
+  @Post('bulk-update')
+  async bulkUpdate(@Body() dto: BulkUpdateDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.callPolicy.authorize(req['user'], 'update', id);
+    }
+    const authUserId = req['user'].id;
+    return this.callService.bulkUpdate(dto.ids, dto.data, authUserId);
   }
 }

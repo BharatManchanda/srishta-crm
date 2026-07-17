@@ -6,6 +6,9 @@ import { LeadCreateDto } from './dto/lead-create.dto';
 import { LeadUpdateDto } from './dto/lead-update.dto';
 import { LeadPolicy } from './lead.policy';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
+import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
+
 
 @UseGuards(AuthGuard)
 @Controller('lead')
@@ -65,4 +68,23 @@ export class LeadController {
     const authUserId = req['user'].id;
     return this.leadService.delete(id, authUserId);
   }
+
+  @Post('bulk-delete')
+  async bulkDelete(@Body() dto: BulkDeleteDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.leadPolicy.authorize(req['user'], 'delete', id);
+    }
+    const authUserId = req['user'].id;
+    return this.leadService.bulkDelete(dto.ids, authUserId);
+  }
+
+  @Post('bulk-update')
+  async bulkUpdate(@Body() dto: BulkUpdateDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.leadPolicy.authorize(req['user'], 'update', id);
+    }
+    const authUserId = req['user'].id;
+    return this.leadService.bulkUpdate(dto.ids, dto.data, authUserId);
+  }
 }
+

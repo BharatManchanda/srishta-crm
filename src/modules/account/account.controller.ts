@@ -18,6 +18,9 @@ import { AccountCreateDto } from './dto/account-create.dto';
 import { UpdateViewSettingDto } from './dto/account-view-setting.dto';
 import { AccountUpdateDto } from './dto/account-update.dto';
 import { AccountPolicy } from './account.policy';
+import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
+import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
+
 
 @UseGuards(AuthGuard)
 @Controller('account')
@@ -76,4 +79,23 @@ export class AccountController {
     const authUserId = req['user'].id;
     return this.accountService.delete(id, authUserId);
   }
+
+  @Post('bulk-delete')
+  async bulkDelete(@Body() dto: BulkDeleteDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.accountPolicy.authorize(req['user'], 'delete', id);
+    }
+    const authUserId = req['user'].id;
+    return this.accountService.bulkDelete(dto.ids, authUserId);
+  }
+
+  @Post('bulk-update')
+  async bulkUpdate(@Body() dto: BulkUpdateDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.accountPolicy.authorize(req['user'], 'update', id);
+    }
+    const authUserId = req['user'].id;
+    return this.accountService.bulkUpdate(dto.ids, dto.data, authUserId);
+  }
 }
+

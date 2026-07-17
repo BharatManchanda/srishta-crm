@@ -275,4 +275,47 @@ export class LeadService {
 
     return updatedColumns;
   }
+
+  async bulkDelete(ids: number[], authUserId: number) {
+    const deletedLeads: any[] = [];
+    for (const id of ids) {
+      const deleted = await this.delete(id, authUserId);
+      deletedLeads.push(deleted);
+    }
+    return deletedLeads;
+  }
+
+  async bulkUpdate(ids: number[], data: any, authUserId: number) {
+    const whitelistedKeys = [
+      'status',
+      'priority',
+      'rating',
+      'source',
+      'industry',
+      'city',
+      'state',
+      'pinCode',
+      'country',
+      'address',
+      'budget',
+      'requirement',
+      'description',
+      'leadScore',
+    ];
+
+    const cleanData = {};
+    for (const key of Object.keys(data)) {
+      if (whitelistedKeys.includes(key)) {
+        cleanData[key] = data[key];
+      }
+    }
+
+    const updatedLeads: any[] = [];
+    for (const id of ids) {
+      const updated = await this.update(cleanData as any, id, authUserId);
+      updatedLeads.push(updated);
+    }
+    return updatedLeads;
+  }
 }
+

@@ -372,4 +372,38 @@ export class ContactService {
 
     return contact;
   }
+
+  async bulkDelete(ids: number[], authUserId: number) {
+    const deletedContacts: any[] = [];
+    for (const id of ids) {
+      const deleted = await this.delete(id, authUserId);
+      deletedContacts.push(deleted);
+    }
+    return deletedContacts;
+  }
+
+  async bulkUpdate(ids: number[], data: any, authUserId: number) {
+    const whitelistedKeys = [
+      'source',
+      'department',
+      'assistant',
+      'assistantPhone',
+      'description',
+    ];
+
+    const cleanData = {};
+    for (const key of Object.keys(data)) {
+      if (whitelistedKeys.includes(key)) {
+        cleanData[key] = data[key];
+      }
+    }
+
+    const updatedContacts: any[] = [];
+    for (const id of ids) {
+      const updated = await this.update(cleanData as any, id, authUserId);
+      updatedContacts.push(updated);
+    }
+    return updatedContacts;
+  }
 }
+

@@ -6,6 +6,8 @@ import { MeetingCreateDto } from './dto/meeting-create.dto';
 import { MeetingUpdateDto } from './dto/meeting-update.dto';
 import { MeetingPolicy } from './meeting.policy';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
+import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
 
 @UseGuards(AuthGuard)
 @Controller('meeting')
@@ -63,5 +65,23 @@ export class MeetingController {
     await this.meetingPolicy.authorize(req['user'], 'delete', id);
     const authUserId = req['user'].id;
     return this.meetingService.delete(id, authUserId);
+  }
+
+  @Post('bulk-delete')
+  async bulkDelete(@Body() dto: BulkDeleteDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.meetingPolicy.authorize(req['user'], 'delete', id);
+    }
+    const authUserId = req['user'].id;
+    return this.meetingService.bulkDelete(dto.ids, authUserId);
+  }
+
+  @Post('bulk-update')
+  async bulkUpdate(@Body() dto: BulkUpdateDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.meetingPolicy.authorize(req['user'], 'update', id);
+    }
+    const authUserId = req['user'].id;
+    return this.meetingService.bulkUpdate(dto.ids, dto.data, authUserId);
   }
 }

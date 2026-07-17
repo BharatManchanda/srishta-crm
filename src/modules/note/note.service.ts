@@ -6,7 +6,9 @@ import { NoteFilterBuilder } from './note-filter.builder';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { NoteCreateDto } from './dto/note-create.dto';
 import { NoteUpdateDto } from './dto/note-update.dto';
+import { BulkNoteCreateDto } from './dto/bulk-note-create.dto';
 import { ActivityService } from '../activity/activity.service';
+
 
 @Injectable()
 export class NoteService {
@@ -128,4 +130,18 @@ export class NoteService {
 
     return deletedNote;
   }
+
+  async bulkCreate(dto: BulkNoteCreateDto, authUserId: number) {
+    const notes: any[] = [];
+    const { entityIds, ...noteData } = dto;
+    for (const entityId of entityIds) {
+      const note = await this.create({
+        ...noteData,
+        entityId,
+      } as any, authUserId);
+      notes.push(note);
+    }
+    return notes;
+  }
 }
+

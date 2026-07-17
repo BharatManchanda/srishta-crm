@@ -434,4 +434,43 @@ export class AccountService {
 
     return deletedAccount;
   }
+
+  async bulkDelete(ids: number[], authUserId: number) {
+    const deletedAccounts: any[] = [];
+    for (const id of ids) {
+      const deleted = await this.delete(id, authUserId);
+      deletedAccounts.push(deleted);
+    }
+    return deletedAccounts;
+  }
+
+  async bulkUpdate(ids: number[], data: any, authUserId: number) {
+    const whitelistedKeys = [
+      'accountType',
+      'rating',
+      'ownership',
+      'industry',
+      'annualRevenue',
+      'phone',
+      'fax',
+      'website',
+      'tickerSymbol',
+      'description',
+    ];
+
+    const cleanData = {};
+    for (const key of Object.keys(data)) {
+      if (whitelistedKeys.includes(key)) {
+        cleanData[key] = data[key];
+      }
+    }
+
+    const updatedAccounts: any[] = [];
+    for (const id of ids) {
+      const updated = await this.update(id, cleanData as any, authUserId);
+      updatedAccounts.push(updated);
+    }
+    return updatedAccounts;
+  }
 }
+

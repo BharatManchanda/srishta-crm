@@ -18,6 +18,9 @@ import { ContactCreateDto } from './dto/contact-create.dto';
 import { UpdateViewSettingDto } from './dto/contact-view-setting.dto';
 import { ContactUpdateDto } from './dto/contact-update.dto';
 import { ContactPolicy } from './contact.policy';
+import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
+import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
+
 
 @UseGuards(AuthGuard)
 @Controller('contact')
@@ -76,4 +79,23 @@ export class ContactController {
     const authUserId = req['user'].id;
     return this.contactService.delete(id, authUserId);
   }
+
+  @Post('bulk-delete')
+  async bulkDelete(@Body() dto: BulkDeleteDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.contactPolicy.authorize(req['user'], 'delete', id);
+    }
+    const authUserId = req['user'].id;
+    return this.contactService.bulkDelete(dto.ids, authUserId);
+  }
+
+  @Post('bulk-update')
+  async bulkUpdate(@Body() dto: BulkUpdateDto, @Req() req: Request) {
+    for (const id of dto.ids) {
+      await this.contactPolicy.authorize(req['user'], 'update', id);
+    }
+    const authUserId = req['user'].id;
+    return this.contactService.bulkUpdate(dto.ids, dto.data, authUserId);
+  }
 }
+

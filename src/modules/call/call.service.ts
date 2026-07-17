@@ -261,4 +261,38 @@ export class CallService {
 
     return updatedColumns;
   }
+
+  async bulkDelete(ids: number[], authUserId: number) {
+    const deletedCalls: any[] = [];
+    for (const id of ids) {
+      const deleted = await this.delete(id, authUserId);
+      deletedCalls.push(deleted);
+    }
+    return deletedCalls;
+  }
+
+  async bulkUpdate(ids: number[], data: any, authUserId: number) {
+    const whitelistedKeys = [
+      'purpose',
+      'result',
+      'status',
+      'description',
+      'callDuration',
+      'agenda',
+    ];
+
+    const cleanData = {};
+    for (const key of Object.keys(data)) {
+      if (whitelistedKeys.includes(key)) {
+        cleanData[key] = data[key];
+      }
+    }
+
+    const updatedCalls: any[] = [];
+    for (const id of ids) {
+      const updated = await this.update(cleanData as any, id, authUserId);
+      updatedCalls.push(updated);
+    }
+    return updatedCalls;
+  }
 }

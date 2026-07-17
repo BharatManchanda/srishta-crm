@@ -17,6 +17,8 @@ import { NoteFilterDto } from './dto/note-filter.dto';
 import { NoteCreateDto } from './dto/note-create.dto';
 import { NoteUpdateDto } from './dto/note-update.dto';
 import { NotePolicy } from './note.policy';
+import { BulkNoteCreateDto } from './dto/bulk-note-create.dto';
+
 
 @UseGuards(AuthGuard)
 @Controller('note')
@@ -63,4 +65,12 @@ export class NoteController {
     const authUserId = req['user'].id;
     return this.noteService.delete(id, authUserId);
   }
+
+  @Post('bulk')
+  async bulkCreate(@Body() dto: BulkNoteCreateDto, @Req() req: Request) {
+    await this.notePolicy.authorize(req['user'], 'create');
+    const authUserId = req['user'].id;
+    return this.noteService.bulkCreate(dto, authUserId);
+  }
 }
+

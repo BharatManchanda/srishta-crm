@@ -6,7 +6,9 @@ import { TaskFilterBuilder } from './task-filter.builder';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
+import { BulkTaskCreateDto } from './dto/bulk-task-create.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+
 import { ActivityService } from '../activity/activity.service';
 import { ActivityEntity } from '@prisma/client';
 
@@ -256,4 +258,18 @@ export class TaskService {
 
     return updatedColumns;
   }
+
+  async bulkCreate(dto: BulkTaskCreateDto, authUserId: number) {
+    const tasks: any[] = [];
+    const { entityIds, ...taskData } = dto;
+    for (const entityId of entityIds) {
+      const task = await this.create({
+        ...taskData,
+        entityId,
+      } as any, authUserId);
+      tasks.push(task);
+    }
+    return tasks;
+  }
 }
+

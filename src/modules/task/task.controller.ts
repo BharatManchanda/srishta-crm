@@ -17,7 +17,9 @@ import { TaskFilterDto } from './dto/task-filter.dto';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { TaskPolicy } from './task.policy';
+import { BulkTaskCreateDto } from './dto/bulk-task-create.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+
 
 @UseGuards(AuthGuard)
 @Controller('task')
@@ -76,4 +78,12 @@ export class TaskController {
     const authUserId = req['user'].id;
     return this.taskService.delete(id, authUserId);
   }
+
+  @Post('bulk')
+  async bulkCreate(@Body() dto: BulkTaskCreateDto, @Req() req: Request) {
+    await this.taskPolicy.authorize(req['user'], 'create');
+    const authUserId = req['user'].id;
+    return this.taskService.bulkCreate(dto, authUserId);
+  }
 }
+
