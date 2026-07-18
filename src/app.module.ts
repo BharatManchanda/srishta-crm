@@ -24,6 +24,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { ExportModule } from './modules/export/export.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { GoogleCalendarModule } from './modules/google-calendar/google-calendar.module';
+import { ScheduleModule } from '@nestjs/schedule';
+
 @Module({
   imports: [
     AuthModule,
@@ -31,6 +33,7 @@ import { GoogleCalendarModule } from './modules/google-calendar/google-calendar.
     PrismaModule,
     JwtModule,
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     ModuleModule,
     RoleModule,
     MasterDataModule,

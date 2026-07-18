@@ -227,6 +227,13 @@ enum ImportRowStatus {
   FAILED
 }
 
+enum GoogleSyncStatus {
+  PENDING
+  SYNCING
+  SYNCED
+  FAILED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -650,6 +657,10 @@ model Task {
 
   description String?
 
+  googleEventId String?
+  googleSyncedAt DateTime?
+  googleSyncStatus GoogleSyncStatus @default(PENDING)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -679,6 +690,10 @@ model Call {
 
   status CallStatus  @default(SCHEDULED)
 
+  googleEventId String?
+  googleSyncedAt DateTime?
+  googleSyncStatus GoogleSyncStatus @default(PENDING)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -704,6 +719,10 @@ model Meeting {
   endTime     DateTime
 
   participants MeetingParticipant[]
+
+  googleEventId String?
+  googleSyncedAt DateTime?
+  googleSyncStatus GoogleSyncStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
