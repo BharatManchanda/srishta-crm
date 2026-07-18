@@ -29,8 +29,14 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
       case 'sync-call':
         await this.syncCall(job.data.callId);
         break;
+      case 'delete-calendar-event':
+        await this.googleCalendarService.deleteEvent(job.data.userId, job.data.googleEventId);
+        break;
       case 'sync-all-user-events':
         await this.syncAllUserEvents(job.data.userId);
+        break;
+      case 'manual-sync-all-user-events':
+        await this.manualSyncAllUserEvents(job.data.userId);
         break;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);
@@ -59,32 +65,54 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
       return;
     }
 
-    if (meeting.googleEventId) {
-      this.logger.log(`Meeting ${meetingId} is already synced.`);
-      return;
-    }
-
     try {
-      const event = await this.googleCalendarService.createEvent(meeting.createdById, {
-        summary: meeting.title,
-        description: meeting.description ?? '',
-        location: meeting.location ?? '',
-        start: meeting.startTime.toISOString(),
-        end: meeting.endTime.toISOString(),
-      });
+      if (meeting.googleEventId) {
+        const event = await this.googleCalendarService.updateEvent(meeting.createdById, meeting.googleEventId, {
+          summary: meeting.title,
+          description: meeting.description ?? '',
+          location: meeting.location ?? '',
+          start: meeting.startTime.toISOString(),
+          end: meeting.endTime.toISOString(),
+        });
 
+        await this.prisma.meeting.update({
+          where: { id: meeting.id },
+          data: {
+            googleEventId: event.id,
+            googleSyncedAt: new Date(),
+            googleSyncStatus: 'SYNCED',
+          },
+        });
+
+        this.logger.log(`Meeting ${meeting.id} updated successfully on Google Calendar.`);
+      } else {
+        const event = await this.googleCalendarService.createEvent(meeting.createdById, {
+          summary: meeting.title,
+          description: meeting.description ?? '',
+          location: meeting.location ?? '',
+          start: meeting.startTime.toISOString(),
+          end: meeting.endTime.toISOString(),
+        });
+
+        await this.prisma.meeting.update({
+          where: { id: meeting.id },
+          data: {
+            googleEventId: event.id,
+            googleSyncedAt: new Date(),
+            googleSyncStatus: 'SYNCED',
+          },
+        });
+
+        this.logger.log(`Meeting ${meeting.id} synced successfully.`);
+      }
+    } catch (error: any) {
+      this.logger.error(`Meeting ${meeting.id} sync failed: ${error.message}`, error.stack);
       await this.prisma.meeting.update({
         where: { id: meeting.id },
         data: {
-          googleEventId: event.id,
-          googleSyncedAt: new Date(),
-          googleSyncStatus: 'SYNCED',
+          googleSyncStatus: 'FAILED',
         },
       });
-
-      this.logger.log(`Meeting ${meeting.id} synced successfully.`);
-    } catch (error: any) {
-      this.logger.error(`Meeting ${meeting.id} sync failed: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -116,11 +144,6 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
       return;
     }
 
-    if (task.googleEventId) {
-      this.logger.log(`Task ${taskId} is already synced.`);
-      return;
-    }
-
     try {
       const start = new Date(task.dueDate);
       start.setHours(9, 0, 0);
@@ -128,25 +151,51 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
       const end = new Date(start);
       end.setHours(10, 0, 0);
 
-      const event = await this.googleCalendarService.createEvent(task.createdById, {
-        summary: `Task: ${task.subject}`,
-        description: task.description ?? '',
-        start: start.toISOString(),
-        end: end.toISOString(),
-      });
+      if (task.googleEventId) {
+        const event = await this.googleCalendarService.updateEvent(task.createdById, task.googleEventId, {
+          summary: `Task: ${task.subject}`,
+          description: task.description ?? '',
+          start: start.toISOString(),
+          end: end.toISOString(),
+        });
 
+        await this.prisma.task.update({
+          where: { id: task.id },
+          data: {
+            googleEventId: event.id,
+            googleSyncedAt: new Date(),
+            googleSyncStatus: 'SYNCED',
+          },
+        });
+
+        this.logger.log(`Task ${task.id} updated successfully on Google Calendar.`);
+      } else {
+        const event = await this.googleCalendarService.createEvent(task.createdById, {
+          summary: `Task: ${task.subject}`,
+          description: task.description ?? '',
+          start: start.toISOString(),
+          end: end.toISOString(),
+        });
+
+        await this.prisma.task.update({
+          where: { id: task.id },
+          data: {
+            googleEventId: event.id,
+            googleSyncedAt: new Date(),
+            googleSyncStatus: 'SYNCED',
+          },
+        });
+
+        this.logger.log(`Task ${task.id} synced successfully.`);
+      }
+    } catch (error: any) {
+      this.logger.error(`Task ${task.id} sync failed: ${error.message}`, error.stack);
       await this.prisma.task.update({
         where: { id: task.id },
         data: {
-          googleEventId: event.id,
-          googleSyncedAt: new Date(),
-          googleSyncStatus: 'SYNCED',
+          googleSyncStatus: 'FAILED',
         },
       });
-
-      this.logger.log(`Task ${task.id} synced successfully.`);
-    } catch (error: any) {
-      this.logger.error(`Task ${task.id} sync failed: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -178,33 +227,54 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
       return;
     }
 
-    if (call.googleEventId) {
-      this.logger.log(`Call ${callId} is already synced.`);
-      return;
-    }
-
     try {
       const end = new Date(call.callStartTime.getTime() + call.callDuration * 60000);
 
-      const event = await this.googleCalendarService.createEvent(call.createdById, {
-        summary: `Call: ${call.subject}`,
-        description: call.description ?? '',
-        start: call.callStartTime.toISOString(),
-        end: end.toISOString(),
-      });
+      if (call.googleEventId) {
+        const event = await this.googleCalendarService.updateEvent(call.createdById, call.googleEventId, {
+          summary: `Call: ${call.subject}`,
+          description: call.description ?? '',
+          start: call.callStartTime.toISOString(),
+          end: end.toISOString(),
+        });
 
+        await this.prisma.call.update({
+          where: { id: call.id },
+          data: {
+            googleEventId: event.id,
+            googleSyncedAt: new Date(),
+            googleSyncStatus: 'SYNCED',
+          },
+        });
+
+        this.logger.log(`Call ${call.id} updated successfully on Google Calendar.`);
+      } else {
+        const event = await this.googleCalendarService.createEvent(call.createdById, {
+          summary: `Call: ${call.subject}`,
+          description: call.description ?? '',
+          start: call.callStartTime.toISOString(),
+          end: end.toISOString(),
+        });
+
+        await this.prisma.call.update({
+          where: { id: call.id },
+          data: {
+            googleEventId: event.id,
+            googleSyncedAt: new Date(),
+            googleSyncStatus: 'SYNCED',
+          },
+        });
+
+        this.logger.log(`Call ${call.id} synced successfully.`);
+      }
+    } catch (error: any) {
+      this.logger.error(`Call ${call.id} sync failed: ${error.message}`, error.stack);
       await this.prisma.call.update({
         where: { id: call.id },
         data: {
-          googleEventId: event.id,
-          googleSyncedAt: new Date(),
-          googleSyncStatus: 'SYNCED',
+          googleSyncStatus: 'FAILED',
         },
       });
-
-      this.logger.log(`Call ${call.id} synced successfully.`);
-    } catch (error: any) {
-      this.logger.error(`Call ${call.id} sync failed: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -246,5 +316,87 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
     for (const task of tasks) {
       await this.syncTask(task.id);
     }
+  }
+
+  private async manualSyncAllUserEvents(userId: number) {
+    this.logger.log(`Manual sync initiated for user ${userId}`);
+
+    // 1. Find all user's meetings, calls, tasks that have a googleEventId
+    const meetings = await this.prisma.meeting.findMany({
+      where: { createdById: userId, googleEventId: { not: null } },
+      select: { id: true, googleEventId: true },
+    });
+
+    const calls = await this.prisma.call.findMany({
+      where: { createdById: userId, googleEventId: { not: null } },
+      select: { id: true, googleEventId: true },
+    });
+
+    const tasks = await this.prisma.task.findMany({
+      where: { createdById: userId, googleEventId: { not: null } },
+      select: { id: true, googleEventId: true },
+    });
+
+    // 2. Delete them from Google Calendar (ignore 404/410 errors)
+    for (const m of meetings) {
+      if (m.googleEventId) {
+        try {
+          await this.googleCalendarService.deleteEvent(userId, m.googleEventId);
+        } catch (err: any) {
+          this.logger.error(`Failed to delete meeting event ${m.googleEventId}: ${err.message}`);
+        }
+      }
+    }
+
+    for (const c of calls) {
+      if (c.googleEventId) {
+        try {
+          await this.googleCalendarService.deleteEvent(userId, c.googleEventId);
+        } catch (err: any) {
+          this.logger.error(`Failed to delete call event ${c.googleEventId}: ${err.message}`);
+        }
+      }
+    }
+
+    for (const t of tasks) {
+      if (t.googleEventId) {
+        try {
+          await this.googleCalendarService.deleteEvent(userId, t.googleEventId);
+        } catch (err: any) {
+          this.logger.error(`Failed to delete task event ${t.googleEventId}: ${err.message}`);
+        }
+      }
+    }
+
+    // 3. Reset all googleEventId/sync status to null in database
+    await this.prisma.meeting.updateMany({
+      where: { createdById: userId },
+      data: {
+        googleEventId: null,
+        googleSyncStatus: 'PENDING',
+        googleSyncedAt: null,
+      },
+    });
+
+    await this.prisma.call.updateMany({
+      where: { createdById: userId },
+      data: {
+        googleEventId: null,
+        googleSyncStatus: 'PENDING',
+        googleSyncedAt: null,
+      },
+    });
+
+    await this.prisma.task.updateMany({
+      where: { createdById: userId },
+      data: {
+        googleEventId: null,
+        googleSyncStatus: 'PENDING',
+        googleSyncedAt: null,
+      },
+    });
+
+    // 4. Trigger standard sync-all-user-events
+    await this.syncAllUserEvents(userId);
   }
 }

@@ -138,6 +138,8 @@ export class TaskService {
       );
     }
 
+    await this.calendarSyncQueue.add('sync-task', { taskId: updatedTask.id });
+
     return updatedTask;
   }
 
@@ -148,6 +150,13 @@ export class TaskService {
 
     if (!existingTask) {
       throw new NotFoundException('Task not found');
+    }
+
+    if (existingTask.googleEventId) {
+      await this.calendarSyncQueue.add('delete-calendar-event', {
+        userId: authUserId,
+        googleEventId: existingTask.googleEventId,
+      });
     }
 
     const deletedTask = await this.prisma.task.delete({

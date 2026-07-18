@@ -139,6 +139,8 @@ export class CallService {
       );
     }
 
+    await this.calendarSyncQueue.add('sync-call', { callId: updatedCall.id });
+
     return updatedCall;
   }
 
@@ -149,6 +151,13 @@ export class CallService {
 
     if (!existingCall) {
       throw new NotFoundException('Call not found');
+    }
+
+    if (existingCall.googleEventId) {
+      await this.calendarSyncQueue.add('delete-calendar-event', {
+        userId: authUserId,
+        googleEventId: existingCall.googleEventId,
+      });
     }
 
     const deletedCall = await this.prisma.call.delete({

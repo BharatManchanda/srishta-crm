@@ -190,6 +190,92 @@ export class GoogleCalendarService {
         return response.data;
     }
 
+    async updateEvent(userId: number, eventId: string, event: CreateCalendarEventDto) {
+        const client = await this.getGoogleClient(userId);
+
+        const calendar = google.calendar({
+            version: 'v3',
+            auth: client,
+        });
+
+        try {
+            const response = await calendar.events.update({
+                calendarId: 'primary',
+                eventId: eventId,
+                requestBody: {
+                    summary: event.summary,
+                    description: event.description,
+                    location: event.location,
+                    start: {
+                        dateTime: event.start,
+                    },
+                    end: {
+                        dateTime: event.end,
+                    },
+                },
+            });
+
+            return response.data;
+        } catch (error: any) {
+            if (error.code === 404 || error.code === 410) {
+                const response = await calendar.events.insert({
+                    calendarId: 'primary',
+                    requestBody: {
+                        summary: event.summary,
+                        description: event.description,
+                        location: event.location,
+                        start: {
+                            dateTime: event.start,
+                        },
+                        end: {
+                            dateTime: event.end,
+                        },
+                    },
+                });
+                return response.data;
+            }
+            throw error;
+        }
+    }
+
+    async deleteEvent(userId: number, eventId: string) {
+        const client = await this.getGoogleClient(userId);
+
+        const calendar = google.calendar({
+            version: 'v3',
+            auth: client,
+        });
+
+        try {
+            await calendar.events.delete({
+                calendarId: 'primary',
+                eventId: eventId,
+            });
+        } catch (error: any) {
+            if (error.code !== 404 && error.code !== 410) {
+                throw error;
+            }
+        }
+    }
+
+    async manualSync(userId: number) {
+        const account = await this.prisma.googleCalendar.findFirst({
+            where: {
+                connectedById: userId,
+            },
+        });
+
+        if (!account) {
+            throw new NotFoundException('Google Calendar is not connected.');
+        }
+
+        await this.calendarSyncQueue.add('manual-sync-all-user-events', { userId });
+
+        return {
+            message: 'Google Calendar manual synchronization initiated.',
+        };
+    }
+
     async disconnect(userId: number) {
         const account = await this.prisma.googleCalendar.findUnique({
             where: {

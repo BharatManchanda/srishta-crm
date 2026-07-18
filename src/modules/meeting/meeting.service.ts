@@ -178,6 +178,8 @@ export class MeetingService {
       }, authUserId);
     }
 
+    await this.calendarSyncQueue.add('sync-meeting', { meetingId: updatedMeeting.id });
+
     return updatedMeeting;
   }
 
@@ -188,6 +190,13 @@ export class MeetingService {
 
     if (!existingMeeting) {
       throw new NotFoundException('Meeting not found');
+    }
+
+    if (existingMeeting.googleEventId) {
+      await this.calendarSyncQueue.add('delete-calendar-event', {
+        userId: authUserId,
+        googleEventId: existingMeeting.googleEventId,
+      });
     }
 
     // MeetingParticipant will be auto-deleted because of onDelete: Cascade in Prisma schema

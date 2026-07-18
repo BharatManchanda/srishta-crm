@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Req, Res, UseGuards, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Query, Req, Res, UseGuards, Delete } from '@nestjs/common';
 import { GoogleCalendarService } from './google-calendar.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import type { Response } from 'express';
@@ -35,6 +35,13 @@ export class GoogleCalendarController {
     async get(@Req() req: Request) {
         const authUserId = req['user'].id;
         return this.googleService.getCalendar(authUserId);
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('sync')
+    async sync(@Req() req: Request) {
+        const authUserId = req['user'].id;
+        return this.googleService.manualSync(authUserId);
     }
 
     @UseGuards(AuthGuard)
