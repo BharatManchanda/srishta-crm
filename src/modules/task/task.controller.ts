@@ -85,5 +85,23 @@ export class TaskController {
     const authUserId = req['user'].id;
     return this.taskService.bulkCreate(dto, authUserId);
   }
+
+  @Post('bulk-delete')
+  async bulkDelete(@Body('ids') ids: number[], @Req() req: Request) {
+    for (const id of ids) {
+      await this.taskPolicy.authorize(req['user'], 'delete', id);
+    }
+    const authUserId = req['user'].id;
+    return this.taskService.bulkDelete(ids, authUserId);
+  }
+
+  @Post('bulk-update')
+  async bulkUpdate(@Body('ids') ids: number[], @Body('data') data: any, @Req() req: Request) {
+    for (const id of ids) {
+      await this.taskPolicy.authorize(req['user'], 'update', id);
+    }
+    const authUserId = req['user'].id;
+    return this.taskService.bulkUpdate(ids, data, authUserId);
+  }
 }
 

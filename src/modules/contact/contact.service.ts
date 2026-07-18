@@ -112,12 +112,29 @@ export class ContactService {
         where: {
           userId: authUserId,
           isDefault: true,
+          moduleId: contactModule.id,
         },
         include: {
           columns: true,
         },
       });
     }
+
+    const hasOpenActivity = viewSetting.columns.some(col => col.field === 'openActivity');
+    if (!hasOpenActivity) {
+      const nextOrder = Math.max(...viewSetting.columns.map(col => col.order), 0) + 1;
+      const newColumn = await this.prisma.tableColumn.create({
+        data: {
+          tableViewId: viewSetting.id,
+          field: 'openActivity',
+          label: 'Open Activity',
+          visible: true,
+          order: nextOrder,
+        },
+      });
+      viewSetting.columns.push(newColumn);
+    }
+
     return viewSetting;
   }
 

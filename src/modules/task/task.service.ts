@@ -285,5 +285,36 @@ export class TaskService {
     }
     return tasks;
   }
+
+  async bulkDelete(ids: number[], authUserId: number) {
+    const deletedTasks: any[] = [];
+    for (const id of ids) {
+      const deleted = await this.delete(id, authUserId);
+      deletedTasks.push(deleted);
+    }
+    return deletedTasks;
+  }
+
+  async bulkUpdate(ids: number[], data: any, authUserId: number) {
+    const whitelistedKeys = [
+      'priority',
+      'status',
+      'description',
+    ];
+
+    const cleanData = {};
+    for (const key of Object.keys(data)) {
+      if (whitelistedKeys.includes(key)) {
+        cleanData[key] = data[key];
+      }
+    }
+
+    const updatedTasks: any[] = [];
+    for (const id of ids) {
+      const updated = await this.update(cleanData as any, id, authUserId);
+      updatedTasks.push(updated);
+    }
+    return updatedTasks;
+  }
 }
 
