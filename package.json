@@ -39,6 +39,7 @@
     "csv-parser": "^3.2.1",
     "dayjs": "^1.11.21",
     "google-auth-library": "^10.6.2",
+    "googleapis": "^173.0.0",
     "ioredis": "^5.11.1",
     "multer": "^2.2.0",
     "pg": "^8.21.0",

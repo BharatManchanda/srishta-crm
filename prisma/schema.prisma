@@ -279,6 +279,8 @@ model User {
   createdImportJob ImportJob[] @relation("ImportJobCreator")
 
   createdActivities Activity[] @relation("ActivityCreator")
+  
+  connectedGoogleCalendar GoogleCalendar[] @relation("GoogleConnector")
 }
 
 model OtpVerification {
@@ -802,4 +804,23 @@ model Activity {
   createdAt DateTime @default(now())
 
   @@index([entityType, entityId])
+}
+
+model GoogleCalendar {
+  id           Int @id @default(autoincrement())
+
+  connectedById       Int @unique
+  connectedBy User @relation("GoogleConnector", fields: [connectedById], references: [id])
+
+  googleId     String
+  email        String?
+  name         String?
+
+  accessToken  String
+  refreshToken String
+
+  expiryDate   BigInt?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

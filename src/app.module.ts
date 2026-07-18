@@ -23,6 +23,7 @@ import { BulkImportModule } from './modules/bulk-import/bulk-import.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ExportModule } from './modules/export/export.module';
 import { ActivityModule } from './modules/activity/activity.module';
+import { GoogleCalendarModule } from './modules/google-calendar/google-calendar.module';
 @Module({
   imports: [
     AuthModule,
@@ -51,6 +52,7 @@ import { ActivityModule } from './modules/activity/activity.module';
     }),
     ExportModule,
     ActivityModule,
+    GoogleCalendarModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],
