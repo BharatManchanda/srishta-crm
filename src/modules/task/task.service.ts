@@ -250,6 +250,7 @@ export class TaskService {
           },
           data: {
             visible: column.visible,
+            ...(column.order !== undefined ? { order: column.order } : {}),
           },
         }),
       ),

@@ -208,6 +208,7 @@ export class BulkImportService {
                     },
                     data: {
                         visible: column.visible,
+                        ...(column.order !== undefined ? { order: column.order } : {}),
                     },
                 }),
             ),

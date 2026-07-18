@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsInt } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsOptional } from 'class-validator';
 
 class ColumnDto {
   @IsInt()
@@ -6,6 +6,10 @@ class ColumnDto {
 
   @IsBoolean()
   visible: boolean;
+
+  @IsOptional()
+  @IsInt()
+  order?: number;
 }
 
 export class UpdateViewSettingDto {

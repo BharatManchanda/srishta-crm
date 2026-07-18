@@ -132,6 +132,7 @@ export class AccountService {
           },
           data: {
             visible: column.visible,
+            ...(column.order !== undefined ? { order: column.order } : {}),
           },
         }),
       ),
