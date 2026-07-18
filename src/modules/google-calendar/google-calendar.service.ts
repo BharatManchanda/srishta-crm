@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { google } from 'googleapis';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 
 @Injectable()
 export class GoogleCalendarService {
@@ -103,9 +104,7 @@ export class GoogleCalendarService {
         });
 
         if (!account) {
-            throw new NotFoundException(
-                'Google Calendar is not connected.',
-            );
+            throw new NotFoundException('Google Calendar is not connected.');
         }
 
         const client = this.oauthClient();
@@ -113,9 +112,7 @@ export class GoogleCalendarService {
         client.setCredentials({
             access_token: account.accessToken,
             refresh_token: account.refreshToken,
-            expiry_date: account.expiryDate
-                ? Number(account.expiryDate)
-                : undefined,
+            expiry_date: account.expiryDate ? Number(account.expiryDate) : undefined,
         });
 
         const { credentials } = await client.refreshAccessToken();
@@ -160,16 +157,7 @@ export class GoogleCalendarService {
         return response.data.items;
     }
 
-    async createEvent(
-        userId: number,
-        event: {
-            summary: string;
-            description?: string;
-            location?: string;
-            start: string;
-            end: string;
-        },
-    ) {
+    async createEvent(userId: number, event: CreateCalendarEventDto) {
         const client = await this.getGoogleClient(userId);
 
         const calendar = google.calendar({

@@ -176,7 +176,7 @@ const modules = [
     description: 'Application settings',
     parent_id: null,
     sort_order: 10,
-    activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit'],
+    activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit', "/connects", "/calendar"],
     showInNavbar: true,
   },
   {
@@ -187,7 +187,7 @@ const modules = [
     description: 'Bulk import management',
     parent_id: null,
     sort_order: 9,
-    activeOn: ['/imports'],
+    activeOn: ['/imports', '/imports/:id'],
     showInNavbar: true,
   },
 ];
