@@ -8,9 +8,10 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { MeetingFilterBuilder } from './meeting-filter.builder';
 import { MeetingPolicy } from './meeting.policy';
 import { ActivityModule } from '../activity/activity.module';
+import { GoogleCalendarModule } from '../google-calendar/google-calendar.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule],
   providers: [
     MeetingService,
     PaginationService,

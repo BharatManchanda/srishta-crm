@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { CallFilterDto } from './dto/call-filter.dto';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { CallFilterBuilder } from './call-filter.builder';
@@ -18,6 +20,7 @@ export class CallService {
     private readonly callFilterBuilder: CallFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
+    @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
   async getList(dto: CallFilterDto, currentUserId: number) {
@@ -87,6 +90,8 @@ export class CallService {
         metadata: newCall,
       }, authUserId);
     }
+
+    await this.calendarSyncQueue.add('sync-call', { callId: newCall.id });
 
     return newCall;
   }

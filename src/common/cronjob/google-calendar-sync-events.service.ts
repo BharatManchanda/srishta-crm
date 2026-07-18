@@ -12,7 +12,7 @@ export class GoogleCalendarSyncService {
     private readonly googleCalendarService: GoogleCalendarService,
   ) { }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  // @Cron(CronExpression.EVERY_5_MINUTES)
   async GoogleCalendarSyncEvents() {
     this.logger.log('Starting Google Calendar Sync...');
 

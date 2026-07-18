@@ -8,9 +8,10 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { CallFilterBuilder } from './call-filter.builder';
 import { CallPolicy } from './call.policy';
 import { ActivityModule } from '../activity/activity.module';
+import { GoogleCalendarModule } from '../google-calendar/google-calendar.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule],
   providers: [
     CallService,
     PaginationService,

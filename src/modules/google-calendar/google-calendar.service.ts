@@ -6,10 +6,15 @@ import {
 import { google } from 'googleapis';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class GoogleCalendarService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
+    ) { }
 
     private oauthClient() {
         return new google.auth.OAuth2(
@@ -70,6 +75,8 @@ export class GoogleCalendarService {
                 expiryDate: tokens.expiry_date ? BigInt(tokens.expiry_date) : null,
             },
         });
+
+        await this.calendarSyncQueue.add('sync-all-user-events', { userId: authUserId });
 
         return {
             message: 'Google Calendar connected successfully.',
