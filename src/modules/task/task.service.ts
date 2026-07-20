@@ -13,6 +13,7 @@ import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 
 import { ActivityService } from '../activity/activity.service';
 import { ActivityEntity } from '@prisma/client';
+import { UserPolicy } from '../user/user.policy';
 
 @Injectable()
 export class TaskService {
@@ -21,6 +22,7 @@ export class TaskService {
     private readonly paginationService: PaginationService,
     private readonly taskFilterBuilder: TaskFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
+    private readonly userPolicy: UserPolicy,
     private readonly activityService: ActivityService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
@@ -41,7 +43,7 @@ export class TaskService {
     if (user?.accessLevel === 'STANDARD') {
       where.ownerId = currentUserId;
     } else {
-      const userIds = await this.userHierarchyService.getFamilyUserIds(currentUserId);
+      const userIds = await this.userPolicy.getAccessibleUserIds(currentUserId);
       where.OR = [
         { createdById: { in: userIds } },
         { ownerId: { in: userIds } }

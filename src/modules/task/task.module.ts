@@ -9,6 +9,7 @@ import { TaskFilterBuilder } from './task-filter.builder';
 import { TaskPolicy } from './task.policy';
 import { ActivityModule } from '../activity/activity.module';
 import { GoogleCalendarModule } from '../google-calendar/google-calendar.module';
+import { UserPolicy } from '../user/user.policy';
 
 @Module({
   imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule],
@@ -18,6 +19,7 @@ import { GoogleCalendarModule } from '../google-calendar/google-calendar.module'
     UserHierarchyService,
     TaskFilterBuilder,
     TaskPolicy,
+    UserPolicy,
   ],
   controllers: [TaskController],
 })
