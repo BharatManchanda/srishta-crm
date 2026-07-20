@@ -11,6 +11,7 @@ import { MeetingUpdateDto } from './dto/meeting-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { ActivityEntity } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
+import { UserPolicy } from '../user/user.policy';
 
 @Injectable()
 export class MeetingService {
@@ -20,6 +21,7 @@ export class MeetingService {
     private readonly meetingFilterBuilder: MeetingFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
+    private readonly userPolicy: UserPolicy,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -45,7 +47,7 @@ export class MeetingService {
       };
     } else {
       where.createdById = {
-        in: await this.userHierarchyService.getFamilyUserIds(currentUserId),
+        in: await this.userPolicy.getAccessibleUserIds(currentUserId),
       };
     }
 

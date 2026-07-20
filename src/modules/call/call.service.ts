@@ -11,6 +11,7 @@ import { CallUpdateDto } from './dto/call-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { ActivityService } from '../activity/activity.service';
 import { ActivityEntity } from '@prisma/client';
+import { UserPolicy } from '../user/user.policy';
 
 @Injectable()
 export class CallService {
@@ -20,6 +21,7 @@ export class CallService {
     private readonly callFilterBuilder: CallFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
+    private readonly userPolicy: UserPolicy,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -39,7 +41,7 @@ export class CallService {
     if (user?.accessLevel === 'STANDARD') {
       where.ownerId = currentUserId;
     } else {
-      const userIds = await this.userHierarchyService.getFamilyUserIds(currentUserId);
+      const userIds = await this.userPolicy.getAccessibleUserIds(currentUserId);
       where.OR = [
         { createdById: { in: userIds } },
         { ownerId: { in: userIds } }

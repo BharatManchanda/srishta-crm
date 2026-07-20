@@ -21,6 +21,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { LeadService } from '../lead/lead.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
+import { UserPolicy } from '../user/user.policy';
 @Injectable()
 export class AuthService {
   constructor(
@@ -29,7 +30,8 @@ export class AuthService {
     private readonly emailService: EmailService,
     private googleService: GoogleService,
     private readonly leadService: LeadService,
-    private readonly userHierarchyService: UserHierarchyService
+    private readonly userHierarchyService: UserHierarchyService,
+    private readonly userPolicy: UserPolicy
     ) { }
 
   private generateOtp(): string {
@@ -102,13 +104,18 @@ export class AuthService {
     };
   }
 
-    async update(dto: UpdateUserDto, authUserId: number, userId: number): Promise<any> {
+  async update(dto: UpdateUserDto, authUserId: number, userId: number): Promise<any> {
+    const familyUserIds = await this.userPolicy.getAccessibleUserIds(authUserId);
+    console.log(familyUserIds, userId);
+    if (!familyUserIds.includes(userId)) {
+      throw new BadRequestException('User not found');
+    }
+
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [
           {
             id: userId,
-            parentId: authUserId
           }
         ],
       },

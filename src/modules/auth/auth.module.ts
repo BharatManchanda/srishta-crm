@@ -8,11 +8,12 @@ import { GoogleService } from './google.service';
 import { LeadService } from '../lead/lead.service';
 import { LeadModule } from '../lead/lead.module';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
+import { UserPolicy } from '../user/user.policy';
 
 @Module({
   imports: [PrismaModule, JwtModule, EmailModule, LeadModule],
   controllers: [AuthController],
-  providers: [AuthService, GoogleService, UserHierarchyService],
+  providers: [AuthService, GoogleService, UserHierarchyService, UserPolicy],
   exports: [AuthService, GoogleService],
 })
 export class AuthModule {}
