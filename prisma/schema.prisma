@@ -239,6 +239,16 @@ enum AccessLevel {
   STANDARD
 }
 
+enum AiEntityType {
+  LEAD
+  CONTACT
+  ACCOUNT
+  TASK
+  CALL
+  MEETING
+}
+
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -301,6 +311,7 @@ model User {
   ownedTasks  Task[]  @relation("TaskOwner")
   ownedCalls  Call[]  @relation("CallOwner")
   calendarSyncRecords CalendarSyncRecord[] @relation("UserCalendarSync")
+  createdAiDocuments  AiDocument[]         @relation("AiDocumentCreator")
 }
 
 model OtpVerification {
@@ -885,4 +896,19 @@ model CalendarSyncRecord {
   updatedAt     DateTime         @updatedAt
 
   @@unique([userId, entityType, entityId])
+}
+
+model AiDocument {
+  id          Int          @id @default(autoincrement())
+  entityType  AiEntityType
+  entityId    Int
+  title       String?
+  content     String       @db.Text
+  createdById Int
+  createdBy   User         @relation("AiDocumentCreator", fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([entityType, entityId])
+  @@map("ai_documents")
 }
