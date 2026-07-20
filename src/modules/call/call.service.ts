@@ -168,12 +168,28 @@ export class CallService {
       throw new NotFoundException('Call not found');
     }
 
-    if (existingCall.googleEventId) {
-      await this.calendarSyncQueue.add('delete-calendar-event', {
-        userId: authUserId,
-        googleEventId: existingCall.googleEventId,
-      });
+    const syncRecords = await this.prisma.calendarSyncRecord.findMany({
+      where: {
+        entityType: 'CALL',
+        entityId: id,
+      },
+    });
+
+    for (const record of syncRecords) {
+      if (record.googleEventId) {
+        await this.calendarSyncQueue.add('delete-calendar-event', {
+          userId: record.userId,
+          googleEventId: record.googleEventId,
+        });
+      }
     }
+
+    await this.prisma.calendarSyncRecord.deleteMany({
+      where: {
+        entityType: 'CALL',
+        entityId: id,
+      },
+    });
 
     const deletedCall = await this.prisma.call.delete({
       where: {

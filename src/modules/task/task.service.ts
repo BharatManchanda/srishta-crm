@@ -167,12 +167,28 @@ export class TaskService {
       throw new NotFoundException('Task not found');
     }
 
-    if (existingTask.googleEventId) {
-      await this.calendarSyncQueue.add('delete-calendar-event', {
-        userId: authUserId,
-        googleEventId: existingTask.googleEventId,
-      });
+    const syncRecords = await this.prisma.calendarSyncRecord.findMany({
+      where: {
+        entityType: 'TASK',
+        entityId: id,
+      },
+    });
+
+    for (const record of syncRecords) {
+      if (record.googleEventId) {
+        await this.calendarSyncQueue.add('delete-calendar-event', {
+          userId: record.userId,
+          googleEventId: record.googleEventId,
+        });
+      }
     }
+
+    await this.prisma.calendarSyncRecord.deleteMany({
+      where: {
+        entityType: 'TASK',
+        entityId: id,
+      },
+    });
 
     const deletedTask = await this.prisma.task.delete({
       where: {

@@ -300,6 +300,7 @@ model User {
   ownedAccounts Account[] @relation("AccountOwner")
   ownedTasks  Task[]  @relation("TaskOwner")
   ownedCalls  Call[]  @relation("CallOwner")
+  calendarSyncRecords CalendarSyncRecord[] @relation("UserCalendarSync")
 }
 
 model OtpVerification {
@@ -869,4 +870,19 @@ model GoogleCalendar {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model CalendarSyncRecord {
+  id            Int              @id @default(autoincrement())
+  userId        Int
+  user          User             @relation("UserCalendarSync", fields: [userId], references: [id], onDelete: Cascade)
+  entityType    String           // 'MEETING', 'TASK', 'CALL'
+  entityId      Int
+  googleEventId String?
+  syncStatus    GoogleSyncStatus @default(PENDING)
+  syncedAt      DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([userId, entityType, entityId])
 }

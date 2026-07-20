@@ -77,6 +77,22 @@ export class MeetingPolicy {
   }
 
   private async canAccessMeeting(currentUser: any, meetingId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { accessLevel: true },
+    });
+
+    if (user?.accessLevel === 'STANDARD') {
+      const isParticipant = await this.prisma.meetingParticipant.findFirst({
+        where: {
+          meetingId,
+          participantType: 'USER',
+          participantId: currentUser.id,
+        },
+      });
+      return !!isParticipant;
+    }
+
     const meeting = await this.prisma.meeting.findUnique({
       where: {
         id: meetingId,
