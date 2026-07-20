@@ -902,13 +902,40 @@ model AiDocument {
   id          Int          @id @default(autoincrement())
   entityType  AiEntityType
   entityId    Int
+
   title       String?
   content     String       @db.Text
+
   createdById Int
   createdBy   User         @relation("AiDocumentCreator", fields: [createdById], references: [id])
+
+  chunks      AiDocumentChunk[]
+
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
   @@index([entityType, entityId])
   @@map("ai_documents")
+}
+
+model AiDocumentChunk {
+  id Int @id @default(autoincrement())
+
+  aiDocumentId Int
+  aiDocument   AiDocument @relation(fields: [aiDocumentId], references: [id], onDelete: Cascade)
+
+  chunkIndex Int
+
+  content String @db.Text
+
+  embedding Unsupported("vector(1536)")
+
+  tokenCount Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([aiDocumentId])
+  @@index([chunkIndex])
+  @@map("ai_document_chunks")
 }
