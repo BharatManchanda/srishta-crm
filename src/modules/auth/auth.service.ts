@@ -3,6 +3,8 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -31,7 +33,8 @@ export class AuthService {
     private googleService: GoogleService,
     private readonly leadService: LeadService,
     private readonly userHierarchyService: UserHierarchyService,
-    private readonly userPolicy: UserPolicy
+    private readonly userPolicy: UserPolicy,
+    @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
     ) { }
 
   private generateOtp(): string {
@@ -136,6 +139,12 @@ export class AuthService {
         accessLevel: dto.accessLevel,
       },
     });
+
+    if (existingUser.accessLevel !== user.accessLevel) {
+      await this.calendarSyncQueue.add('sync-access-level-change', {
+        userId: user.id,
+      });
+    }
 
     const { password: _, accessTokens, refreshTokens, ...safeUser } = user;
     return {

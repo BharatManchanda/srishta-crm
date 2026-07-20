@@ -17,7 +17,7 @@ export class UserService {
     private readonly paginationService: PaginationService,
     private readonly userFilterBuilder: UserFilterBuilder,
     private readonly userPolicy: UserPolicy,
-    ) { }
+  ) { }
 
   async getList(dto: UserFilterDto, currentUserId: number) {
     const orderBy = dto.sortBy

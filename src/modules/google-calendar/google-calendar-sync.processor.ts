@@ -38,6 +38,9 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
       case 'manual-sync-all-user-events':
         await this.manualSyncAllUserEvents(job.data.userId);
         break;
+      case 'sync-access-level-change':
+        await this.syncAccessLevelChange(job.data.userId);
+        break;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);
     }
@@ -616,5 +619,71 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
 
     // 4. Trigger standard sync-all-user-events
     await this.syncAllUserEvents(userId);
+  }
+
+  private async syncAccessLevelChange(userId: number) {
+    this.logger.log(`Syncing access level change for user ${userId}`);
+
+    // Check if user has connected Google Calendar
+    const account = await this.prisma.googleCalendar.findFirst({
+      where: { connectedById: userId },
+    });
+    if (!account) return;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { accessLevel: true },
+    });
+    if (!user) return;
+
+    if (user.accessLevel === 'ADMINISTRATIVE') {
+      // ADMINISTRATIVE users get all events; trigger sync of unsynced events
+      await this.syncAllUserEvents(userId);
+    } else if (user.accessLevel === 'STANDARD') {
+      // STANDARD users only keep events they own (tasks/calls) or participate in (meetings)
+      const records = await this.prisma.calendarSyncRecord.findMany({
+        where: { userId },
+      });
+
+      for (const record of records) {
+        let keep = false;
+
+        if (record.entityType === 'MEETING') {
+          const isParticipant = await this.prisma.meetingParticipant.findFirst({
+            where: {
+              meetingId: record.entityId,
+              participantType: 'USER',
+              participantId: userId,
+            },
+          });
+          keep = !!isParticipant;
+        } else if (record.entityType === 'TASK') {
+          const task = await this.prisma.task.findUnique({
+            where: { id: record.entityId },
+            select: { ownerId: true },
+          });
+          keep = task?.ownerId === userId;
+        } else if (record.entityType === 'CALL') {
+          const call = await this.prisma.call.findUnique({
+            where: { id: record.entityId },
+            select: { ownerId: true },
+          });
+          keep = call?.ownerId === userId;
+        }
+
+        if (!keep) {
+          if (record.googleEventId) {
+            try {
+              await this.googleCalendarService.deleteEvent(userId, record.googleEventId);
+            } catch (err: any) {
+              this.logger.error(`Failed to delete event ${record.googleEventId} on accessLevel change: ${err.message}`);
+            }
+          }
+          await this.prisma.calendarSyncRecord.delete({
+            where: { id: record.id },
+          });
+        }
+      }
+    }
   }
 }
