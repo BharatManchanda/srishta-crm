@@ -18,6 +18,7 @@ import {
   CallStatus,
   CallResult,
   CallPurpose,
+  AccessLevel,
 } from '@prisma/client';
 
 @Injectable()
@@ -28,6 +29,7 @@ export class MasterDataService {
     return {
       data: {
         userStatus: UserStatus,
+        userAccessLevel: AccessLevel,
         leadSource: LeadSource,
         leadStatus: LeadStatus,
         leadPriority: LeadPriority,

@@ -91,6 +91,7 @@ export class AuthService {
         parentId: authUserId,
         roleId: dto.roleId,
         status: dto.status,
+        accessLevel: dto.accessLevel,
       },
     });
 
@@ -125,6 +126,7 @@ export class AuthService {
         email: dto.email,
         roleId: dto.roleId,
         status: dto.status,
+        accessLevel: dto.accessLevel,
       },
     });
 

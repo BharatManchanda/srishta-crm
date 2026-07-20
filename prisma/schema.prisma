@@ -234,6 +234,11 @@ enum GoogleSyncStatus {
   FAILED
 }
 
+enum AccessLevel {
+  ADMINISTRATIVE
+  STANDARD
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -248,6 +253,7 @@ model User {
 
   roleId    Int?
   role      Role?    @relation("UserRole", fields: [roleId], references: [id])
+  accessLevel AccessLevel @default(ADMINISTRATIVE)
 
   isSuperAdmin Boolean @default(false)
 

@@ -1,9 +1,8 @@
-import { UserStatus } from '@prisma/client';
+import { AccessLevel, UserStatus } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
   IsNumber,
-  IsPhoneNumber,
   IsString,
   MinLength,
 } from 'class-validator';
@@ -24,5 +23,8 @@ export class RegisterDto {
 
   @IsEnum(UserStatus)
   status: UserStatus;
+
+  @IsEnum(AccessLevel)
+  accessLevel: AccessLevel;
   
 }

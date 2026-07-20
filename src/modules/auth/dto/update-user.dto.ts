@@ -1,4 +1,4 @@
-import { UserStatus } from '@prisma/client';
+import { AccessLevel, UserStatus } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
@@ -20,4 +20,7 @@ export class UpdateUserDto {
 
   @IsEnum(UserStatus)
   status: UserStatus;
+
+  @IsEnum(AccessLevel)
+  accessLevel: AccessLevel;
 }

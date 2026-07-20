@@ -58,6 +58,7 @@ export class UserService {
         email: true,
         phone: true,
         role: true,
+        accessLevel: true,
         status: true,
         createdAt: true,
         updatedAt: true,
