@@ -20,21 +20,34 @@ export class LeadService {
     private readonly activityService: ActivityService,
   ) {}
   async getList(dto: LeadFilterDto, currentUserId: number) {
-    const userIds = await this.userHierarchyService.getFamilyUserIds(currentUserId);
+    const user = await this.prisma.user.findUnique({
+      where: { id: currentUserId },
+      select: { accessLevel: true },
+    });
+
+    const where: any = {
+      ...this.leadFilterBuilder.build(dto),
+      id: {
+        in: dto.id !== undefined && dto.id ? [dto?.id] : undefined,
+      },
+    };
+
+    if (user?.accessLevel === 'STANDARD') {
+      where.ownerId = currentUserId;
+    } else {
+      const userIds = await this.userHierarchyService.getFamilyUserIds(currentUserId);
+      where.OR = [
+        { createdById: { in: userIds } },
+        { ownerId: { in: userIds } }
+      ];
+    }
+
     const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
     const result = await this.paginationService.paginate(this.prisma.lead, {
       page: dto.page,
       perPage: dto.perPage,
       paginate: dto?.paginate,
-      where: {
-        ...this.leadFilterBuilder.build(dto),
-        createdById: {
-          in: userIds,
-        },
-        id: {
-          in: dto.id !== undefined && dto.id ? [dto?.id] : undefined,
-        },
-      },
+      where,
       orderBy,
     });
 
@@ -87,9 +100,9 @@ export class LeadService {
     const lead = await this.prisma.lead.create({
       data: {
         ...dto,
-
         budget: dto.budget ? new Prisma.Decimal(dto.budget) : null,
         createdById: authUserId,
+        ownerId: dto.ownerId || authUserId,
       },
     });
 

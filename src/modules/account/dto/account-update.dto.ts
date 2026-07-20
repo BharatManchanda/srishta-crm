@@ -83,4 +83,8 @@ export class AccountUpdateDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsInt()
+  ownerId?: number;
 }

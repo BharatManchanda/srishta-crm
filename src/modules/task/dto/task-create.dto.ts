@@ -29,4 +29,8 @@ export class TaskCreateDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsInt()
+  ownerId?: number;
 }

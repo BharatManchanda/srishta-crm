@@ -83,6 +83,7 @@ export class CallPolicy {
       },
       select: {
         createdById: true,
+        ownerId: true,
       },
     });
 
@@ -90,9 +91,21 @@ export class CallPolicy {
       throw new NotFoundException('Call not found');
     }
 
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { accessLevel: true },
+    });
+
+    if (dbUser?.accessLevel === 'STANDARD') {
+      return call.ownerId === currentUser.id;
+    }
+
     const allowedUsers = await this.getAccessibleUserIds(currentUser.id);
 
-    return allowedUsers.includes(call.createdById);
+    return (
+      allowedUsers.includes(call.createdById) ||
+      (call.ownerId !== null && allowedUsers.includes(call.ownerId))
+    );
   }
 
   async canViewAll(currentUser: any) {

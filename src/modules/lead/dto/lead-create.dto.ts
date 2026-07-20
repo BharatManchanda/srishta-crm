@@ -105,4 +105,8 @@ export class LeadCreateDto {
   @IsOptional()
   @IsString()
   description: string;
+
+  @IsOptional()
+  @IsNumber()
+  ownerId?: number;
 }

@@ -83,6 +83,7 @@ export class ContactPolicy {
       },
       select: {
         createdById: true,
+        ownerId: true,
       },
     });
 
@@ -90,9 +91,21 @@ export class ContactPolicy {
       throw new NotFoundException('Contact not found');
     }
 
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { accessLevel: true },
+    });
+
+    if (dbUser?.accessLevel === 'STANDARD') {
+      return contact.ownerId === currentUser.id;
+    }
+
     const allowedUsers = await this.getAccessibleUserIds(currentUser.id);
 
-    return allowedUsers.includes(contact.createdById);
+    return (
+      allowedUsers.includes(contact.createdById) ||
+      (contact.ownerId !== null && allowedUsers.includes(contact.ownerId))
+    );
   }
 
   async canViewAll(currentUser: any) {

@@ -294,6 +294,12 @@ model User {
   createdActivities Activity[] @relation("ActivityCreator")
   
   connectedGoogleCalendar GoogleCalendar[] @relation("GoogleConnector")
+
+  ownedLeads  Lead[]  @relation("LeadOwner")
+  ownedContacts Contact[] @relation("ContactOwner")
+  ownedAccounts Account[] @relation("AccountOwner")
+  ownedTasks  Task[]  @relation("TaskOwner")
+  ownedCalls  Call[]  @relation("CallOwner")
 }
 
 model OtpVerification {
@@ -418,6 +424,9 @@ model Lead {
   assignedToId Int?
   assignedTo   User? @relation("LeadAssignee", fields: [assignedToId], references: [id])
 
+  ownerId      Int?
+  owner        User? @relation("LeadOwner", fields: [ownerId], references: [id])
+
   // Follow-up
   nextFollowUpDate DateTime?
   lastFollowUpDate DateTime?
@@ -507,6 +516,9 @@ model Contact {
   otherAddressId    Int?
   otherAddress      Address? @relation("OtherAddress", fields: [otherAddressId], references: [id])
 
+  ownerId           Int?
+  owner             User? @relation("ContactOwner", fields: [ownerId], references: [id])
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -579,6 +591,9 @@ model Account {
 
   shippingAddressId Int?
   shippingAddress   Address? @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+
+  ownerId           Int?
+  owner             User? @relation("AccountOwner", fields: [ownerId], references: [id])
 
   // Notes
   description     String? @db.Text
@@ -667,6 +682,9 @@ model Task {
   googleSyncedAt DateTime?
   googleSyncStatus GoogleSyncStatus @default(PENDING)
 
+  ownerId     Int?
+  owner       User? @relation("TaskOwner", fields: [ownerId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -699,6 +717,9 @@ model Call {
   googleEventId String?
   googleSyncedAt DateTime?
   googleSyncStatus GoogleSyncStatus @default(PENDING)
+
+  ownerId     Int?
+  owner       User? @relation("CallOwner", fields: [ownerId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

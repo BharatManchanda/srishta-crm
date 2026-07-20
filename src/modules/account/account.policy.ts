@@ -83,6 +83,7 @@ export class AccountPolicy {
       },
       select: {
         createdById: true,
+        ownerId: true,
       },
     });
 
@@ -90,9 +91,21 @@ export class AccountPolicy {
       throw new NotFoundException('Account not found');
     }
 
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { accessLevel: true },
+    });
+
+    if (dbUser?.accessLevel === 'STANDARD') {
+      return account.ownerId === currentUser.id;
+    }
+
     const allowedUsers = await this.getAccessibleUserIds(currentUser.id);
 
-    return allowedUsers.includes(account.createdById);
+    return (
+      allowedUsers.includes(account.createdById) ||
+      (account.ownerId !== null && allowedUsers.includes(account.ownerId))
+    );
   }
 
   async canViewAll(currentUser: any) {

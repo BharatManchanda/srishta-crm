@@ -43,4 +43,8 @@ export class CallCreateDto {
   @IsOptional()
   @IsEnum(CallStatus)
   status?: CallStatus;
+
+  @IsOptional()
+  @IsInt()
+  ownerId?: number;
 }

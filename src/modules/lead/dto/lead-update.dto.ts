@@ -105,4 +105,8 @@ export class LeadUpdateDto {
   @IsOptional()
   @IsString()
   description: string;
+
+  @IsOptional()
+  @IsNumber()
+  ownerId?: number;
 }

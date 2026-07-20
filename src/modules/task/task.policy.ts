@@ -83,6 +83,7 @@ export class TaskPolicy {
       },
       select: {
         createdById: true,
+        ownerId: true,
       },
     });
 
@@ -90,9 +91,21 @@ export class TaskPolicy {
       throw new NotFoundException('Task not found');
     }
 
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { accessLevel: true },
+    });
+
+    if (dbUser?.accessLevel === 'STANDARD') {
+      return task.ownerId === currentUser.id;
+    }
+
     const allowedUsers = await this.getAccessibleUserIds(currentUser.id);
 
-    return allowedUsers.includes(task.createdById);
+    return (
+      allowedUsers.includes(task.createdById) ||
+      (task.ownerId !== null && allowedUsers.includes(task.ownerId))
+    );
   }
 
   async canViewAll(currentUser: any) {

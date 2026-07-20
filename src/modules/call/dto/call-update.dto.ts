@@ -44,4 +44,8 @@ export class CallUpdateDto {
   @IsOptional()
   @IsEnum(CallStatus)
   status?: CallStatus;
+
+  @IsOptional()
+  @IsInt()
+  ownerId?: number;
 }

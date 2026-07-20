@@ -59,6 +59,7 @@ export class UserService {
         phone: true,
         role: true,
         accessLevel: true,
+        isSuperAdmin: true,
         status: true,
         createdAt: true,
         updatedAt: true,

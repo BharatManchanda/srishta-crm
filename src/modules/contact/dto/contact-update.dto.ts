@@ -75,4 +75,8 @@ export class ContactUpdateDto {
   @ValidateNested()
   @Type(() => AddressDto)
   otherAddress?: AddressDto;
+
+  @IsOptional()
+  @IsInt()
+  ownerId?: number;
 }

@@ -83,6 +83,7 @@ export class LeadPolicy {
       },
       select: {
         createdById: true,
+        ownerId: true,
       },
     });
 
@@ -90,9 +91,21 @@ export class LeadPolicy {
       throw new NotFoundException('Lead not found');
     }
 
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { accessLevel: true },
+    });
+
+    if (dbUser?.accessLevel === 'STANDARD') {
+      return lead.ownerId === currentUser.id;
+    }
+
     const allowedUsers = await this.getAccessibleUserIds(currentUser.id);
 
-    return allowedUsers.includes(lead.createdById);
+    return (
+      allowedUsers.includes(lead.createdById) ||
+      (lead.ownerId !== null && allowedUsers.includes(lead.ownerId))
+    );
   }
 
   async canViewAll(currentUser: any) {

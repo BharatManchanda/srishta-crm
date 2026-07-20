@@ -21,6 +21,28 @@ export class ContactService {
   ) {}
 
   async getList(dto: ContactFilterDto, currentUserId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: currentUserId },
+      select: { accessLevel: true },
+    });
+
+    const where: any = {
+      ...this.contactFilterBuilder.build(dto),
+      id: {
+        in: dto.id !== undefined && dto.id ? [dto?.id] : undefined,
+      },
+    };
+
+    if (user?.accessLevel === 'STANDARD') {
+      where.ownerId = currentUserId;
+    } else {
+      const userIds = await this.userHierarchyService.getFamilyUserIds(currentUserId);
+      where.OR = [
+        { createdById: { in: userIds } },
+        { ownerId: { in: userIds } }
+      ];
+    }
+
     const orderBy = dto.sortBy
       ? { [dto.sortBy]: dto.sortOrder || 'desc' }
       : { id: 'desc' };
@@ -28,15 +50,7 @@ export class ContactService {
     const result = await this.paginationService.paginate(this.prisma.contact, {
       page: dto.page,
       perPage: dto.perPage,
-      where: {
-        ...this.contactFilterBuilder.build(dto),
-        createdById: {
-          in: await this.userHierarchyService.getFamilyUserIds(currentUserId),
-        },
-        id: {
-          in: dto.id !== undefined && dto.id ? [dto?.id] : undefined,
-        },
-      },
+      where,
       include: {
         mailingAddress: true,
         otherAddress: true,
@@ -318,6 +332,7 @@ export class ContactService {
         data: {
           ...contactData,
           createdById: authUserId,
+          ownerId: dto.ownerId || authUserId,
           mailingAddressId: mailAddressRecord?.id,
           otherAddressId: otherAddressRecord?.id,
           dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
