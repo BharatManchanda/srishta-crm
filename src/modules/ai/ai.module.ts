@@ -6,8 +6,10 @@ import { PromptService } from './prompt.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { VectorService } from './vector.service';
 import { EmbeddingService } from './embedding.service';
+import { JwtModule } from '../jwt/jwt.module';
 
 @Module({
+  imports: [JwtModule],
   controllers: [AiController],
   providers: [
     AiService,
