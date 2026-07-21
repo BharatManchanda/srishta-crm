@@ -11,6 +11,14 @@ export class EmailService {
   }
   async sendEmail(to: string, subject: string, html: string): Promise<void> {
     try {
+      const apiKey = this.configService.get<string>('RESEND_API_KEY');
+      if (!apiKey || apiKey === 'YOUR_RESEND_API_KEY' || apiKey.trim() === '') {
+        console.log(`[Email MOCK] Sending email to: ${to}`);
+        console.log(`[Email MOCK] Subject: ${subject}`);
+        console.log(`[Email MOCK] Body: ${html}`);
+        return;
+      }
+
       const { error } = await this.resend.emails.send({
         from: this.configService.get<string>('MAIL_FROM')!,
         to,
