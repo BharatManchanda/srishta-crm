@@ -7,8 +7,10 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UpdateViewSettingDto } from './dto/contact-view-setting.dto';
 import { ContactCreateDto } from './dto/contact-create.dto';
 import { ContactUpdateDto } from './dto/contact-update.dto';
-import { ActivityEntity } from '@prisma/client';
+import { ActivityEntity, AiEntityType } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
+import { AiService } from '../ai/ai.service';
+import { contactToDocument } from 'src/common/helpers/build-document';
 
 @Injectable()
 export class ContactService {
@@ -18,6 +20,7 @@ export class ContactService {
     private readonly contactFilterBuilder: ContactFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
+    private readonly aiService: AiService,
   ) {}
 
   async getList(dto: ContactFilterDto, currentUserId: number) {
@@ -320,12 +323,8 @@ export class ContactService {
       const { mailingAddress, otherAddress, ...contactData } = dto;
 
       const [mailAddressRecord, otherAddressRecord] = await Promise.all([
-        mailingAddress
-          ? this.prisma.address.create({ data: mailingAddress })
-          : null,
-        otherAddress
-          ? this.prisma.address.create({ data: otherAddress })
-          : null,
+        mailingAddress ? this.prisma.address.create({ data: mailingAddress }) : null,
+        otherAddress ? this.prisma.address.create({ data: otherAddress }) : null,
       ]);
 
       const contact = await this.prisma.contact.create({
@@ -349,6 +348,13 @@ export class ContactService {
           email: contact.email,
           title: contact.title,
         },
+      }, authUserId);
+
+      await this.aiService.create({
+        entityType: AiEntityType.CONTACT,
+        entityId: contact.id,
+        title: contact.title ?? "",
+        content: contactToDocument(contact),
       }, authUserId);
 
       return contact;
@@ -422,9 +428,15 @@ export class ContactService {
         },
       }, authUserId);
 
+      await this.aiService.update({
+        entityId: contact.id,
+        entityType: ActivityEntity.CONTACT,
+        title: contact.title ?? "",
+        content: contactToDocument(contact),
+      });
+
       return contact;
     } catch (error) {
-      console.log(error, '::::error');
       throw error;
     }
   }

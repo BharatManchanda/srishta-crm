@@ -8,9 +8,10 @@ import { LeadPolicy } from './lead.policy';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { LeadService } from './lead.service';
 import { ActivityModule } from '../activity/activity.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, AiModule],
   controllers: [LeadController],
   providers: [
     LeadService,

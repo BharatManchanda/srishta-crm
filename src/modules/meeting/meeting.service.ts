@@ -5,13 +5,14 @@ import { Queue } from 'bullmq';
 import { MeetingFilterDto } from './dto/meeting-filter.dto';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { MeetingFilterBuilder } from './meeting-filter.builder';
-import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { MeetingCreateDto } from './dto/meeting-create.dto';
 import { MeetingUpdateDto } from './dto/meeting-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
-import { ActivityEntity } from '@prisma/client';
+import { ActivityEntity, AiEntityType } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
 import { UserPolicy } from '../user/user.policy';
+import { AiService } from '../ai/ai.service';
+import { meetingToDocument } from 'src/common/helpers/build-document';
 
 @Injectable()
 export class MeetingService {
@@ -19,9 +20,9 @@ export class MeetingService {
     private readonly prisma: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly meetingFilterBuilder: MeetingFilterBuilder,
-    private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
     private readonly userPolicy: UserPolicy,
+    private readonly aiService: AiService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -130,6 +131,13 @@ export class MeetingService {
 
     await this.calendarSyncQueue.add('sync-meeting', { meetingId: meeting.id });
 
+    await this.aiService.create({
+      entityType: AiEntityType.MEETING,
+      entityId: meeting.id,
+      title: meeting.title ?? "",
+      content: meetingToDocument(meeting),
+    }, authUserId);
+
     return meeting;
   }
 
@@ -198,6 +206,13 @@ export class MeetingService {
     }
 
     await this.calendarSyncQueue.add('sync-meeting', { meetingId: updatedMeeting.id });
+
+    await this.aiService.update({
+      entityType: AiEntityType.MEETING,
+      entityId: updatedMeeting.id,
+      title: updatedMeeting.title ?? "",
+      content: meetingToDocument(updatedMeeting),
+    });
 
     return updatedMeeting;
   }

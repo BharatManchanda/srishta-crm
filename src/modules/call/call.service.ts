@@ -10,8 +10,10 @@ import { CallCreateDto } from './dto/call-create.dto';
 import { CallUpdateDto } from './dto/call-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { ActivityService } from '../activity/activity.service';
-import { ActivityEntity } from '@prisma/client';
+import { ActivityEntity, AiEntityType } from '@prisma/client';
 import { UserPolicy } from '../user/user.policy';
+import { AiService } from '../ai/ai.service';
+import { callToDocument } from 'src/common/helpers/build-document';
 
 @Injectable()
 export class CallService {
@@ -19,9 +21,9 @@ export class CallService {
     private readonly prisma: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly callFilterBuilder: CallFilterBuilder,
-    private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
     private readonly userPolicy: UserPolicy,
+    private readonly aiService: AiService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -110,6 +112,13 @@ export class CallService {
 
     await this.calendarSyncQueue.add('sync-call', { callId: newCall.id });
 
+    await this.aiService.create({
+      entityType: AiEntityType.ACCOUNT,
+      entityId: newCall.id,
+      title: newCall.subject ?? "",
+      content: callToDocument(newCall),
+    }, authUserId);
+
     return newCall;
   }
 
@@ -157,6 +166,13 @@ export class CallService {
     }
 
     await this.calendarSyncQueue.add('sync-call', { callId: updatedCall.id });
+
+    await this.aiService.update({
+      entityType: AiEntityType.CALL,
+      entityId: updatedCall.id,
+      title: updatedCall.subject ?? "",
+      content: callToDocument(updatedCall),
+    })
 
     return updatedCall;
   }

@@ -25,6 +25,7 @@ import { ExportModule } from './modules/export/export.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { GoogleCalendarModule } from './modules/google-calendar/google-calendar.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ExportModule,
     ActivityModule,
     GoogleCalendarModule,
+    AiModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

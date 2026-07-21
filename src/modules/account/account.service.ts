@@ -8,6 +8,9 @@ import { UpdateViewSettingDto } from './dto/account-view-setting.dto';
 import { AccountCreateDto } from './dto/account-create.dto';
 import { AccountUpdateDto } from './dto/account-update.dto';
 import { ActivityService } from '../activity/activity.service';
+import { AiEntityType } from '@prisma/client';
+import { AiService } from '../ai/ai.service';
+import { accountToDocument } from 'src/common/helpers/build-document';
 
 @Injectable()
 export class AccountService {
@@ -17,6 +20,7 @@ export class AccountService {
     private readonly accountFilterBuilder: AccountFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
+    private readonly aiService: AiService
   ) {}
 
   async getList(dto: AccountFilterDto, currentUserId: number) {
@@ -151,7 +155,6 @@ export class AccountService {
         }),
       ),
     );
-
     return updatedColumns;
   }
 
@@ -373,6 +376,13 @@ export class AccountService {
         description: `Account "${newAccount.accountName}" was created.`,
       }, authUserId);
 
+      await this.aiService.create({
+        entityType: AiEntityType.ACCOUNT,
+        entityId: newAccount.id,
+        title: newAccount.accountName ?? "",
+        content: accountToDocument(newAccount),
+      }, authUserId);
+
       return newAccount;
     } catch (error) {
       console.log(error, '::::error');
@@ -463,6 +473,13 @@ export class AccountService {
         },
         authUserId,
       );
+
+      await this.aiService.update({
+        entityId: id,
+        entityType: AiEntityType.ACCOUNT,
+        title: updatedAccount.accountName ?? "",
+        content: accountToDocument(updatedAccount),
+      });
 
       return updatedAccount;
     } catch (error) {

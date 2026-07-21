@@ -8,9 +8,10 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { AccountFilterBuilder } from './account-filter.builder';
 import { AccountPolicy } from './account.policy';
 import { ActivityModule } from '../activity/activity.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, AiModule],
   providers: [
     AccountService,
     PaginationService,

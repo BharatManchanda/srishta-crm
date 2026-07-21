@@ -4,11 +4,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { LeadFilterBuilder } from './lead-filter.builder';
 import { LeadCreateDto } from './dto/lead-create.dto';
-import { ActivityEntity, Prisma } from '@prisma/client';
+import { ActivityEntity, AiEntityType, Prisma } from '@prisma/client';
 import { LeadUpdateDto } from './dto/lead-update.dto';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { ActivityService } from '../activity/activity.service';
+import { AiService } from '../ai/ai.service';
+import { leadToDocument } from 'src/common/helpers/build-document';
 
 @Injectable()
 export class LeadService {
@@ -18,6 +20,7 @@ export class LeadService {
     private readonly leadFilterBuilder: LeadFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
+    private readonly aiService: AiService,
   ) {}
   async getList(dto: LeadFilterDto, currentUserId: number) {
     const user = await this.prisma.user.findUnique({
@@ -118,6 +121,13 @@ export class LeadService {
       },
     }, authUserId );
 
+    await this.aiService.create({
+      entityType: AiEntityType.LEAD,
+      entityId: lead.id,
+      title: lead.title ?? "",
+      content: leadToDocument(lead),
+    }, authUserId);
+
     return lead;
   }
 
@@ -128,18 +138,6 @@ export class LeadService {
       },
     });
   }
-
-  // async update(dto: LeadUpdateDto, id: number) {
-  //   return this.prisma.lead.update({
-  //     where: {
-  //       id: id,
-  //     },
-  //     data: {
-  //       ...dto,
-  //       budget: dto.budget ? new Prisma.Decimal(dto.budget) : null,
-  //     },
-  //   });
-  // }
 
   async update(dto: LeadUpdateDto, id: number, authUserId: number) {
     const oldLead = await this.prisma.lead.findUnique({ where: { id } });
@@ -165,6 +163,13 @@ export class LeadService {
       },
       authUserId,
     );
+
+    await this.aiService.update({
+      entityId: lead.id,
+      entityType: ActivityEntity.LEAD,
+      title: lead.title ?? "",
+      content: leadToDocument(lead),
+    });
 
     return lead;
   }

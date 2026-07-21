@@ -12,8 +12,10 @@ import { BulkTaskCreateDto } from './dto/bulk-task-create.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 
 import { ActivityService } from '../activity/activity.service';
-import { ActivityEntity } from '@prisma/client';
+import { ActivityEntity, AiEntityType } from '@prisma/client';
 import { UserPolicy } from '../user/user.policy';
+import { AiService } from '../ai/ai.service';
+import { taskToDocument } from 'src/common/helpers/build-document';
 
 @Injectable()
 export class TaskService {
@@ -21,9 +23,9 @@ export class TaskService {
     private readonly prisma: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly taskFilterBuilder: TaskFilterBuilder,
-    private readonly userHierarchyService: UserHierarchyService,
     private readonly userPolicy: UserPolicy,
     private readonly activityService: ActivityService,
+    private readonly aiService: AiService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -109,6 +111,13 @@ export class TaskService {
 
     await this.calendarSyncQueue.add('sync-task', { taskId: newTask.id });
 
+    this.aiService.create({
+      entityType: AiEntityType.TASK,
+      entityId: newTask.id,
+      title: newTask.subject,
+      content: taskToDocument(newTask.description),
+    }, authUserId);
+
     return newTask;
   }
 
@@ -156,6 +165,13 @@ export class TaskService {
     }
 
     await this.calendarSyncQueue.add('sync-task', { taskId: updatedTask.id });
+
+    await this.aiService.update({
+      entityType: AiEntityType.TASK,
+      entityId: updatedTask.id,
+      title: updatedTask.subject,
+      content: taskToDocument(updatedTask),
+    });
 
     return updatedTask;
   }

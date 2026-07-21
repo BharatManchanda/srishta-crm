@@ -10,9 +10,10 @@ import { MeetingPolicy } from './meeting.policy';
 import { ActivityModule } from '../activity/activity.module';
 import { GoogleCalendarModule } from '../google-calendar/google-calendar.module';
 import { UserPolicy } from '../user/user.policy';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule],
   providers: [
     MeetingService,
     PaginationService,
