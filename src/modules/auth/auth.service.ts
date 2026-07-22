@@ -98,6 +98,17 @@ export class AuthService {
         roleId: dto.roleId,
         status: dto.status,
         accessLevel: dto.accessLevel,
+        phone: dto.phone,
+        bio: dto.bio,
+        country: dto.country,
+        city: dto.city,
+        pincode: dto.pincode,
+        tax_id: dto.tax_id,
+        facebookLink: dto.facebookLink,
+        twitterLink: dto.twitterLink,
+        linkdinLink: dto.linkdinLink,
+        instagramLink: dto.instagramLink,
+        websiteLink: dto.websiteLink,
       },
     });
 

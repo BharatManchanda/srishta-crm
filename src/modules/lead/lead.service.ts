@@ -21,7 +21,7 @@ export class LeadService {
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
-  ) {}
+  ) { }
   async getList(dto: LeadFilterDto, currentUserId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: currentUserId },
@@ -119,7 +119,7 @@ export class LeadService {
         email: lead.email,
         status: lead.status,
       },
-    }, authUserId );
+    }, authUserId);
 
     await this.aiService.create({
       entityType: AiEntityType.LEAD,
@@ -198,7 +198,7 @@ export class LeadService {
         email: lead.email,
       },
     },
-    authUserId);
+      authUserId);
 
     return lead;
   }
@@ -219,77 +219,32 @@ export class LeadService {
         columns: {
           create: [
             { field: 'id', label: 'ID', visible: true, order: 1 },
-            {
-              field: 'createdById',
-              label: 'Created By',
-              visible: false,
-              order: 2,
-            },
-            { field: 'name', label: 'Name', visible: true, order: 3 },
-            { field: 'title', label: 'Title', visible: false, order: 4 },
-            { field: 'email', label: 'Email', visible: true, order: 5 },
-            { field: 'phone', label: 'Phone', visible: true, order: 6 },
-            { field: 'website', label: 'Website', visible: true, order: 7 },
-            { field: 'city', label: 'City', visible: true, order: 8 },
-            { field: 'state', label: 'State', visible: false, order: 9 },
-            { field: 'pinCode', label: 'Pin Code', visible: false, order: 10 },
-            { field: 'country', label: 'Country', visible: false, order: 11 },
-            { field: 'address', label: 'Address', visible: false, order: 12 },
-            { field: 'industry', label: 'Industry', visible: false, order: 13 },
-            { field: 'source', label: 'Source', visible: false, order: 14 },
-            { field: 'budget', label: 'Budget', visible: false, order: 15 },
-            { field: 'priority', label: 'Priority', visible: false, order: 16 },
-            { field: 'rating', label: 'Rating', visible: false, order: 17 },
-            {
-              field: 'leadScore',
-              label: 'LeadScore',
-              visible: false,
-              order: 18,
-            },
-            {
-              field: 'isQualified',
-              label: 'Is Qualified',
-              visible: false,
-              order: 19,
-            },
-            {
-              field: 'isConverted',
-              label: 'Is Converted',
-              visible: false,
-              order: 20,
-            },
-            {
-              field: 'assignedToId',
-              label: 'Assigned To',
-              visible: false,
-              order: 21,
-            },
-            {
-              field: 'nextFollowUpDate',
-              label: 'Next FollowUp Date',
-              visible: false,
-              order: 22,
-            },
-            {
-              field: 'lastFollowUpDate',
-              label: 'Last FollowUp Date',
-              visible: false,
-              order: 23,
-            },
-            { field: 'status', label: 'Status', visible: true, order: 24 },
-            {
-              field: 'createdAt',
-              label: 'Created At',
-              visible: false,
-              order: 25,
-            },
-            {
-              field: 'updatedAt',
-              label: 'Updated At',
-              visible: false,
-              order: 26,
-            },
-            { field: 'openActivity', label: 'Open Activity', visible: true, order: 27 },
+            { field: 'openActivity', label: 'Open Activity', visible: true, order: 2 },
+            { field: 'createdById', label: 'Created By', visible: false, order: 3, },
+            { field: 'name', label: 'Name', visible: true, order: 4 },
+            { field: 'title', label: 'Title', visible: false, order: 5 },
+            { field: 'email', label: 'Email', visible: true, order: 6 },
+            { field: 'phone', label: 'Phone', visible: true, order: 7 },
+            { field: 'website', label: 'Website', visible: true, order: 8 },
+            { field: 'city', label: 'City', visible: true, order: 9 },
+            { field: 'state', label: 'State', visible: false, order: 10 },
+            { field: 'pinCode', label: 'Pin Code', visible: false, order: 11 },
+            { field: 'country', label: 'Country', visible: false, order: 12 },
+            { field: 'address', label: 'Address', visible: false, order: 13 },
+            { field: 'industry', label: 'Industry', visible: false, order: 14 },
+            { field: 'source', label: 'Source', visible: false, order: 15 },
+            { field: 'budget', label: 'Budget', visible: false, order: 16 },
+            { field: 'priority', label: 'Priority', visible: false, order: 17 },
+            { field: 'rating', label: 'Rating', visible: false, order: 18 },
+            { field: 'leadScore', label: 'LeadScore', visible: false, order: 19 },
+            { field: 'isQualified', label: 'Is Qualified', visible: false, order: 20, },
+            { field: 'isConverted', label: 'Is Converted', visible: false, order: 21, },
+            { field: 'assignedToId', label: 'Assigned To', visible: false, order: 22, },
+            { field: 'nextFollowUpDate', label: 'Next FollowUp Date', visible: false, order: 23, },
+            { field: 'lastFollowUpDate', label: 'Last FollowUp Date', visible: false, order: 24, },
+            { field: 'status', label: 'Status', visible: true, order: 25 },
+            { field: 'createdAt', label: 'Created At', visible: false, order: 26, },
+            { field: 'updatedAt', label: 'Updated At', visible: false, order: 27, },
             { field: 'action', label: 'Action', visible: true, order: 28 },
           ],
         },

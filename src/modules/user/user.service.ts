@@ -166,8 +166,18 @@ export class UserService {
             { field: 'role', label: 'Role', visible: true, order: 5 },
             { field: 'status', label: 'Status', visible: true, order: 6 },
             { field: 'accessLevel', label: 'Access Level', visible: true, order: 7 },
-            { field: 'createdAt', label: 'Created At', visible: false, order: 8 },
-            { field: 'action', label: 'Action', visible: true, order: 9 },
+            { field: 'bio', label: 'Bio', visible: false, order: 8 },
+            { field: 'country', label: 'Country', visible: false, order: 9 },
+            { field: 'city', label: 'City', visible: false, order: 10 },
+            { field: 'pincode', label: 'Pincode', visible: false, order: 11 },
+            { field: 'tax_id', label: 'Tax ID', visible: false, order: 12 },
+            { field: 'facebookLink', label: 'Facebook Link', visible: false, order: 13 },
+            { field: 'twitterLink', label: 'Twitter Link', visible: false, order: 14 },
+            { field: 'linkdinLink', label: 'LinkedIn Link', visible: false, order: 15 },
+            { field: 'instagramLink', label: 'Instagram Link', visible: false, order: 16 },
+            { field: 'websiteLink', label: 'Website Link', visible: false, order: 17 },
+            { field: 'createdAt', label: 'Created At', visible: false, order: 18 },
+            { field: 'action', label: 'Action', visible: true, order: 19 },
           ],
         },
       },
@@ -181,7 +191,7 @@ export class UserService {
       },
     });
     if (!userModule) return;
-    const viewSetting = await this.prisma.userTableView.findFirst({
+    let viewSetting = await this.prisma.userTableView.findFirst({
       where: {
         userId: authUserId,
         isDefault: true,
@@ -194,7 +204,7 @@ export class UserService {
 
     if (!viewSetting) {
       await this.createDefaultUserView(authUserId);
-      return this.prisma.userTableView.findFirst({
+      viewSetting = await this.prisma.userTableView.findFirst({
         where: {
           userId: authUserId,
           isDefault: true,
@@ -205,6 +215,55 @@ export class UserService {
         },
       });
     }
+
+    if (viewSetting) {
+      const existingFields = viewSetting.columns.map((c) => c.field);
+      const allDefaultColumns = [
+        { field: 'id', label: 'ID', visible: true },
+        { field: 'name', label: 'Name', visible: true },
+        { field: 'email', label: 'Email', visible: true },
+        { field: 'phone', label: 'Phone', visible: true },
+        { field: 'role', label: 'Role', visible: true },
+        { field: 'status', label: 'Status', visible: true },
+        { field: 'accessLevel', label: 'Access Level', visible: true },
+        { field: 'bio', label: 'Bio', visible: false },
+        { field: 'country', label: 'Country', visible: false },
+        { field: 'city', label: 'City', visible: false },
+        { field: 'pincode', label: 'Pincode', visible: false },
+        { field: 'tax_id', label: 'Tax ID', visible: false },
+        { field: 'facebookLink', label: 'Facebook Link', visible: false },
+        { field: 'twitterLink', label: 'Twitter Link', visible: false },
+        { field: 'linkdinLink', label: 'LinkedIn Link', visible: false },
+        { field: 'instagramLink', label: 'Instagram Link', visible: false },
+        { field: 'websiteLink', label: 'Website Link', visible: false },
+        { field: 'createdAt', label: 'Created At', visible: false },
+        { field: 'action', label: 'Action', visible: true },
+      ];
+
+      const missingColumns = allDefaultColumns.filter(
+        (c) => !existingFields.includes(c.field),
+      );
+
+      if (missingColumns.length > 0) {
+        const maxOrder = Math.max(...viewSetting.columns.map((c) => c.order), 0);
+        await this.prisma.tableColumn.createMany({
+          data: missingColumns.map((col, index) => ({
+            tableViewId: viewSetting!.id,
+            field: col.field,
+            label: col.label,
+            visible: col.visible,
+            order: maxOrder + index + 1,
+          })),
+        });
+
+        // Refetch synced settings
+        viewSetting = await this.prisma.userTableView.findFirst({
+          where: { id: viewSetting.id },
+          include: { columns: true },
+        });
+      }
+    }
+
     return viewSetting;
   }
 
