@@ -15,18 +15,15 @@ export class AiService {
         private gemini: GeminiService,
         private prompt: PromptService,
         private readonly prisma: PrismaService,
-    ) {}
+    ) { }
 
     async ask(question: string) {
         const embedding = await this.embedding.embed(question);
         if (!embedding) {
             throw new Error("Failed to generate embedding");
         }
-        console.log(embedding,"::embedding")
         const docs = await this.vector.similaritySearch(embedding);
-        console.log(docs,"::docs")
         const prompt = this.prompt.build(question, docs);
-        // console.log(prompt, "::::prompt")
         return this.gemini.chat(prompt);
     }
 

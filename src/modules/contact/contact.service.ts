@@ -21,7 +21,7 @@ export class ContactService {
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
-  ) {}
+  ) { }
 
   async getList(dto: ContactFilterDto, currentUserId: number) {
     const user = await this.prisma.user.findUnique({
@@ -314,6 +314,13 @@ export class ContactService {
       include: {
         otherAddress: true,
         mailingAddress: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
   }
@@ -359,7 +366,6 @@ export class ContactService {
 
       return contact;
     } catch (error) {
-      console.log(error, '::::error');
     }
   }
 

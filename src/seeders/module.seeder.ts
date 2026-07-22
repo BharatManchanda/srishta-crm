@@ -21,6 +21,8 @@ export const TASK_MODULE_ID = 22;
 export const CALL_MODULE_ID = 23;
 export const MEETING_MODULE_ID = 24;
 export const IMPORT_MODULE_ID = 25;
+export const EMAIL_MODULE_ID = 26;
+
 
 const modules = [
   {
@@ -169,17 +171,6 @@ const modules = [
     showInNavbar: true,
   },
   {
-    id: SETTINGS_MODULE_ID,
-    name: 'Settings',
-    path: '/settings',
-    icon: 'PieChartIcon',
-    description: 'Application settings',
-    parent_id: null,
-    sort_order: 10,
-    activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit', "/connects", "/calendar"],
-    showInNavbar: true,
-  },
-  {
     id: IMPORT_MODULE_ID,
     name: 'Imports',
     path: '/imports',
@@ -188,6 +179,28 @@ const modules = [
     parent_id: null,
     sort_order: 9,
     activeOn: ['/imports', '/imports/:id'],
+    showInNavbar: true,
+  },
+  {
+    id: EMAIL_MODULE_ID,
+    name: 'Emails',
+    path: '/emails',
+    icon: 'Mail',
+    description: 'Email log management',
+    parent_id: null,
+    sort_order: 10,
+    activeOn: ['/emails'],
+    showInNavbar: true,
+  },
+  {
+    id: SETTINGS_MODULE_ID,
+    name: 'Settings',
+    path: '/settings',
+    icon: 'PieChartIcon',
+    description: 'Application settings',
+    parent_id: null,
+    sort_order: 11,
+    activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit', "/connects", "/calendar"],
     showInNavbar: true,
   },
 ];

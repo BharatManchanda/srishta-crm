@@ -49,6 +49,13 @@ export class MeetingController {
     return this.meetingService.get(id);
   }
 
+  @Post(':id/send-reminder')
+  async sendReminder(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    await this.meetingPolicy.authorize(req['user'], 'view', id);
+    const authUserId = req['user'].id;
+    return this.meetingService.sendReminder(id, authUserId);
+  }
+
   @Put(':id')
   async update(
     @Body() dto: MeetingUpdateDto,

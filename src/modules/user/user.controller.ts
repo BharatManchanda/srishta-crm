@@ -18,6 +18,7 @@ import { UserFilterDto } from './dto/user-filter.dto';
 import { UpdateUserDto } from '../auth/dto/update-user.dto';
 import { UserPolicy } from './user.policy';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
+import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 
 @UseGuards(AuthGuard)
 @Controller('user')
@@ -25,13 +26,33 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly userPolicy: UserPolicy,
-    ) { }
+  ) { }
+
+  @Get('view-setting')
+  async viewSetting(@Req() req: Request) {
+    const authUserId = req['user'].id;
+    return this.userService.viewSetting(authUserId);
+  }
+
+  @Put('update-setting')
+  async updateSetting(@Body() dto: UpdateViewSettingDto, @Req() req: Request) {
+    const authUserId = req['user'].id;
+    return this.userService.updateSetting(dto, authUserId);
+  }
 
   @Get()
   async getList(@Query() dto: UserFilterDto, @Req() req: Request) {
     await this.userPolicy.authorize(req['user'], 'view');
     const authUserId = req['user'].id;
     return this.userService.getList(dto, authUserId);
+  }
+
+  @Get("me")
+  async getMe(@Req() req: Request) {
+    console.log(req, "::req")
+    const authUserId = req['user'].id;
+    console.log(authUserId, "::authUserId")
+    return this.userService.getOne(authUserId);
   }
 
   @Post()
@@ -58,7 +79,7 @@ export class UserController {
   }
 
   @Put(':id')
-    async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto, @Req() req: Request) {
+  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto, @Req() req: Request) {
     await this.userPolicy.authorize(req['user'], 'update', id);
     const authUserId = req['user'].id;
     return this.userService.update(dto, authUserId, id);

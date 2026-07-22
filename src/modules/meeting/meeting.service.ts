@@ -13,6 +13,7 @@ import { ActivityService } from '../activity/activity.service';
 import { UserPolicy } from '../user/user.policy';
 import { AiService } from '../ai/ai.service';
 import { meetingToDocument } from 'src/common/helpers/build-document';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class MeetingService {
@@ -23,6 +24,7 @@ export class MeetingService {
     private readonly activityService: ActivityService,
     private readonly userPolicy: UserPolicy,
     private readonly aiService: AiService,
+    private readonly emailService: EmailService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -400,5 +402,160 @@ export class MeetingService {
       updatedMeetings.push(updated);
     }
     return updatedMeetings;
+  }
+
+  async sendReminder(id: number, authUserId: number) {
+    const meeting = await this.prisma.meeting.findUnique({
+      where: { id },
+      include: {
+        participants: true,
+      },
+    });
+
+    if (!meeting) {
+      throw new NotFoundException('Meeting not found');
+    }
+
+    const errors: string[] = [];
+    let sentCount = 0;
+
+    for (const participant of meeting.participants) {
+      let email = participant.email;
+      let name = participant.name || '';
+
+      if (participant.participantId) {
+        if (participant.participantType === 'USER') {
+          const user = await this.prisma.user.findUnique({
+            where: { id: participant.participantId },
+            select: { email: true, name: true },
+          });
+          if (user) {
+            email = user.email;
+            name = user.name || '';
+          }
+        } else if (participant.participantType === 'LEAD') {
+          const lead = await this.prisma.lead.findUnique({
+            where: { id: participant.participantId },
+            select: { email: true, name: true },
+          });
+          if (lead) {
+            email = lead.email;
+            name = lead.name || '';
+          }
+        } else if (participant.participantType === 'CONTACT') {
+          const contact = await this.prisma.contact.findUnique({
+            where: { id: participant.participantId },
+            select: { email: true, name: true },
+          });
+          if (contact) {
+            email = contact.email;
+            name = contact.name || '';
+          }
+        }
+      }
+
+      if (!email) {
+        continue;
+      }
+
+      try {
+        const subject = `Meeting Reminder: ${meeting.title}`;
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+            <h2 style="color: #4f46e5; margin-bottom: 20px;">Meeting Reminder</h2>
+            <p>Hello <strong>${name || 'Participant'}</strong>,</p>
+            <p>This is a reminder for your upcoming meeting scheduled in Srishta CRM.</p>
+            
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #e5e7eb;">
+              <h3 style="margin-top: 0; color: #111827;">${meeting.title}</h3>
+              <p style="margin: 5px 0;"><strong>Start Time:</strong> ${meeting.startTime.toLocaleString()}</p>
+              <p style="margin: 5px 0;"><strong>End Time:</strong> ${meeting.endTime.toLocaleString()}</p>
+              ${meeting.location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${meeting.location}</p>` : ''}
+              ${meeting.url ? `<p style="margin: 5px 0;"><strong>Join Link:</strong> <a href="${meeting.url}" style="color: #4f46e5; text-decoration: none;">Join Meeting</a></p>` : ''}
+            </div>
+            
+            ${meeting.description ? `<p style="color: #4b5563; font-style: italic; margin-top: 20px;">"${meeting.description}"</p>` : ''}
+            
+            <p style="margin-top: 30px; font-size: 12px; color: #9ca3af;">This is an automated notification from Srishta CRM.</p>
+          </div>
+        `;
+
+        await this.emailService.sendEmail(email, subject, html);
+        sentCount++;
+
+        // Store email history in DB
+        const mappedEntityType = participant.participantType === 'LEAD' ? 'LEAD' : 'CONTACT';
+        await this.prisma.email.create({
+          data: {
+            entityType: mappedEntityType,
+            entityId: participant.participantId || id,
+            recipientEmail: email,
+            subject,
+            content: html,
+            createdById: authUserId,
+            status: 'DELIVERED',
+          },
+        });
+
+      } catch (err: any) {
+        console.error(`Failed to send reminder email to ${email}:`, err);
+        errors.push(`Participant ${name} (${email}): ${err.message || 'Send failed'}`);
+
+        try {
+          const subject = `Meeting Reminder: ${meeting.title}`;
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+              <h2 style="color: #4f46e5; margin-bottom: 20px;">Meeting Reminder</h2>
+              <p>Hello <strong>${name || 'Participant'}</strong>,</p>
+              <p>This is a reminder for your upcoming meeting scheduled in Srishta CRM.</p>
+              
+              <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #e5e7eb;">
+                <h3 style="margin-top: 0; color: #111827;">${meeting.title}</h3>
+                <p style="margin: 5px 0;"><strong>Start Time:</strong> ${meeting.startTime.toLocaleString()}</p>
+                <p style="margin: 5px 0;"><strong>End Time:</strong> ${meeting.endTime.toLocaleString()}</p>
+                ${meeting.location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${meeting.location}</p>` : ''}
+                ${meeting.url ? `<p style="margin: 5px 0;"><strong>Join Link:</strong> <a href="${meeting.url}" style="color: #4f46e5; text-decoration: none;">Join Meeting</a></p>` : ''}
+              </div>
+              
+              ${meeting.description ? `<p style="color: #4b5563; font-style: italic; margin-top: 20px;">"${meeting.description}"</p>` : ''}
+              
+              <p style="margin-top: 30px; font-size: 12px; color: #9ca3af;">This is an automated notification from Srishta CRM.</p>
+            </div>
+          `;
+          const mappedEntityType = participant.participantType === 'LEAD' ? 'LEAD' : 'CONTACT';
+          await this.prisma.email.create({
+            data: {
+              entityType: mappedEntityType,
+              entityId: participant.participantId || id,
+              recipientEmail: email,
+              subject,
+              content: html,
+              createdById: authUserId,
+              status: 'FAILED',
+            },
+          });
+        } catch (dbErr) {
+          console.error(`Failed to store failed email history in DB:`, dbErr);
+        }
+      }
+    }
+
+    // Log activity under Meeting
+    await this.activityService.create({
+      entityType: ActivityEntity.MEETING,
+      entityId: meeting.id,
+      action: 'REMINDER_SENT',
+      description: `Sent meeting reminder to ${sentCount} participant(s).`,
+      metadata: {
+        sentCount,
+        errors: errors.length > 0 ? errors : undefined,
+      },
+    }, authUserId);
+
+    return {
+      success: true,
+      sentCount,
+      errors: errors.length > 0 ? errors : undefined,
+    };
   }
 }

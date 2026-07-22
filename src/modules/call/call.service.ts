@@ -71,6 +71,13 @@ export class CallService {
       },
       include: {
         createdBy: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 

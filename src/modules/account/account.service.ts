@@ -21,7 +21,7 @@ export class AccountService {
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
     private readonly aiService: AiService
-  ) {}
+  ) { }
 
   async getList(dto: AccountFilterDto, currentUserId: number) {
     const user = await this.prisma.user.findUnique({
@@ -336,6 +336,13 @@ export class AccountService {
         shippingAddress: true,
         parentAccount: true,
         childAccounts: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
   }
@@ -350,7 +357,7 @@ export class AccountService {
             id: dto.parentAccountId,
           },
         })
-        if (!existingAccount){
+        if (!existingAccount) {
           throw new BadRequestException('Parent account not found');
         }
       }
@@ -385,7 +392,6 @@ export class AccountService {
 
       return newAccount;
     } catch (error) {
-      console.log(error, '::::error');
       throw error;
     }
   }

@@ -35,7 +35,7 @@ export class AuthService {
     private readonly userHierarchyService: UserHierarchyService,
     private readonly userPolicy: UserPolicy,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
-    ) { }
+  ) { }
 
   private generateOtp(): string {
     if (process.env.NODE_ENV === 'production') {
@@ -56,7 +56,8 @@ export class AuthService {
     if (existingUser.status !== UserStatus.ACTIVE) {
       throw new BadRequestException('Account is deactivated');
     }
-        const isPasswordValid = await bcrypt.compare(dto.password, existingUser.password ?? "");
+    const isPasswordValid = await bcrypt.compare(dto.password, existingUser.password ?? "");
+    console.log(isPasswordValid,"::isPasswordValid")
     if (!isPasswordValid) {
       throw new BadRequestException('Invalid credentials');
     }
@@ -109,7 +110,6 @@ export class AuthService {
 
   async update(dto: UpdateUserDto, authUserId: number, userId: number): Promise<any> {
     const familyUserIds = await this.userPolicy.getAccessibleUserIds(authUserId);
-    console.log(familyUserIds, userId);
     if (!familyUserIds.includes(userId)) {
       throw new BadRequestException('User not found');
     }
@@ -134,9 +134,20 @@ export class AuthService {
       data: {
         name: dto.name,
         email: dto.email,
-        roleId: dto.roleId,
-        status: dto.status,
-        accessLevel: dto.accessLevel,
+        phone: dto.phone,
+        bio: dto.bio,
+        country: dto.country,
+        city: dto.city,
+        pincode: dto.pincode,
+        tax_id: dto.tax_id,
+        facebookLink: dto.facebookLink,
+        twitterLink: dto.twitterLink,
+        linkdinLink: dto.linkdinLink,
+        instagramLink: dto.instagramLink,
+        websiteLink: dto.websiteLink,
+        ...(dto.roleId !== undefined ? { roleId: dto.roleId } : {}),
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
+        ...(dto.accessLevel !== undefined ? { accessLevel: dto.accessLevel } : {}),
       },
     });
 
@@ -167,7 +178,7 @@ export class AuthService {
         },
       });
       if (user) {
-                throw new BadRequestException('User with this email already exists and is verified');
+        throw new BadRequestException('User with this email already exists and is verified');
       }
     } else if (purpose === OtpPurpose.FORGOT_PASSWORD) {
       const user = await this.prisma.user.findUnique({
@@ -258,7 +269,7 @@ export class AuthService {
       const existingUser = await this.prisma.user.findFirst({
         where: {
           OR: [
-              { email },
+            { email },
           ],
         },
       });
@@ -337,8 +348,8 @@ export class AuthService {
         },
       });
 
-            const { password: hashedPassword, accessTokens, refreshTokens, ...safeUser } = user;
-            const { accessToken, refreshToken } = await this.jwtService.generateTokens(safeUser);
+      const { password: hashedPassword, accessTokens, refreshTokens, ...safeUser } = user;
+      const { accessToken, refreshToken } = await this.jwtService.generateTokens(safeUser);
       return {
         user: {
           ...safeUser,
@@ -442,7 +453,7 @@ export class AuthService {
     }
 
     const { password, accessTokens, refreshTokens, ...safeUser } = user;
-        const { accessToken, refreshToken } = await this.jwtService.generateTokens(safeUser);
+    const { accessToken, refreshToken } = await this.jwtService.generateTokens(safeUser);
 
     return {
       accessToken,
@@ -455,7 +466,7 @@ export class AuthService {
 
   async changePassword(dto: ChangePasswordDto, authUserId: number, userId: number) {
     const familyUserIds = await this.userHierarchyService.getFamilyUserIds(authUserId);
-    
+
     if (!familyUserIds.includes(userId)) {
       throw new BadRequestException('User not found');
     }

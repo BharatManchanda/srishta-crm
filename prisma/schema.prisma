@@ -252,10 +252,24 @@ enum AiEntityType {
 model User {
   id        Int      @id @default(autoincrement())
 
+  name      String?
   email     String   @unique
   phone     String?  @unique
-  name      String?
   password  String?
+
+  bio String? @db.Text
+  
+  country String?
+  city String?
+  pincode String?
+  tax_id String?
+
+  facebookLink String?
+  twitterLink String?
+  linkdinLink String?
+  instagramLink String?
+  websiteLink String?
+
 
   parentId  Int?
   parent    User?    @relation("UserTree", fields: [parentId], references: [id])
@@ -288,6 +302,7 @@ model User {
 
   createdNotes Note[] @relation("NoteCreator")
   createdAttachments Attachment[] @relation("AttachmentCreator")
+  createdEmails Email[] @relation("EmailCreator")
 
   createdLeads  Lead[] @relation("LeadCreator")
 
@@ -938,4 +953,36 @@ model AiDocumentChunk {
   @@index([aiDocumentId])
   @@index([chunkIndex])
   @@map("ai_document_chunks")
+}
+
+enum EmailEntityType {
+  LEAD
+  CONTACT
+}
+
+enum EmailStatus {
+  SCHEDULED
+  CANCELED
+  DELIVERED
+  FAILED
+}
+
+model Email {
+  id Int @id @default(autoincrement())
+
+  entityType EmailEntityType
+  entityId Int
+
+  recipientEmail String
+  subject String
+  content String @db.Text
+  status EmailStatus @default(DELIVERED)
+
+  createdById Int
+  createdBy User @relation("EmailCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdById])
 }

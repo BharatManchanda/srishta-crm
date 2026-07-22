@@ -136,6 +136,15 @@ export class LeadService {
       where: {
         id: id,
       },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
   }
 
