@@ -9,9 +9,10 @@ import { AccountFilterBuilder } from './account-filter.builder';
 import { AccountPolicy } from './account.policy';
 import { ActivityModule } from '../activity/activity.module';
 import { AiModule } from '../ai/ai.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, AiModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, AiModule, NotificationModule],
   providers: [
     AccountService,
     PaginationService,

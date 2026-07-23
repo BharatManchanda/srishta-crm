@@ -11,6 +11,7 @@ import { ActivityService } from '../activity/activity.service';
 import { AiEntityType } from '@prisma/client';
 import { AiService } from '../ai/ai.service';
 import { accountToDocument } from 'src/common/helpers/build-document';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AccountService {
@@ -20,7 +21,8 @@ export class AccountService {
     private readonly accountFilterBuilder: AccountFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
-    private readonly aiService: AiService
+    private readonly aiService: AiService,
+    private readonly notificationService: NotificationService
   ) { }
 
   async getList(dto: AccountFilterDto, currentUserId: number) {
@@ -275,6 +277,18 @@ export class AccountService {
         content: accountToDocument(newAccount),
       }, authUserId);
 
+      if (newAccount.ownerId && newAccount.ownerId !== authUserId) {
+        await this.notificationService.create({
+          title: 'Account Assigned',
+          message: `Account "${newAccount.accountName}" has been assigned to you.`,
+          type: 'ACCOUNT',
+          module: 'ACCOUNT',
+          entityId: newAccount.id,
+          createdBy: authUserId,
+          userIds: [newAccount.ownerId],
+        });
+      }
+
       return newAccount;
     } catch (error) {
       throw error;
@@ -371,6 +385,18 @@ export class AccountService {
         title: updatedAccount.accountName ?? "",
         content: accountToDocument(updatedAccount),
       });
+
+      if (updatedAccount.ownerId && oldAccount && oldAccount.ownerId !== updatedAccount.ownerId) {
+        await this.notificationService.create({
+          title: 'Account Reassigned',
+          message: `Account "${updatedAccount.accountName}" has been reassigned to you.`,
+          type: 'ACCOUNT',
+          module: 'ACCOUNT',
+          entityId: updatedAccount.id,
+          createdBy: authUserId,
+          userIds: [updatedAccount.ownerId],
+        });
+      }
 
       return updatedAccount;
     } catch (error) {

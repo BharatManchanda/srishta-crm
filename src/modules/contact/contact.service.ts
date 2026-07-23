@@ -11,6 +11,7 @@ import { ActivityEntity, AiEntityType } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
 import { AiService } from '../ai/ai.service';
 import { contactToDocument } from 'src/common/helpers/build-document';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ContactService {
@@ -21,6 +22,7 @@ export class ContactService {
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
+    private readonly notificationService: NotificationService,
   ) { }
 
   async getList(dto: ContactFilterDto, currentUserId: number) {
@@ -280,6 +282,18 @@ export class ContactService {
         content: contactToDocument(contact),
       }, authUserId);
 
+      if (contact.ownerId && contact.ownerId !== authUserId) {
+        await this.notificationService.create({
+          title: 'Contact Assigned',
+          message: `Contact "${contact.name}" has been assigned to you.`,
+          type: 'CONTACT',
+          module: 'CONTACT',
+          entityId: contact.id,
+          createdBy: authUserId,
+          userIds: [contact.ownerId],
+        });
+      }
+
       return contact;
     } catch (error) {
     }
@@ -356,6 +370,18 @@ export class ContactService {
         title: contact.title ?? "",
         content: contactToDocument(contact),
       });
+
+      if (contact.ownerId && existingContact && existingContact.ownerId !== contact.ownerId) {
+        await this.notificationService.create({
+          title: 'Contact Reassigned',
+          message: `Contact "${contact.name}" has been reassigned to you.`,
+          type: 'CONTACT',
+          module: 'CONTACT',
+          entityId: contact.id,
+          createdBy: authUserId,
+          userIds: [contact.ownerId],
+        });
+      }
 
       return contact;
     } catch (error) {
