@@ -11,6 +11,7 @@ import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { ActivityService } from '../activity/activity.service';
 import { AiService } from '../ai/ai.service';
 import { leadToDocument } from 'src/common/helpers/build-document';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class LeadService {
@@ -21,6 +22,7 @@ export class LeadService {
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
+    private readonly notificationService: NotificationService,
   ) { }
   async getList(dto: LeadFilterDto, currentUserId: number) {
     const user = await this.prisma.user.findUnique({
@@ -128,6 +130,18 @@ export class LeadService {
       content: leadToDocument(lead),
     }, authUserId);
 
+    if (lead.ownerId && lead.ownerId !== authUserId) {
+      await this.notificationService.create({
+        title: 'Lead Assigned',
+        message: `Lead "${lead.name}" has been assigned to you.`,
+        type: 'LEAD',
+        module: 'LEAD',
+        entityId: lead.id,
+        createdBy: authUserId,
+        userIds: [lead.ownerId],
+      });
+    }
+
     return lead;
   }
 
@@ -179,6 +193,30 @@ export class LeadService {
       title: lead.title ?? "",
       content: leadToDocument(lead),
     });
+
+    if (lead.ownerId && oldLead && oldLead.ownerId !== lead.ownerId) {
+      await this.notificationService.create({
+        title: 'Lead Reassigned',
+        message: `Lead "${lead.name}" has been reassigned to you.`,
+        type: 'LEAD',
+        module: 'LEAD',
+        entityId: lead.id,
+        createdBy: authUserId,
+        userIds: [lead.ownerId],
+      });
+    }
+
+    if (lead.isConverted && oldLead && !oldLead.isConverted) {
+      await this.notificationService.create({
+        title: 'Lead Converted',
+        message: `Lead "${lead.name}" has been successfully converted.`,
+        type: 'LEAD',
+        module: 'LEAD',
+        entityId: lead.id,
+        createdBy: authUserId,
+        userIds: [lead.ownerId || authUserId],
+      });
+    }
 
     return lead;
   }

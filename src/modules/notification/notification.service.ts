@@ -80,18 +80,16 @@ export class NotificationService {
         });
     }
 
-    async markAsRead(userId: number, notificationId: number) {
-        return await this.prisma.notificationRecipient.update({
+    async markAsRead(notificationId: number, userId: number) {
+        return await this.prisma.notificationRecipient.updateMany({
             where: {
-                notificationId_userId: {
-                    notificationId,
-                    userId
-                }
+                notificationId,
+                userId,
             },
             data: {
                 status: 'READ',
-                readAt: new Date()
-            }
+                readAt: new Date(),
+            },
         });
     }
 

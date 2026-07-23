@@ -16,6 +16,7 @@ import { ActivityEntity, AiEntityType } from '@prisma/client';
 import { UserPolicy } from '../user/user.policy';
 import { AiService } from '../ai/ai.service';
 import { taskToDocument } from 'src/common/helpers/build-document';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class TaskService {
@@ -26,6 +27,7 @@ export class TaskService {
     private readonly userPolicy: UserPolicy,
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
+    private readonly notificationService: NotificationService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -98,6 +100,18 @@ export class TaskService {
       },
     });
 
+    if (newTask.ownerId && newTask.ownerId !== authUserId) {
+      await this.notificationService.create({
+        title: 'Task Assigned',
+        message: `Task "${newTask.subject}" has been assigned to you.`,
+        type: 'TASK',
+        module: 'TASK',
+        entityId: newTask.id,
+        createdBy: authUserId,
+        userIds: [newTask.ownerId],
+      });
+    }
+
     // 1. Log under Task itself
     await this.activityService.create({
       entityType: ActivityEntity.TASK,
@@ -143,6 +157,18 @@ export class TaskService {
       where: { id },
       data: dto,
     });
+
+    if (updatedTask.ownerId && oldTask && oldTask.ownerId !== updatedTask.ownerId) {
+      await this.notificationService.create({
+        title: 'Task Assigned',
+        message: `Task "${updatedTask.subject}" has been assigned to you.`,
+        type: 'TASK',
+        module: 'TASK',
+        entityId: updatedTask.id,
+        createdBy: authUserId,
+        userIds: [updatedTask.ownerId],
+      });
+    }
 
     // 1. Log under Task itself
     await this.activityService.create({

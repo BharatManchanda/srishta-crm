@@ -14,6 +14,7 @@ import { UserPolicy } from '../user/user.policy';
 import { AiService } from '../ai/ai.service';
 import { meetingToDocument } from 'src/common/helpers/build-document';
 import { EmailService } from '../email/email.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class MeetingService {
@@ -25,6 +26,7 @@ export class MeetingService {
     private readonly userPolicy: UserPolicy,
     private readonly aiService: AiService,
     private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -103,6 +105,25 @@ export class MeetingService {
       },
     });
 
+    // Notify participants
+    if (participants && participants.length > 0) {
+      const userIdsToNotify = participants
+        .filter((p) => p.participantType === 'USER' && p.participantId)
+        .map((p) => p.participantId as number);
+
+      if (userIdsToNotify.length > 0) {
+        await this.notificationService.create({
+          title: 'Meeting Scheduled',
+          message: `You have been scheduled for meeting: "${meeting.title}" on ${new Date(meeting.startTime).toLocaleString()}.`,
+          type: 'MEETING',
+          module: 'MEETING',
+          entityId: meeting.id,
+          createdBy: authUserId,
+          userIds: userIdsToNotify,
+        });
+      }
+    }
+
     // 1. Log under Meeting itself
     await this.activityService.create({
       entityType: ActivityEntity.MEETING,
@@ -154,6 +175,10 @@ export class MeetingService {
       throw new NotFoundException('Meeting not found');
     }
 
+    const oldParticipants = await this.prisma.meetingParticipant.findMany({
+      where: { meetingId: id },
+    });
+
     const updatedMeeting = await this.prisma.$transaction(async (tx) => {
       if (participants !== undefined) {
         // Delete existing participants
@@ -180,6 +205,32 @@ export class MeetingService {
         },
       });
     });
+
+    if (participants !== undefined) {
+      const oldParticipantKeys = new Set(
+        oldParticipants.map((p) => `${p.participantType}_${p.participantId}`)
+      );
+      
+      const newParticipants = participants.filter(
+        (p) => !oldParticipantKeys.has(`${p.participantType}_${p.participantId}`)
+      );
+
+      const userIdsToNotify = newParticipants
+        .filter((p) => p.participantType === 'USER' && p.participantId)
+        .map((p) => p.participantId as number);
+
+      if (userIdsToNotify.length > 0) {
+        await this.notificationService.create({
+          title: 'Meeting Scheduled',
+          message: `You have been added to meeting: "${updatedMeeting.title}" scheduled for ${new Date(updatedMeeting.startTime).toLocaleString()}.`,
+          type: 'MEETING',
+          module: 'MEETING',
+          entityId: updatedMeeting.id,
+          createdBy: authUserId,
+          userIds: userIdsToNotify,
+        });
+      }
+    }
 
     // 1. Log under Meeting itself
     await this.activityService.create({

@@ -14,16 +14,47 @@ export class ModuleService {
 
   async getList(currentUser: any) {
     const roleId = currentUser.roleId;
-    const permissions = await this.prisma.rolePermission.findMany({
-      where: {
-        roleId,
-        isAllow: true,
-      },
-      select: {
-        moduleId: true,
-      },
+
+    const userDb = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      include: { role: true },
     });
-    const moduleIds = permissions.map((p) => p.moduleId);
+
+    const isCEOOrSuperAdmin = userDb?.isSuperAdmin || userDb?.role?.name?.toUpperCase() === 'CEO';
+
+    let moduleIds: number[] = [];
+
+    if (isCEOOrSuperAdmin) {
+      const allModules = await this.prisma.module.findMany({
+        select: { id: true },
+      });
+      moduleIds = allModules.map((m) => m.id);
+    } else {
+      const permissions = await this.prisma.rolePermission.findMany({
+        where: {
+          roleId: roleId ?? -1,
+          isAllow: true,
+        },
+        select: {
+          moduleId: true,
+        },
+      });
+      moduleIds = permissions.map((p) => p.moduleId);
+
+      // Fallback: If no permissions are set or allowed, show standard CRM modules
+      if (moduleIds.length === 0) {
+        const standardModules = await this.prisma.module.findMany({
+          where: {
+            path: {
+              in: ['/dashboard', '/leads', '/contacts', '/accounts', '/tasks', '/calls', '/meetings'],
+            },
+          },
+          select: { id: true },
+        });
+        moduleIds = standardModules.map((m) => m.id);
+      }
+    }
+
     const modules = await this.prisma.module.findMany({
       orderBy: { sort_order: 'asc' },
       where: {

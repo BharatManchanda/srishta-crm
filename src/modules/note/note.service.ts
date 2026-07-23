@@ -8,6 +8,7 @@ import { NoteCreateDto } from './dto/note-create.dto';
 import { NoteUpdateDto } from './dto/note-update.dto';
 import { BulkNoteCreateDto } from './dto/bulk-note-create.dto';
 import { ActivityService } from '../activity/activity.service';
+import { NotificationService } from '../notification/notification.service';
 
 
 @Injectable()
@@ -18,6 +19,7 @@ export class NoteService {
     private readonly noteFilterBuilder: NoteFilterBuilder,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getList(dto: NoteFilterDto, currentUserId: number) {
@@ -71,6 +73,40 @@ export class NoteService {
       action: 'NOTE_ADDED',
       description: `Note created: "${dto.title}"`,
     }, authUserId);
+
+    // Process mentions
+    try {
+      const users = await this.prisma.user.findMany({
+        where: { status: 'ACTIVE' },
+      });
+
+      const textToSearch = `${dto.title || ''} ${dto.content || ''}`;
+      const mentionedUsers = users.filter((user) => {
+        const escapedName = user.name?.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') || '';
+        const escapedEmail = user.email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        
+        const nameRegex = new RegExp(`@${escapedName}\\b`, 'i');
+        const emailRegex = new RegExp(`@${escapedEmail}\\b`, 'i');
+
+        return (user.name && nameRegex.test(textToSearch)) || emailRegex.test(textToSearch);
+      });
+
+      for (const u of mentionedUsers) {
+        if (u.id === authUserId) continue;
+
+        await this.notificationService.create({
+          title: 'New Mention',
+          message: `You were mentioned in a note: "${dto.title}"`,
+          type: 'SYSTEM',
+          module: dto.entityType === 'LEAD' ? 'LEAD' : dto.entityType === 'CONTACT' ? 'CONTACT' : undefined,
+          entityId: dto.entityId,
+          createdBy: authUserId,
+          userIds: [u.id],
+        });
+      }
+    } catch (err) {
+      console.error('Failed to process mentions in note creation:', err);
+    }
 
     return newNote;
   }

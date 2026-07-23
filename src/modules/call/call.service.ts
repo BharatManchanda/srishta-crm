@@ -14,6 +14,7 @@ import { ActivityEntity, AiEntityType } from '@prisma/client';
 import { UserPolicy } from '../user/user.policy';
 import { AiService } from '../ai/ai.service';
 import { callToDocument } from 'src/common/helpers/build-document';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class CallService {
@@ -24,8 +25,9 @@ export class CallService {
     private readonly activityService: ActivityService,
     private readonly userPolicy: UserPolicy,
     private readonly aiService: AiService,
+    private readonly notificationService: NotificationService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
-  ) {}
+  ) { }
 
   async getList(dto: CallFilterDto, currentUserId: number) {
     const user = await this.prisma.user.findUnique({
@@ -97,6 +99,19 @@ export class CallService {
       },
     });
 
+    if (newCall.ownerId && newCall.ownerId !== authUserId) {
+      const callTimeStr = newCall.callStartTime ? new Date(newCall.callStartTime).toLocaleString() : 'unscheduled';
+      await this.notificationService.create({
+        title: 'Call Scheduled',
+        message: `You have been scheduled for a call: "${newCall.subject}" on ${callTimeStr}.`,
+        type: 'CALL',
+        module: 'CALL',
+        entityId: newCall.id,
+        createdBy: authUserId,
+        userIds: [newCall.ownerId],
+      });
+    }
+
     // 1. Log under Call itself
     await this.activityService.create({
       entityType: ActivityEntity.CALL,
@@ -120,7 +135,7 @@ export class CallService {
     await this.calendarSyncQueue.add('sync-call', { callId: newCall.id });
 
     await this.aiService.create({
-      entityType: AiEntityType.ACCOUNT,
+      entityType: AiEntityType.CALL,
       entityId: newCall.id,
       title: newCall.subject ?? "",
       content: callToDocument(newCall),
@@ -143,7 +158,18 @@ export class CallService {
       data: dto,
     });
 
-    // 1. Log under Call itself
+    if (updatedCall.ownerId && oldCall && oldCall.ownerId !== updatedCall.ownerId) {
+      await this.notificationService.create({
+        title: 'Call Reassigned',
+        message: `Call "${updatedCall.subject}" has been reassigned to you.`,
+        type: 'CALL',
+        module: 'CALL',
+        entityId: updatedCall.id,
+        createdBy: authUserId,
+        userIds: [updatedCall.ownerId],
+      });
+    }
+
     await this.activityService.create({
       entityType: ActivityEntity.CALL,
       entityId: updatedCall.id,
@@ -155,7 +181,6 @@ export class CallService {
       },
     }, authUserId);
 
-    // 2. Log under parent entity if exists
     if (oldCall.entityType && oldCall.entityId) {
       await this.activityService.create(
         {
@@ -171,7 +196,6 @@ export class CallService {
         authUserId,
       );
     }
-
     await this.calendarSyncQueue.add('sync-call', { callId: updatedCall.id });
 
     await this.aiService.update({

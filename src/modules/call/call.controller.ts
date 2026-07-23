@@ -15,7 +15,7 @@ export class CallController {
   constructor(
     private readonly callService: CallService,
     private readonly callPolicy: CallPolicy,
-  ) {}
+  ) { }
 
   @Get()
   async getList(@Query() dto: CallFilterDto, @Req() req: Request) {
@@ -50,11 +50,7 @@ export class CallController {
   }
 
   @Put(':id')
-  async update(
-    @Body() dto: CallUpdateDto,
-    @Param('id', ParseIntPipe) id: number,
-    @Req() req: Request,
-  ) {
+  async update(@Body() dto: CallUpdateDto, @Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.callPolicy.authorize(req['user'], 'update', id);
     const authUserId = req['user'].id;
     return this.callService.update(dto, id, authUserId);

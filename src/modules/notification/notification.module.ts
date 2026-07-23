@@ -6,11 +6,12 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { OnlineUserService } from './online-user.service';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { NotificationController } from './notification.controller';
+import { FollowUpCronService } from './follow-up-cron.service';
 
 @Module({
   imports: [JwtModule, PrismaModule],
   controllers: [NotificationController],
-  providers: [NotificationGateway, NotificationService, OnlineUserService, PaginationService],
+  providers: [NotificationGateway, NotificationService, OnlineUserService, PaginationService, FollowUpCronService],
   exports: [
     NotificationService,
     NotificationGateway,

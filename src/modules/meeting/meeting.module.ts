@@ -12,9 +12,10 @@ import { GoogleCalendarModule } from '../google-calendar/google-calendar.module'
 import { UserPolicy } from '../user/user.policy';
 import { AiModule } from '../ai/ai.module';
 import { EmailModule } from '../email/email.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, EmailModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, EmailModule, NotificationModule],
   providers: [
     MeetingService,
     PaginationService,

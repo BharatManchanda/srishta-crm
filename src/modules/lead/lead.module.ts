@@ -9,9 +9,10 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { LeadService } from './lead.service';
 import { ActivityModule } from '../activity/activity.module';
 import { AiModule } from '../ai/ai.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, AiModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, AiModule, NotificationModule],
   controllers: [LeadController],
   providers: [
     LeadService,

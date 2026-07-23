@@ -43,8 +43,8 @@ export class RoleService {
       data: modules.map((module) => ({
         roleId: role.id,
         moduleId: module.id,
-        isAllow: false,
-        canView: false,
+        isAllow: true,
+        canView: true,
         canCreate: false,
         canEdit: false,
         canDelete: false,

@@ -8,9 +8,10 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { NoteFilterBuilder } from './note-filter.builder';
 import { NotePolicy } from './note.policy';
 import { ActivityModule } from '../activity/activity.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, NotificationModule],
   providers: [
     NoteService,
     PaginationService,

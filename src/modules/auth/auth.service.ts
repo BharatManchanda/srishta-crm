@@ -87,6 +87,22 @@ export class AuthService {
       throw new BadRequestException('User already exists');
     }
 
+    let roleId = dto.roleId;
+    if (!roleId) {
+      const defaultRole = await this.prisma.role.findFirst({
+        where: {
+          OR: [
+            { name: 'Manager' },
+            { name: 'CEO' },
+          ],
+        },
+        orderBy: { id: 'asc' },
+      });
+      if (defaultRole) {
+        roleId = defaultRole.id;
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
       data: {
@@ -94,7 +110,7 @@ export class AuthService {
         email: dto.email,
         password: hashedPassword,
         parentId: authUserId,
-        roleId: dto.roleId,
+        roleId: roleId,
         status: dto.status,
         accessLevel: dto.accessLevel,
         phone: dto.phone,
@@ -338,16 +354,16 @@ export class AuthService {
         })),
       });
 
-      // Manager -> No permissions
+      // Manager -> Full permissions by default
       await this.prisma.rolePermission.createMany({
         data: modules.map((module) => ({
           roleId: managerRole.id,
           moduleId: module.id,
-          isAllow: false,
-          canView: false,
-          canCreate: false,
-          canEdit: false,
-          canDelete: false,
+          isAllow: true,
+          canView: true,
+          canCreate: true,
+          canEdit: true,
+          canDelete: true,
         })),
       });
 
@@ -518,16 +534,16 @@ export class AuthService {
         })),
       });
 
-      // Manager -> No permissions
+      // Manager -> Full permissions by default
       await this.prisma.rolePermission.createMany({
         data: modules.map((module) => ({
           roleId: managerRole.id,
           moduleId: module.id,
-          isAllow: false,
-          canView: false,
-          canCreate: false,
-          canEdit: false,
-          canDelete: false,
+          isAllow: true,
+          canView: true,
+          canCreate: true,
+          canEdit: true,
+          canDelete: true,
         })),
       });
 
