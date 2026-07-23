@@ -11,6 +11,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AuthProvider {
+  GOOGLE
+  LOCAL
+  BOTH
+}
+
 enum OtpPurpose {
   EMAIL_VERIFICATION
   PHONE_VERIFICATION
@@ -248,6 +254,26 @@ enum AiEntityType {
   MEETING
 }
 
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+
+  LEAD
+  CONTACT
+  ACCOUNT
+  TASK
+  MEETING
+  CALL
+  SYSTEM
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
 
 model User {
   id        Int      @id @default(autoincrement())
@@ -256,6 +282,9 @@ model User {
   email     String   @unique
   phone     String?  @unique
   password  String?
+
+  googleId  String?        @unique
+  provider  AuthProvider   @default(LOCAL)
 
   bio String? @db.Text
   
@@ -321,12 +350,22 @@ model User {
   connectedGoogleCalendar GoogleCalendar[] @relation("GoogleConnector")
 
   ownedLeads  Lead[]  @relation("LeadOwner")
+
   ownedContacts Contact[] @relation("ContactOwner")
+
   ownedAccounts Account[] @relation("AccountOwner")
+
   ownedTasks  Task[]  @relation("TaskOwner")
+
   ownedCalls  Call[]  @relation("CallOwner")
+
   calendarSyncRecords CalendarSyncRecord[] @relation("UserCalendarSync")
+
   createdAiDocuments  AiDocument[]         @relation("AiDocumentCreator")
+
+  createdNotifications Notification[]
+  
+  notificationRecipients NotificationRecipient[]
 }
 
 model OtpVerification {
@@ -985,4 +1024,37 @@ model Email {
 
   @@index([entityType, entityId])
   @@index([createdById])
+}
+
+model Notification {
+  id          Int      @id @default(autoincrement())
+  title       String
+  message     String   @db.Text
+  type        NotificationType
+
+  module      String?
+  entityId    Int?
+
+  createdById Int?
+  createdBy   User? @relation(fields: [createdById], references: [id])
+
+  recipients  NotificationRecipient[]
+
+  createdAt   DateTime @default(now())
+}
+
+model NotificationRecipient {
+  id             Int @id @default(autoincrement())
+
+  notificationId Int
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  userId         Int
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status         NotificationStatus @default(UNREAD)
+  readAt         DateTime?
+
+  @@unique([notificationId, userId])
+  @@index([userId, status])
 }

@@ -13,9 +13,9 @@ import { OtpPurpose, Role } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService, private readonly jwtService: JwtService) {
+  constructor(private readonly authService: AuthService, private readonly jwtService: JwtService) {
 
-    }
+  }
 
   @Post('login')
   async login(@Body() dto: LoginDto) {
@@ -46,7 +46,7 @@ export class AuthController {
   @Post('verify-otp')
   async verifyOtp(@Body() dto: VerifyOtpDto) {
     if (dto.purpose === OtpPurpose.EMAIL_VERIFICATION) {
-            const result = await this.authService.verifyOtp(dto) as any;
+      const result = await this.authService.verifyOtp(dto) as any;
       if (result) {
         return {
           message: 'Email verified successfully',
@@ -66,9 +66,7 @@ export class AuthController {
   }
 
   @Post('google')
-    async googleLogin(
-        @Body() dto: GoogleLoginDto,
-    ) {
+  async googleLogin(@Body() dto: GoogleLoginDto) {
     return this.authService.googleLogin(dto.idToken);
   }
 }

@@ -27,6 +27,7 @@ import { GoogleCalendarModule } from './modules/google-calendar/google-calendar.
 import { ScheduleModule } from '@nestjs/schedule';
 import { AiModule } from './modules/ai/ai.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     GoogleCalendarModule,
     AiModule,
     DashboardModule,
+    NotificationModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

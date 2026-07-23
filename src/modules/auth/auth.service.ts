@@ -17,8 +17,7 @@ import { signupOtpTemplate } from '../email/templates/signup-otp.template';
 import { forgotPasswordOtpTemplate } from '../email/templates/forgot-password-otp.template';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleService } from './google.service';
-import { OtpPurpose } from '@prisma/client';
-import { UserStatus } from '@prisma/client';
+import { OtpPurpose, UserStatus, AuthProvider } from '@prisma/client';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LeadService } from '../lead/lead.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -30,7 +29,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
-    private googleService: GoogleService,
+    private readonly googleService: GoogleService,
     private readonly leadService: LeadService,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly userPolicy: UserPolicy,
@@ -57,7 +56,7 @@ export class AuthService {
       throw new BadRequestException('Account is deactivated');
     }
     const isPasswordValid = await bcrypt.compare(dto.password, existingUser.password ?? "");
-    console.log(isPasswordValid,"::isPasswordValid")
+    console.log(isPasswordValid, "::isPasswordValid")
     if (!isPasswordValid) {
       throw new BadRequestException('Invalid credentials');
     }
@@ -120,6 +119,7 @@ export class AuthService {
   }
 
   async update(dto: UpdateUserDto, authUserId: number, userId: number): Promise<any> {
+    console.log("Testing: ", dto)
     const familyUserIds = await this.userPolicy.getAccessibleUserIds(authUserId);
     if (!familyUserIds.includes(userId)) {
       throw new BadRequestException('User not found');
@@ -144,7 +144,6 @@ export class AuthService {
       },
       data: {
         name: dto.name,
-        email: dto.email,
         phone: dto.phone,
         bio: dto.bio,
         country: dto.country,
@@ -288,7 +287,7 @@ export class AuthService {
         throw new BadRequestException('User already exists');
       }
 
-      const user = await this.prisma.user.create({
+      let user = await this.prisma.user.create({
         data: {
           name,
           email,
@@ -315,7 +314,7 @@ export class AuthService {
         },
       });
 
-      await this.prisma.user.update({
+      user = await this.prisma.user.update({
         where: {
           id: user.id,
         },
@@ -419,6 +418,7 @@ export class AuthService {
       },
       data: {
         password: hashedPassword,
+        provider: user.provider === AuthProvider.GOOGLE ? AuthProvider.BOTH : user.provider,
       },
     });
 
@@ -448,17 +448,93 @@ export class AuthService {
       },
     });
 
-    if (!user && payload.name && payload.email && payload.sub) {
+    if (user) {
+      // User exists. Link Google if needed and update provider to BOTH if it was LOCAL.
+      const updates: any = {};
+      if (!user.googleId) {
+        updates.googleId = payload.sub;
+      }
+      if (user.provider === AuthProvider.LOCAL) {
+        updates.provider = AuthProvider.BOTH;
+      }
+      if (Object.keys(updates).length > 0) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: updates,
+        });
+      }
+    } else if (payload.name && payload.email && payload.sub) {
+      // User doesn't exist. Create user automatically and log in.
       user = await this.prisma.user.create({
         data: {
           email: payload.email,
           name: payload.name,
-          // googleId: payload.sub,
-          // provider: 'GOOGLE',
-          password: await bcrypt.hash(payload.sub, 10),
+          googleId: payload.sub,
+          provider: AuthProvider.GOOGLE,
+          isEmailVerified: true,
+          isSuperAdmin: true,
+          status: UserStatus.ACTIVE,
         },
       });
+
+      // Create default roles and assign CEO role (similar to standard signup verifyOtp)
+      const ceoRole = await this.prisma.role.create({
+        data: {
+          name: 'CEO',
+          description: 'CEO of the organization',
+          createdById: user.id,
+        },
+      });
+
+      const managerRole = await this.prisma.role.create({
+        data: {
+          name: 'Manager',
+          description: 'Manager of the organization',
+          createdById: user.id,
+        },
+      });
+
+      user = await this.prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          roleId: ceoRole.id,
+        },
+      });
+
+      const modules = await this.prisma.module.findMany();
+
+      // CEO -> Full permissions
+      await this.prisma.rolePermission.createMany({
+        data: modules.map((module) => ({
+          roleId: ceoRole.id,
+          moduleId: module.id,
+          isAllow: true,
+          canView: true,
+          canCreate: true,
+          canEdit: true,
+          canDelete: true,
+        })),
+      });
+
+      // Manager -> No permissions
+      await this.prisma.rolePermission.createMany({
+        data: modules.map((module) => ({
+          roleId: managerRole.id,
+          moduleId: module.id,
+          isAllow: false,
+          canView: false,
+          canCreate: false,
+          canEdit: false,
+          canDelete: false,
+        })),
+      });
+
+      // Create default lead view
+      await this.leadService.createDefaultLeadView(user.id);
     }
+
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

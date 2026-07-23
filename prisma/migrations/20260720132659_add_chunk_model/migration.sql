@@ -1,3 +1,6 @@
+-- Create Extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
 -- CreateTable
 CREATE TABLE "ai_document_chunks" (
     "id" SERIAL NOT NULL,
