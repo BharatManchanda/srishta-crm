@@ -13,9 +13,13 @@ import { AccountImporterService } from './importers/account-importer.service';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { BulkImportFilterBuilder } from './bulk-import-filter.builder';
 
+import { NotificationModule } from '../notification/notification.module';
+import { UserHierarchyService } from '../user/user-hierarchy.service';
+
 @Module({
   imports: [
     JwtModule,
+    NotificationModule,
     BullModule.registerQueue({ name: 'bulk-import' }),
   ],
   controllers: [BulkImportController],
@@ -30,6 +34,7 @@ import { BulkImportFilterBuilder } from './bulk-import-filter.builder';
     AccountImporterService,
     PaginationService,
     BulkImportFilterBuilder,
+    UserHierarchyService
   ],
 })
-export class BulkImportModule {}
+export class BulkImportModule { }

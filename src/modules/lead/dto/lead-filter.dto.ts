@@ -111,9 +111,8 @@ export class LeadFilterDto extends PaginationDto {
   assignedToId?: number;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  createdById?: number;
+  @IsString()
+  createdById?: string;
 
   @IsOptional()
   @IsString()

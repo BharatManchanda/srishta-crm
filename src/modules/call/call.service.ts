@@ -87,7 +87,16 @@ export class CallService {
       throw new NotFoundException('Call not found');
     }
 
-    return call;
+    const notes = await this.prisma.note.count({
+      where: { entityType: 'CALL', entityId: id },
+    });
+
+    return {
+      ...call,
+      counts: {
+        notes,
+      },
+    };
   }
 
   async create(dto: CallCreateDto, authUserId: number) {

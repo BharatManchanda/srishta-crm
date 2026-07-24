@@ -5,7 +5,7 @@ import { AttachmentFilterDto } from './dto/attachment-filter.dto';
 @Injectable()
 export class AttachmentFilterBuilder {
   build(dto: AttachmentFilterDto) {
-    return {
+    const where: any = {
       id: PrismaFilter.equals(dto.id),
       entityType: PrismaFilter.equals(dto.entityType),
       entityId: PrismaFilter.equals(dto.entityId),
@@ -14,5 +14,21 @@ export class AttachmentFilterBuilder {
       createdAt: PrismaFilter.dateRange(dto.createdFrom, dto.createdTo),
       updatedAt: PrismaFilter.dateRange(dto.updatedFrom, dto.updatedTo),
     };
+
+    if (dto.createdById) {
+      const parsedId = Number(dto.createdById);
+      if (!isNaN(parsedId)) {
+        where.createdById = parsedId;
+      } else {
+        where.createdBy = {
+          name: {
+            contains: dto.createdById,
+            mode: 'insensitive',
+          },
+        };
+      }
+    }
+
+    return where;
   }
 }

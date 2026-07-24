@@ -62,6 +62,10 @@ export class NoteFilterDto extends PaginationDto {
 
   @IsOptional()
   @IsString()
+  createdById?: string;
+
+  @IsOptional()
+  @IsString()
   sortBy?: string;
 
   @IsOptional()

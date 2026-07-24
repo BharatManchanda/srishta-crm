@@ -9,6 +9,7 @@ import { ImportJobFilterDto } from './dto/import-job-filter.dto';
 import { ImportRowFilterDto } from './dto/import-row-filter.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { BulkImportFilterBuilder } from './bulk-import-filter.builder';
+import { UserHierarchyService } from '../user/user-hierarchy.service';
 
 @Injectable()
 export class BulkImportService {
@@ -16,6 +17,7 @@ export class BulkImportService {
         private readonly prisma: PrismaService,
         private readonly paginationService: PaginationService,
         private readonly filterBuilder: BulkImportFilterBuilder,
+        private readonly userHierarchyService: UserHierarchyService,
 
         @InjectQueue('bulk-import')
         private readonly bulkImportQueue: Queue,
@@ -47,11 +49,20 @@ export class BulkImportService {
     }
 
     async getList(dto: ImportJobFilterDto, authUserId: number) {
-        const orderBy = dto.sortBy
-            ? { [dto.sortBy]: dto.sortOrder || 'desc' }
-            : { id: 'desc' };
-
-        const where = this.filterBuilder.buildJob(dto, authUserId);
+        const user = await this.prisma.user.findUnique({
+            where: { id: authUserId },
+            select: { accessLevel: true },
+        });
+        const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
+        const where = this.filterBuilder.buildJob(dto);
+        if (user?.accessLevel === 'STANDARD') {
+            where.createdById = authUserId;
+        } else {
+            const userIds = await this.userHierarchyService.getFamilyUserIds(authUserId);
+            where.OR = [
+                { createdById: { in: userIds } },
+            ];
+        }
 
         return this.paginationService.paginate(this.prisma.importJob, {
             page: dto.page,

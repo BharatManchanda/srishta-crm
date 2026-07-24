@@ -46,6 +46,9 @@ export class AttachmentService {
       where: {
         id,
       },
+      include: {
+        createdBy: true,
+      },
     });
 
     if (!attachment) {

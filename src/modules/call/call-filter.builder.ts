@@ -5,7 +5,7 @@ import { CallFilterDto } from './dto/call-filter.dto';
 @Injectable()
 export class CallFilterBuilder {
   build(dto: CallFilterDto) {
-    return {
+    const where: any = {
       id: PrismaFilter.equals(dto.id),
       entityType: PrismaFilter.equals(dto.entityType),
       entityId: PrismaFilter.equals(dto.entityId),
@@ -17,5 +17,21 @@ export class CallFilterBuilder {
       createdAt: PrismaFilter.dateRange(dto.createdFrom, dto.createdTo),
       updatedAt: PrismaFilter.dateRange(dto.updatedFrom, dto.updatedTo),
     };
+
+    if (dto.createdById) {
+      const parsedId = Number(dto.createdById);
+      if (!isNaN(parsedId)) {
+        where.createdById = parsedId;
+      } else {
+        where.createdBy = {
+          name: {
+            contains: dto.createdById,
+            mode: 'insensitive',
+          },
+        };
+      }
+    }
+
+    return where;
   }
 }

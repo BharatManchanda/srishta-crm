@@ -21,7 +21,7 @@ export class LeadFilterBuilder {
   }
 
   build(dto: LeadFilterDto) {
-    return {
+    const where: any = {
       name: PrismaFilter.contains(dto.name),
       title: PrismaFilter.contains(dto.title),
       email: PrismaFilter.contains(dto.email),
@@ -40,7 +40,6 @@ export class LeadFilterBuilder {
       isQualified: PrismaFilter.equals(dto.isQualified),
       isConverted: PrismaFilter.equals(dto.isConverted),
       assignedToId: PrismaFilter.equals(dto.assignedToId),
-      createdById: PrismaFilter.equals(dto.createdById),
       status: dto.status,
       priority: dto.priority,
       rating: dto.rating,
@@ -50,5 +49,21 @@ export class LeadFilterBuilder {
       nextFollowUpDate: this.dateDay(dto.nextFollowUpDate),
       lastFollowUpDate: this.dateDay(dto.lastFollowUpDate),
     };
+
+    if (dto.createdById) {
+      const parsedId = Number(dto.createdById);
+      if (!isNaN(parsedId)) {
+        where.createdById = parsedId;
+      } else {
+        where.createdBy = {
+          name: {
+            contains: dto.createdById,
+            mode: 'insensitive',
+          },
+        };
+      }
+    }
+
+    return where;
   }
 }

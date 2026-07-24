@@ -53,6 +53,9 @@ export class LeadService {
       perPage: dto.perPage,
       paginate: dto?.paginate,
       where,
+      include: {
+        createdBy: true,
+      },
       orderBy,
     });
 
@@ -146,20 +149,89 @@ export class LeadService {
   }
 
   async get(id: number) {
-    return this.prisma.lead.findFirst({
-      where: {
-        id: id,
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    const [
+      lead,
+      notes,
+      attachments,
+      tasks,
+      calls,
+      meetings,
+      emails,
+    ] = await this.prisma.$transaction([
+      this.prisma.lead.findUnique({
+        where: { id },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
+      }),
+
+      this.prisma.note.count({
+        where: {
+          entityType: "LEAD",
+          entityId: id,
+        },
+      }),
+
+      this.prisma.attachment.count({
+        where: {
+          entityType: "LEAD",
+          entityId: id,
+        },
+      }),
+
+      this.prisma.task.count({
+        where: {
+          entityType: "LEAD",
+          entityId: id,
+        },
+      }),
+
+      this.prisma.call.count({
+        where: {
+          entityType: "LEAD",
+          entityId: id,
+        },
+      }),
+
+      this.prisma.meeting.count({
+        where: {
+          entityType: "LEAD",
+          entityId: id,
+        },
+      }),
+
+      this.prisma.email.count({
+        where: {
+          entityType: "LEAD",
+          entityId: id,
+        },
+      }),
+    ]);
+
+    return {
+      ...lead,
+      counts: {
+        notes,
+        attachments,
+        tasks,
+        calls,
+        meetings,
+        emails,
       },
-    });
+    };
   }
 
   async update(dto: LeadUpdateDto, id: number, authUserId: number) {

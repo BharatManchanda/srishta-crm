@@ -79,6 +79,10 @@ export class TaskFilterDto extends PaginationDto {
 
   @IsOptional()
   @IsString()
+  createdById?: string;
+
+  @IsOptional()
+  @IsString()
   sortBy?: string;
 
   @IsOptional()

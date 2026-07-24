@@ -41,15 +41,54 @@ export class ExportService {
                 break;
         }
 
-        return this.getExcelSheet(res)
+        return this.getExcelSheet(res, dto.entity)
     }
 
-    async getExcelSheet(data: any) {
+    async getExcelSheet(data: any, entity?: ExportModule) {
+
         const list = data?.data ?? [];
 
         if (!list.length) return "";
 
-        const flatList: Record<string, any>[] = list.map((row) => this.flatten(row));
+        // const flatList: Record<string, any>[] = list.map((row) => this.flatten(row));
+        const flatList: Record<string, any>[] = list.map((row) => {
+            const flat = this.flatten(row);
+
+            if (entity === ExportModule.LEAD) {
+                Object.keys(flat).forEach((key) => {
+                    if (
+                        key.startsWith("createdBy.") ||
+                        key.startsWith("openActivities.")
+                    ) {
+                        delete flat[key];
+                    }
+                });
+            }
+
+            if (entity === ExportModule.CONTACT) {
+                Object.keys(flat).forEach((key) => {
+                    if (
+                        key.startsWith("createdBy.") ||
+                        key.startsWith("openActivities.")
+                    ) {
+                        delete flat[key];
+                    }
+                });
+            }
+
+            if (entity === ExportModule.ACCOUNT) {
+                Object.keys(flat).forEach((key) => {
+                    if (
+                        key.startsWith("createdBy.") ||
+                        key.startsWith("openActivities.")
+                    ) {
+                        delete flat[key];
+                    }
+                });
+            }
+
+            return flat;
+        });
 
         const headers: string[] = [
             ...new Set(flatList.flatMap((row) => Object.keys(row))),

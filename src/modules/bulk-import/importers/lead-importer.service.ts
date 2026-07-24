@@ -32,6 +32,7 @@ export class LeadImporterService implements BulkImporter {
                 const lead = await this.prisma.lead.create({
                     data: {
                         createdById: importJob.createdById,
+                        ownerId: importJob.createdById,
                         name: getMappedValue(row, mapColumn, 'name', ""),
                         title: getMappedValue(row, mapColumn, 'title', null),
                         email: getMappedValue(row, mapColumn, 'email', ""),

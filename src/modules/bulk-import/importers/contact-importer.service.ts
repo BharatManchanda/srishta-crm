@@ -50,6 +50,7 @@ export class ContactImporterService implements BulkImporter {
                 const contact = await this.prisma.contact.create({
                     data: {
                         createdById: importJob.createdById,
+                        ownerId: importJob.createdById,
                         name: getMappedValue(row, mapColumn, 'name', ""),
                         title: getMappedValue(row, mapColumn, 'title', ""),
                         email: getMappedValue(row, mapColumn, 'email', null),

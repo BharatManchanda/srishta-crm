@@ -60,6 +60,7 @@ export class AccountService {
         billingAddress: true,
         shippingAddress: true,
         parentAccount: true,
+        createdBy: true,
       },
       orderBy,
     });
@@ -214,7 +215,7 @@ export class AccountService {
   }
 
   async get(id: number) {
-    return await this.prisma.account.findFirst({
+    const account = await this.prisma.account.findFirst({
       where: {
         id: id,
       },
@@ -230,8 +231,38 @@ export class AccountService {
             email: true,
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    const [notes, attachments, tasks, calls, meetings] = await Promise.all([
+      this.prisma.note.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
+      this.prisma.attachment.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
+      this.prisma.task.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
+      this.prisma.call.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
+      this.prisma.meeting.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
+    ]);
+
+    return {
+      ...account,
+      counts: {
+        notes,
+        attachments,
+        tasks,
+        calls,
+        meetings,
+      },
+    };
   }
 
   async create(dto: AccountCreateDto, authUserId: number) {

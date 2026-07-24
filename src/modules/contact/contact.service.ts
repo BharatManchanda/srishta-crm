@@ -59,6 +59,7 @@ export class ContactService {
       include: {
         mailingAddress: true,
         otherAddress: true,
+        createdBy: true,
       },
       orderBy,
     });
@@ -225,7 +226,7 @@ export class ContactService {
     });
   }
   async get(id: number) {
-    return await this.prisma.contact.findFirst({
+    const contact = await this.prisma.contact.findFirst({
       where: {
         id: id,
       },
@@ -239,8 +240,40 @@ export class ContactService {
             email: true,
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
+
+    if (!contact) {
+      throw new NotFoundException('Contact not found');
+    }
+
+    const [notes, attachments, tasks, calls, meetings, emails] = await Promise.all([
+      this.prisma.note.count({ where: { entityType: 'CONTACT', entityId: id } }),
+      this.prisma.attachment.count({ where: { entityType: 'CONTACT', entityId: id } }),
+      this.prisma.task.count({ where: { entityType: 'CONTACT', entityId: id } }),
+      this.prisma.call.count({ where: { entityType: 'CONTACT', entityId: id } }),
+      this.prisma.meeting.count({ where: { entityType: 'CONTACT', entityId: id } }),
+      this.prisma.email.count({ where: { entityType: 'CONTACT', entityId: id } }),
+    ]);
+
+    return {
+      ...contact,
+      counts: {
+        notes,
+        attachments,
+        tasks,
+        calls,
+        meetings,
+        emails,
+      },
+    };
   }
 
   async create(dto: ContactCreateDto, authUserId: number) {

@@ -25,7 +25,7 @@ export class AccountFilterBuilder {
       postalCode: PrismaFilter.contains(dto['shippingAddress.postalCode']),
     };
 
-    return {
+    const where: any = {
       id: PrismaFilter.equals(dto.id),
       accountName: PrismaFilter.contains(dto.accountName),
       accountSite: PrismaFilter.contains(dto.accountSite),
@@ -55,5 +55,21 @@ export class AccountFilterBuilder {
         ? shippingAddress
         : undefined,
     };
+
+    if (dto.createdById) {
+      const parsedId = Number(dto.createdById);
+      if (!isNaN(parsedId)) {
+        where.createdById = parsedId;
+      } else {
+        where.createdBy = {
+          name: {
+            contains: dto.createdById,
+            mode: 'insensitive',
+          },
+        };
+      }
+    }
+
+    return where;
   }
 }

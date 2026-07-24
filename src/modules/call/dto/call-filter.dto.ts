@@ -70,6 +70,10 @@ export class CallFilterDto extends PaginationDto {
 
   @IsOptional()
   @IsString()
+  createdById?: string;
+
+  @IsOptional()
+  @IsString()
   sortBy?: string;
 
   @IsOptional()

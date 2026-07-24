@@ -81,6 +81,13 @@ export class TaskService {
             email: true,
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -88,7 +95,18 @@ export class TaskService {
       throw new NotFoundException('Task not found');
     }
 
-    return task;
+    const [notes, attachments] = await Promise.all([
+      this.prisma.note.count({ where: { entityType: 'TASK', entityId: id } }),
+      this.prisma.attachment.count({ where: { entityType: 'TASK', entityId: id } }),
+    ]);
+
+    return {
+      ...task,
+      counts: {
+        notes,
+        attachments,
+      },
+    };
   }
 
   async create(dto: TaskCreateDto, authUserId: number) {

@@ -23,26 +23,19 @@ export class ContactFilterBuilder {
       postalCode: PrismaFilter.contains(dto['otherAddress.postalCode']),
     };
 
-    return {
+    const where: any = {
       id: PrismaFilter.equals(dto.id),
-      // createdById: PrismaFilter.equals(dto.createdById),
-
       name: PrismaFilter.contains(dto.name),
       title: PrismaFilter.contains(dto.title),
-
       email: PrismaFilter.contains(dto.email),
       phone: PrismaFilter.contains(dto.phone),
-
       source: PrismaFilter.equals(dto.source),
       fax: PrismaFilter.contains(dto.fax),
-
       assistant: PrismaFilter.contains(dto.assistant),
       assistantPhone: PrismaFilter.contains(dto.assistantPhone),
-
       department: PrismaFilter.contains(dto.department),
       skypeId: PrismaFilter.contains(dto.skypeId),
       twitter: PrismaFilter.contains(dto.twitter),
-
       description: PrismaFilter.contains(dto.description),
       dateOfBirth: PrismaFilter.dateRange(
         dto.dateOfBirthFrom,
@@ -57,5 +50,21 @@ export class ContactFilterBuilder {
         ? otherAddress
         : undefined,
     };
+
+    if (dto.createdById) {
+      const parsedId = Number(dto.createdById);
+      if (!isNaN(parsedId)) {
+        where.createdById = parsedId;
+      } else {
+        where.createdBy = {
+          name: {
+            contains: dto.createdById,
+            mode: 'insensitive',
+          },
+        };
+      }
+    }
+
+    return where;
   }
 }

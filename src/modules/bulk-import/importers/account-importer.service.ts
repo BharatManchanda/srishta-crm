@@ -51,6 +51,7 @@ export class AccountImporterService implements BulkImporter {
                 const account = await this.prisma.account.create({
                     data: {
                         createdById: importJob.createdById,
+                        ownerId: importJob.createdById,
                         accountName: getMappedValue(row, mapColumn, 'accountName', ""),
                         accountSite: getMappedValue(row, mapColumn, 'accountSite', null),
                         parentAccountId: getMappedValue(row, mapColumn, 'parentAccountId', null),

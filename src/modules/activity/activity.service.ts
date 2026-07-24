@@ -45,6 +45,15 @@ export class ActivityService {
                     in: dto.id !== undefined && dto.id ? [dto?.id] : undefined,
                 },
             },
+            include: {
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
             orderBy,
         });
         return result;

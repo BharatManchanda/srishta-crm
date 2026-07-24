@@ -86,7 +86,18 @@ export class MeetingService {
       throw new NotFoundException('Meeting not found');
     }
 
-    return meeting;
+    const [notes, attachments] = await Promise.all([
+      this.prisma.note.count({ where: { entityType: 'MEETING', entityId: id } }),
+      this.prisma.attachment.count({ where: { entityType: 'MEETING', entityId: id } }),
+    ]);
+
+    return {
+      ...meeting,
+      counts: {
+        notes,
+        attachments,
+      },
+    };
   }
 
   async create(dto: MeetingCreateDto, authUserId: number) {

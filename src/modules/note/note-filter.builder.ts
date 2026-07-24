@@ -5,7 +5,7 @@ import { NoteFilterDto } from './dto/note-filter.dto';
 @Injectable()
 export class NoteFilterBuilder {
   build(dto: NoteFilterDto) {
-    return {
+    const where: any = {
       id: PrismaFilter.equals(dto.id),
       entityType: PrismaFilter.equals(dto.entityType),
       entityId: PrismaFilter.equals(dto.entityId),
@@ -15,5 +15,21 @@ export class NoteFilterBuilder {
       createdAt: PrismaFilter.dateRange(dto.createdFrom, dto.createdTo),
       updatedAt: PrismaFilter.dateRange(dto.updatedFrom, dto.updatedTo),
     };
+
+    if (dto.createdById) {
+      const parsedId = Number(dto.createdById);
+      if (!isNaN(parsedId)) {
+        where.createdById = parsedId;
+      } else {
+        where.createdBy = {
+          name: {
+            contains: dto.createdById,
+            mode: 'insensitive',
+          },
+        };
+      }
+    }
+
+    return where;
   }
 }

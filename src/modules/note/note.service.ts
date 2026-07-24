@@ -50,6 +50,9 @@ export class NoteService {
       where: {
         id,
       },
+      include: {
+        createdBy: true,
+      },
     });
 
     if (!note) {

@@ -5,10 +5,8 @@ import { ImportRowFilterDto } from './dto/import-row-filter.dto';
 
 @Injectable()
 export class BulkImportFilterBuilder {
-  buildJob(dto: ImportJobFilterDto, authUserId: number) {
-    const where: any = {
-      createdById: authUserId,
-    };
+  buildJob(dto: ImportJobFilterDto) {
+    const where: any = {};
 
     if (dto.entity) {
       where.entity = dto.entity;
