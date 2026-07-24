@@ -16,18 +16,21 @@ import {
 } from 'class-validator';
 
 export class LeadUpdateDto {
+  @IsOptional()
   @IsString()
-  name: string;
+  name?: string;
 
   @IsOptional()
   @IsString()
-  title: string;
+  title?: string;
 
+  @IsOptional()
   @IsString()
-  email: string;
+  email?: string;
 
+  @IsOptional()
   @IsString()
-  phone: string;
+  phone?: string;
 
   @IsOptional()
   @IsString()
@@ -71,24 +74,27 @@ export class LeadUpdateDto {
 
   @IsOptional()
   @IsEnum(LeadStatus)
-  status: LeadStatus;
+  status?: LeadStatus;
 
+  @IsOptional()
   @IsEnum(LeadPriority)
-  priority: LeadPriority;
+  priority?: LeadPriority;
 
   @IsOptional()
   @IsEnum(LeadRating)
-  rating: LeadRating;
+  rating?: LeadRating;
 
   @IsOptional()
   @IsNumber()
-  leadScore: number;
+  leadScore?: number;
 
+  @IsOptional()
   @IsBoolean()
-  isQualified: boolean;
+  isQualified?: boolean;
 
+  @IsOptional()
   @IsBoolean()
-  isConverted: boolean;
+  isConverted?: boolean;
 
   @IsOptional()
   @IsNumber()

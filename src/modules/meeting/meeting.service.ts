@@ -276,7 +276,7 @@ export class MeetingService {
       entityId: updatedMeeting.id,
       title: updatedMeeting.title ?? "",
       content: meetingToDocument(updatedMeeting),
-    });
+    }, authUserId);
 
     return updatedMeeting;
   }

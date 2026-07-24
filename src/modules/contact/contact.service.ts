@@ -382,7 +382,7 @@ export class ContactService {
           ...contactData,
           mailingAddressId,
           otherAddressId,
-          dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
+          dateOfBirth: dto.dateOfBirth !== undefined ? (dto.dateOfBirth ? new Date(dto.dateOfBirth) : null) : undefined,
         },
       });
 
@@ -402,7 +402,7 @@ export class ContactService {
         entityType: ActivityEntity.CONTACT,
         title: contact.title ?? "",
         content: contactToDocument(contact),
-      });
+      }, authUserId);
 
       if (contact.ownerId && existingContact && existingContact.ownerId !== contact.ownerId) {
         await this.notificationService.create({

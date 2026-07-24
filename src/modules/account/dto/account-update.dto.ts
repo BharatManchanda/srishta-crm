@@ -11,8 +11,9 @@ import { AccountType, AccountRating, OwnershipType } from '@prisma/client';
 import { AddressDto } from './address.dto';
 
 export class AccountUpdateDto {
+  @IsOptional()
   @IsString()
-  accountName: string;
+  accountName?: string;
 
   @IsOptional()
   @IsString()

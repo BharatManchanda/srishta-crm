@@ -415,7 +415,7 @@ export class AccountService {
         entityType: AiEntityType.ACCOUNT,
         title: updatedAccount.accountName ?? "",
         content: accountToDocument(updatedAccount),
-      });
+      }, authUserId);
 
       if (updatedAccount.ownerId && oldAccount && oldAccount.ownerId !== updatedAccount.ownerId) {
         await this.notificationService.create({

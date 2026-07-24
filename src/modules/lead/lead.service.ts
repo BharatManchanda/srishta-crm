@@ -241,7 +241,7 @@ export class LeadService {
       where: { id },
       data: {
         ...dto,
-        budget: dto.budget ? new Prisma.Decimal(dto.budget) : null,
+        budget: dto.budget !== undefined ? (dto.budget ? new Prisma.Decimal(dto.budget) : null) : undefined,
       },
     });
 
@@ -264,7 +264,7 @@ export class LeadService {
       entityType: ActivityEntity.LEAD,
       title: lead.title ?? "",
       content: leadToDocument(lead),
-    });
+    }, authUserId);
 
     if (lead.ownerId && oldLead && oldLead.ownerId !== lead.ownerId) {
       await this.notificationService.create({

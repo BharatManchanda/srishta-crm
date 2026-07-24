@@ -14,11 +14,13 @@ import { LeadSource } from '@prisma/client';
 import { AddressDto } from './address.dto';
 
 export class ContactUpdateDto {
+  @IsOptional()
   @IsString()
-  name: string;
+  name?: string;
 
+  @IsOptional()
   @IsString()
-  title: string;
+  title?: string;
 
   @IsOptional()
   @IsEmail()

@@ -212,7 +212,7 @@ export class CallService {
       entityId: updatedCall.id,
       title: updatedCall.subject ?? "",
       content: callToDocument(updatedCall),
-    })
+    }, authUserId)
 
     return updatedCall;
   }

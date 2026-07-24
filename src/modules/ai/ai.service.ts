@@ -41,7 +41,7 @@ export class AiService {
         return document;
     }
 
-    async update(dto: AiDocumentUpdateDto) {
+    async update(dto: AiDocumentUpdateDto, authUserId?: number) {
         const document = await this.prisma.aiDocument.findFirst({
             where: {
                 entityId: dto.entityId,
@@ -50,7 +50,17 @@ export class AiService {
         });
 
         if (!document) {
-            throw new NotFoundException("Document not found");
+            const newDoc = await this.prisma.aiDocument.create({
+                data: {
+                    entityType: dto.entityType,
+                    entityId: dto.entityId,
+                    title: dto.title,
+                    content: dto.content,
+                    createdById: authUserId || 1,
+                }
+            });
+            await this.indexDocument(newDoc.id, newDoc.content);
+            return newDoc;
         }
 
         const updated = await this.prisma.aiDocument.update({

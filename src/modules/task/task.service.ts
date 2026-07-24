@@ -224,7 +224,7 @@ export class TaskService {
       entityId: updatedTask.id,
       title: updatedTask.subject,
       content: taskToDocument(updatedTask),
-    });
+    }, authUserId);
 
     return updatedTask;
   }
