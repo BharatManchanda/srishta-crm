@@ -28,6 +28,10 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AiModule } from './modules/ai/ai.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
+import { FacebookModule } from './modules/facebook/facebook.module';
+import { LeadSyncChainModule } from './modules/lead-sync-chain/lead-sync-chain.module';
+import { GoogleAdsModule } from './modules/google-ads/google-ads.module';
 
 @Module({
   imports: [
@@ -62,6 +66,10 @@ import { NotificationModule } from './modules/notification/notification.module';
     AiModule,
     DashboardModule,
     NotificationModule,
+    WhatsappModule,
+    FacebookModule,
+    LeadSyncChainModule,
+    GoogleAdsModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

@@ -7,12 +7,10 @@ import {
 import {
   IsBoolean,
   IsDate,
-  IsEmail,
   IsEnum,
   IsNumber,
   IsOptional,
   IsString,
-  MinLength,
 } from 'class-validator';
 
 export class LeadCreateDto {
@@ -91,16 +89,12 @@ export class LeadCreateDto {
   isConverted: boolean;
 
   @IsOptional()
-  @IsNumber()
-  assignedToId: number;
+  @IsDate()
+  nextFollowUpDate?: Date;
 
   @IsOptional()
   @IsDate()
-  nextFollowUpDate: Date;
-
-  @IsOptional()
-  @IsDate()
-  lastFollowUpDate: Date;
+  lastFollowUpDate?: Date;
 
   @IsOptional()
   @IsString()

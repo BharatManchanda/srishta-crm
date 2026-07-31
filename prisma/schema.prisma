@@ -275,6 +275,53 @@ enum NotificationStatus {
   ARCHIVED
 }
 
+enum ConnectionStatus {
+  CONNECTED
+  DISCONNECTED
+  EXPIRED
+}
+
+enum WhatsappMessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum WhatsappMessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum WhatsappMessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  STICKER
+  LOCATION
+  CONTACT
+  TEMPLATE
+}
+
+enum WhatsappEntityType {
+  LEAD
+  CONTACT
+  ACCOUNT
+}
+
+enum LeadSyncModule {
+  LEAD
+  CONTACT
+}
+
+enum LeadSyncStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -361,11 +408,17 @@ model User {
 
   calendarSyncRecords CalendarSyncRecord[] @relation("UserCalendarSync")
 
+  connectedWhatsapp WhatsappConnection[] @relation("WhatsappConnector")
+
   createdAiDocuments  AiDocument[]         @relation("AiDocumentCreator")
 
   createdNotifications Notification[]
   
   notificationRecipients NotificationRecipient[]
+
+  facebookAccounts FacebookAccount[]
+
+  leadSyncChains LeadSyncChain[]
 }
 
 model OtpVerification {
@@ -485,10 +538,6 @@ model Lead {
   leadScore Int? @default(0)
   isQualified Boolean @default(false)
   isConverted Boolean @default(false)
-
-  // Assignment
-  assignedToId Int?
-  assignedTo   User? @relation("LeadAssignee", fields: [assignedToId], references: [id])
 
   ownerId      Int?
   owner        User? @relation("LeadOwner", fields: [ownerId], references: [id])
@@ -1057,4 +1106,193 @@ model NotificationRecipient {
 
   @@unique([notificationId, userId])
   @@index([userId, status])
+}
+
+model WhatsappConnection {
+  id                 Int      @id @default(autoincrement())
+
+  connectedById       Int @unique
+  connectedBy User @relation("WhatsappConnector", fields: [connectedById], references: [id])
+
+  metaUserId         String?
+  businessId         String?
+  wabaId             String?
+
+  accessToken        String   @db.Text
+  tokenExpiresAt     DateTime?
+
+  status             ConnectionStatus @default(CONNECTED)
+
+  phones             WhatsappPhone[]
+
+  contacts           WhatsappContact[]
+  conversations      WhatsappConversation[]
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model WhatsappPhone {
+  id                   Int    @id @default(autoincrement())
+
+  connectionId         Int
+  connection           WhatsappConnection @relation(fields:[connectionId], references:[id], onDelete: Cascade)
+
+  phoneNumberId        String @unique
+  displayPhoneNumber   String
+  verifiedName         String?
+
+  createdAt            DateTime @default(now())
+}
+
+model WhatsappContact {
+  id              Int    @id @default(autoincrement())
+
+  connectionId    Int
+  connection      WhatsappConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  waId            String
+  phoneNumber     String
+  profileName     String?
+
+  conversations   WhatsappConversation[]
+  links            WhatsappContactLink[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([connectionId, waId])
+}
+
+model WhatsappContactLink {
+  id Int @id @default(autoincrement())
+
+  whatsappContactId Int
+  whatsappContact WhatsappContact @relation(fields: [whatsappContactId], references: [id], onDelete: Cascade)
+
+  entityType WhatsappEntityType
+  entityId Int
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([whatsappContactId])
+}
+
+model WhatsappConversation {
+  id              Int @id @default(autoincrement())
+
+  connectionId    Int
+  connection      WhatsappConnection @relation(fields: [connectionId], references: [id])
+
+  contactId       Int
+  contact         WhatsappContact @relation(fields: [contactId], references: [id])
+
+  lastMessageAt   DateTime?
+
+  messages        WhatsappMessage[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([connectionId, contactId])
+}
+
+model WhatsappMessage {
+  id                Int @id @default(autoincrement())
+
+  conversationId    Int
+  conversation      WhatsappConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  whatsappMessageId String @unique
+
+  direction         WhatsappMessageDirection
+  type              WhatsappMessageType
+
+  from              String
+  to                String
+
+  body              String? @db.Text
+
+  mediaId           String?
+  mediaMimeType     String?
+  mediaUrl          String?
+
+  status            WhatsappMessageStatus @default(PENDING)
+
+  timestamp         DateTime
+
+  rawPayload        Json?
+
+  createdAt         DateTime @default(now())
+
+  @@index([conversationId])
+}
+
+model FacebookAccount {
+  id              Int      @id @default(autoincrement())
+
+  userId          Int
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  pages           FacebookPage[]
+
+  facebookUserId  String
+  facebookName  String?
+  accessToken     String   @db.Text
+  tokenExpiresAt  DateTime?
+
+  leadSyncChains LeadSyncChain[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FacebookPage {
+  id Int @id @default(autoincrement())
+  facebookPageId      String @unique
+
+  name                String
+  pageAccessToken    String @db.Text
+
+  facebookAccountId  Int
+  facebookAccount FacebookAccount @relation(fields:[facebookAccountId], references:[id], onDelete:Cascade)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model LeadSyncChain {
+  id Int @id @default(autoincrement())
+
+  createdById Int
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  facebookAccountId Int
+  facebookAccount FacebookAccount @relation(fields: [facebookAccountId], references: [id])
+
+  facebookAdAccountId String
+  facebookPageId String
+  facebookFormId String
+
+  module LeadSyncModule
+
+  mappings LeadSyncMapping[]
+
+  status LeadSyncStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LeadSyncMapping {
+  id Int @id @default(autoincrement())
+
+  chainId Int
+  chain LeadSyncChain @relation(fields: [chainId], references: [id], onDelete: Cascade )
+
+  crmField String
+  facebookField String
+
+  createdAt DateTime @default(now())
 }

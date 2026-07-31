@@ -5,7 +5,6 @@ export class OnlineUserService implements OnModuleInit {
     private readonly users = new Map<number, Set<string>>();
 
     onModuleInit() {
-        console.log("OnlineUserService initialized");
     }
 
     add(userId: number, socketId: string): void {

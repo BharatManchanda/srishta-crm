@@ -22,6 +22,7 @@ export const CALL_MODULE_ID = 23;
 export const MEETING_MODULE_ID = 24;
 export const IMPORT_MODULE_ID = 25;
 export const EMAIL_MODULE_ID = 26;
+export const WHATSAPP_MODULE_ID = 27;
 
 
 const modules = [
@@ -190,6 +191,17 @@ const modules = [
     parent_id: null,
     sort_order: 10,
     activeOn: ['/emails'],
+    showInNavbar: true,
+  },
+  {
+    id: WHATSAPP_MODULE_ID,
+    name: 'Whatsapp',
+    path: '/whatsapp',
+    icon: 'MessageCircleMore',
+    description: 'Whatsapp chat management',
+    parent_id: null,
+    sort_order: 10,
+    activeOn: ['/whatsapp'],
     showInNavbar: true,
   },
   {
