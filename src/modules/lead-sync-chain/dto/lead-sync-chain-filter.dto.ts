@@ -1,6 +1,6 @@
 import { IsEnum, IsIn, IsInt, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
-import { LeadSyncModule, LeadSyncStatus } from '@prisma/client';
+import { LeadSyncChainProvider, LeadSyncModule, LeadSyncStatus } from '@prisma/client';
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
 export class LeadSyncChainFilterDto extends PaginationDto {
@@ -28,6 +28,10 @@ export class LeadSyncChainFilterDto extends PaginationDto {
     @IsOptional()
     @IsEnum(LeadSyncStatus)
     status?: LeadSyncStatus;
+
+    @IsOptional()
+    @IsEnum(LeadSyncChainProvider)
+    provider: LeadSyncChainProvider;
 
     @IsOptional()
     @IsString()

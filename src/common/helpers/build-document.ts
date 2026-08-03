@@ -19,10 +19,6 @@ export function leadToDocument(lead: any): string {
   lines.push(`Qualified: ${lead.isQualified ? "Yes" : "No"}`);
   lines.push(`Converted: ${lead.isConverted ? "Yes" : "No"}`);
 
-  if (lead.assignedTo) {
-    lines.push(`Assigned To: ${lead.assignedTo.name}`);
-  }
-
   if (lead.description) {
     lines.push("");
     lines.push("Description:");

@@ -84,7 +84,6 @@ export class UserService {
             createdTasks: true,
             createdCalls: true,
             meetingCalls: true,
-            assignedLeads: true,
             createdImportJob: true,
             createdActivities: true,
           },

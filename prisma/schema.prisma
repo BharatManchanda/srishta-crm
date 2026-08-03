@@ -322,6 +322,11 @@ enum LeadSyncStatus {
   INACTIVE
 }
 
+enum LeadSyncChainProvider {
+  FACEBOOK_ADS
+  GOOGLE_ADS
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -388,8 +393,6 @@ model User {
 
   meetingCalls  Meeting[] @relation("MeetingCreator")
 
-  assignedLeads Lead[] @relation("LeadAssignee")
-
   createdImportJob ImportJob[] @relation("ImportJobCreator")
 
   createdActivities Activity[] @relation("ActivityCreator")
@@ -419,6 +422,8 @@ model User {
   facebookAccounts FacebookAccount[]
 
   leadSyncChains LeadSyncChain[]
+
+  GoogleAdsConnections GoogleAdsConnection[]
 }
 
 model OtpVerification {
@@ -556,7 +561,6 @@ model Lead {
 
   @@index([status])
   @@index([source])
-  @@index([assignedToId])
   @@index([nextFollowUpDate])
 }
 
@@ -1268,16 +1272,22 @@ model LeadSyncChain {
   createdById Int
   createdBy User @relation(fields: [createdById], references: [id])
 
-  facebookAccountId Int
-  facebookAccount FacebookAccount @relation(fields: [facebookAccountId], references: [id])
+  facebookAccountId Int?
+  facebookAccount FacebookAccount? @relation(fields: [facebookAccountId], references: [id])
 
-  facebookAdAccountId String
-  facebookPageId String
-  facebookFormId String
+  facebookAdAccountId String?
 
-  module LeadSyncModule
+  facebookPageId String?
+
+  facebookFormId String?
+
+  googleAdsId Int?
+
+  module LeadSyncModule?
 
   mappings LeadSyncMapping[]
+
+  provider LeadSyncChainProvider @default(FACEBOOK_ADS)
 
   status LeadSyncStatus @default(ACTIVE)
 
@@ -1295,4 +1305,27 @@ model LeadSyncMapping {
   facebookField String
 
   createdAt DateTime @default(now())
+}
+
+model GoogleAdsConnection {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user User @relation(fields:[userId], references:[id])
+
+  googleUserId String
+
+  email String
+
+  accessToken String
+
+  customerId String
+
+  refreshToken String
+
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
 }

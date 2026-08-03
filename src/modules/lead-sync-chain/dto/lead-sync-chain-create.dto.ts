@@ -2,10 +2,11 @@ import {
     IsEnum,
     IsString,
     IsInt,
-    IsObject
+    IsObject,
+    IsOptional
 } from "class-validator";
 import { Type } from "class-transformer";
-
+import { LeadSyncChainProvider } from "@prisma/client";
 
 export enum LeadSyncModule {
     LEAD = "LEAD",
@@ -14,21 +15,33 @@ export enum LeadSyncModule {
 
 
 export class LeadSyncChainCreateDto {
+    @IsOptional()
     @Type(() => Number)
     @IsInt()
-    facebookAccountId: number;
+    facebookAccountId?: number;
 
+    @IsOptional()
     @IsString()
-    ad: string;
+    ad?: string;
 
+    @IsOptional()
     @IsString()
-    page: string;
+    page?: string;
+    
+    @IsOptional()
+    @IsString()
+    form?: string;
 
-    @IsString()
-    form: string;
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    googleAdsId?: number;
 
     @IsEnum(LeadSyncModule)
     module: LeadSyncModule;
+
+    @IsEnum(LeadSyncChainProvider)
+    provider: LeadSyncChainProvider;
 
     @IsObject()
     mapping: Record<string, string>;

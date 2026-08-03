@@ -46,7 +46,6 @@ export class GoogleCalendarService {
         });
 
         const { data } = await oauth2.userinfo.get();
-
         const existing = await this.prisma.googleCalendar.findUnique({
             where: {
                 connectedById: authUserId,

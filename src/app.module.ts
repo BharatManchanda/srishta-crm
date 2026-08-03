@@ -32,6 +32,7 @@ import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { FacebookModule } from './modules/facebook/facebook.module';
 import { LeadSyncChainModule } from './modules/lead-sync-chain/lead-sync-chain.module';
 import { GoogleAdsModule } from './modules/google-ads/google-ads.module';
+import { CronjobModule } from './common/cronjob/cronjob.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { GoogleAdsModule } from './modules/google-ads/google-ads.module';
     FacebookModule,
     LeadSyncChainModule,
     GoogleAdsModule,
+    CronjobModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

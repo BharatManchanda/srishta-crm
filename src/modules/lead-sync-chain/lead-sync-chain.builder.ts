@@ -16,17 +16,20 @@ export class LeadSyncChainFilterBuilder {
 
       facebookFormId: PrismaFilter.contains(dto.facebookFormId),
 
+      provider: dto.provider,
+
       module: dto.module,
 
       status: dto.status,
 
       mappings: dto.crmField || dto.facebookField ? {
-          some: {
-            crmField: PrismaFilter.contains(dto.crmField),
-            facebookField: PrismaFilter.contains(dto.facebookField),
-          },
-        }
-      : undefined,
+        some: {
+          crmField: PrismaFilter.contains(dto.crmField),
+          facebookField: PrismaFilter.contains(dto.facebookField),
+        },
+      } : undefined,
+
+
     };
   }
 }

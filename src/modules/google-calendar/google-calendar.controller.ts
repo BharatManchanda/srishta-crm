@@ -20,7 +20,7 @@ export class GoogleCalendarController {
     async callback(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
         const authUserId = parseInt(state, 10);
         await this.googleService.handleGoogleCallback(code, authUserId);
-        return res.redirect('http://localhost:5173/connects');
+        return res.redirect(`${process.env.FRONTEND_URL}/connects`);
     }
 
     @UseGuards(AuthGuard)

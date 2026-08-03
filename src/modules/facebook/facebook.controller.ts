@@ -35,11 +35,11 @@ export class FacebookController {
             const userId = parseInt(state, 10);
             await this.facebookService.callback(userId, code);
             console.log("WhatsApp successfully connected for user:", userId);
-            return res.redirect('http://localhost:5173/connects');
+            return res.redirect(`${process.env.FRONTEND_URL}/connects`);
         } catch (error) {
             console.error("Error in WhatsApp callback:", error);
             // Even if it fails, redirect to connects page so frontend knows to reload
-            return res.redirect('http://localhost:5173/connects?error=true');
+            return res.redirect(`${process.env.FRONTEND_URL}/connects?error=true`);
         }
     }
 

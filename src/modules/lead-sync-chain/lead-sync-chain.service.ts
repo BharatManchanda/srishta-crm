@@ -14,21 +14,22 @@ export class LeadSyncChainService {
     ) {}
 
     async create(dto: LeadSyncChainCreateDto, userId:number) {
-        const mappings = Object.entries(dto.mapping)
-            .map(([crmField, facebookField])=>({
-                crmField,
-                facebookField
-            }));
+        const mappings = Object.entries(dto.mapping).map(([crmField, facebookField])=>({
+            crmField,
+            facebookField
+        }));
 
         return this.prisma.leadSyncChain.create({
-            data:{
+            data: {
                 createdById:userId,
                 facebookAccountId: dto.facebookAccountId,
+                provider: dto.provider,
+                googleAdsId: dto.googleAdsId,
                 facebookAdAccountId: dto.ad,
                 facebookPageId: dto.page,
                 facebookFormId: dto.form,
                 module: dto.module,
-                mappings:{
+                mappings: {
                     create: mappings
                 }
             },
