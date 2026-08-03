@@ -1,15 +1,18 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { google } from 'googleapis';
 import { GoogleAdsApi } from "google-ads-api";
-import { GoogleAdsConnection } from '@prisma/client';
+import { GoogleAdsConnection, LeadPriority, LeadRating, LeadSource, LeadStatus } from '@prisma/client';
+import { LeadCreateDto } from '../lead/dto/lead-create.dto';
+import { LeadService } from '../lead/lead.service';
 
 @Injectable()
 export class GoogleAdsService {
     private oauthClient;
 
     constructor(
-        private prisma: PrismaService
+        private prisma: PrismaService,
+        private leadService: LeadService
     ) {
         this.oauthClient = new google.auth.OAuth2(
             process.env.GOOGLE_CLIENT_ID,
@@ -191,7 +194,73 @@ export class GoogleAdsService {
         return data.results;
     }
 
+    private getEnumValue<T extends string>(
+        value: string | undefined | null,
+        enumObject: Record<string, T>,
+        defaultValue: T
+    ): T {
+        if (!value) {
+            return defaultValue;
+        }
+
+        const values = Object.values(enumObject);
+        return values.includes(value as T) ? value as T : defaultValue;
+    }
+
     async webhook(dto: any, userId: number) {
+        const leadSyncChain = await this.prisma.leadSyncChain.findFirst({
+            where: {
+                provider: "GOOGLE_ADS",
+                createdById: userId
+            },
+            include: {
+                mappings: true
+            }
+        })
+        
+        if (!leadSyncChain) {
+            throw new BadRequestException("Lead sync page not connected");
+        }
+
+        const googleFields = dto.user_column_data.reduce((acc, item) => {
+            acc[item.column_id] = item.string_value;
+            return acc;
+        }, {} as Record<string, string>);
+
+        const leadData: Record<string, any> = {};
+
+        for (const mapping of leadSyncChain.mappings) {
+            const value = googleFields[mapping.facebookField];
+            leadData[mapping.crmField] = value;
+        }
+
+        const leadDto: LeadCreateDto = {
+            name: leadData.name || null,
+            title: leadData.title || null,
+            email: leadData.email || null,
+            phone: leadData.phone || null,
+            website: leadData.website || null,
+            city: leadData.city || null,
+            address: leadData.address || null,
+            state: leadData.state || null,
+            pinCode: leadData.pinCode || null,
+            country: leadData.country || null,
+            industry: leadData.industry || null,
+            budget: leadData.budget ? Number(leadData.budget) : 0,
+            requirement: leadData.requirement || null,
+            source: this.getEnumValue(leadData.source, LeadSource, LeadSource.FACEBOOK),
+            status: this.getEnumValue(leadData.status, LeadStatus, LeadStatus.NEW),
+            priority: this.getEnumValue(leadData.priority, LeadPriority, LeadPriority.MEDIUM),
+            rating: this.getEnumValue(leadData.rating, LeadRating, LeadRating.COLD),
+            leadScore: leadData.leadScore ?? 0,
+            isQualified: leadData.isQualified ?? false,
+            isConverted: leadData.isConverted ?? false,
+            nextFollowUpDate: undefined,
+            lastFollowUpDate: undefined,
+            description: "Created from Facebook Lead Ads",
+        };
+        
+        await this.leadService.create(leadDto, userId);
         
         return true
     }
