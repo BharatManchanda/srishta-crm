@@ -10,11 +10,12 @@ import { CallCreateDto } from './dto/call-create.dto';
 import { CallUpdateDto } from './dto/call-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { ActivityService } from '../activity/activity.service';
-import { ActivityEntity, AiEntityType } from '@prisma/client';
+import { ActivityEntity, AiEntityType, WhatsappEntityType } from '@prisma/client';
 import { UserPolicy } from '../user/user.policy';
 import { AiService } from '../ai/ai.service';
 import { callToDocument } from 'src/common/helpers/build-document';
 import { NotificationService } from '../notification/notification.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class CallService {
@@ -26,6 +27,7 @@ export class CallService {
     private readonly userPolicy: UserPolicy,
     private readonly aiService: AiService,
     private readonly notificationService: NotificationService,
+    private readonly whatsappService: WhatsappService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) { }
 
@@ -106,6 +108,9 @@ export class CallService {
         createdById: authUserId,
         ownerId: dto.ownerId || authUserId,
       },
+      include: {
+        owner: true,
+      },
     });
 
     if (newCall.ownerId && newCall.ownerId !== authUserId) {
@@ -119,6 +124,15 @@ export class CallService {
         createdBy: authUserId,
         userIds: [newCall.ownerId],
       });
+
+      if (newCall.owner && newCall.owner.phone) {
+        await this.whatsappService.sendMessage({
+          message: `You have been scheduled for a call: "${newCall.subject}" on ${callTimeStr}.`,
+          entityType: WhatsappEntityType.CALL,
+          entityId: newCall.id,
+          to: newCall.owner.phone
+        }, authUserId)
+      }
     }
 
     // 1. Log under Call itself
@@ -165,6 +179,9 @@ export class CallService {
     const updatedCall = await this.prisma.call.update({
       where: { id },
       data: dto,
+      include: {
+        owner: true
+      }
     });
 
     if (updatedCall.ownerId && oldCall && oldCall.ownerId !== updatedCall.ownerId) {
@@ -177,6 +194,15 @@ export class CallService {
         createdBy: authUserId,
         userIds: [updatedCall.ownerId],
       });
+
+      if (updatedCall.owner && updatedCall.owner.phone) {
+        await this.whatsappService.sendMessage({
+          message: `Call "${updatedCall.subject}" has been reassigned to you.`,
+          entityType: WhatsappEntityType.CALL,
+          entityId: updatedCall.id,
+          to: updatedCall.owner.phone
+        }, authUserId)
+      }
     }
 
     await this.activityService.create({

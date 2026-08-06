@@ -10,9 +10,10 @@ import { LeadService } from './lead.service';
 import { ActivityModule } from '../activity/activity.module';
 import { AiModule } from '../ai/ai.module';
 import { NotificationModule } from '../notification/notification.module';
+import { WhatsappModule } from '../whatsapp/whatsapp.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, AiModule, NotificationModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, AiModule, NotificationModule, WhatsappModule],
   controllers: [LeadController],
   providers: [
     LeadService,

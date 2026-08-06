@@ -5,18 +5,18 @@ import { Queue } from 'bullmq';
 import { TaskFilterDto } from './dto/task-filter.dto';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { TaskFilterBuilder } from './task-filter.builder';
-import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { BulkTaskCreateDto } from './dto/bulk-task-create.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 
 import { ActivityService } from '../activity/activity.service';
-import { ActivityEntity, AiEntityType } from '@prisma/client';
+import { ActivityEntity, AiEntityType, WhatsappEntityType } from '@prisma/client';
 import { UserPolicy } from '../user/user.policy';
 import { AiService } from '../ai/ai.service';
 import { taskToDocument } from 'src/common/helpers/build-document';
 import { NotificationService } from '../notification/notification.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class TaskService {
@@ -28,6 +28,7 @@ export class TaskService {
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
     private readonly notificationService: NotificationService,
+    private readonly whatsappService: WhatsappService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -116,6 +117,9 @@ export class TaskService {
         createdById: authUserId,
         ownerId: dto.ownerId || authUserId,
       },
+      include: {
+        owner: true,
+      }
     });
 
     if (newTask.ownerId && newTask.ownerId !== authUserId) {
@@ -128,6 +132,15 @@ export class TaskService {
         createdBy: authUserId,
         userIds: [newTask.ownerId],
       });
+
+      if (newTask.owner && newTask.owner.phone) {
+        await this.whatsappService.sendMessage({
+          message: `Task "${newTask.subject}" has been assigned to you.`,
+          entityType: WhatsappEntityType.TASK,
+          entityId: newTask.id,
+          to: newTask.owner.phone
+        }, authUserId)
+      }
     }
 
     // 1. Log under Task itself
@@ -174,18 +187,30 @@ export class TaskService {
     const updatedTask = await this.prisma.task.update({
       where: { id },
       data: dto,
+      include: {
+        owner: true
+      }
     });
 
     if (updatedTask.ownerId && oldTask && oldTask.ownerId !== updatedTask.ownerId) {
       await this.notificationService.create({
         title: 'Task Assigned',
-        message: `Task "${updatedTask.subject}" has been assigned to you.`,
+        message: `Task "${updatedTask.subject}" has been reassigned to you.`,
         type: 'TASK',
         module: 'TASK',
         entityId: updatedTask.id,
         createdBy: authUserId,
         userIds: [updatedTask.ownerId],
       });
+
+      if (updatedTask.owner && updatedTask.owner.phone) {
+        await this.whatsappService.sendMessage({
+          message: `Task "${updatedTask.subject}" has been reassigned to you.`,
+          entityType: WhatsappEntityType.TASK,
+          entityId: updatedTask.id,
+          to: updatedTask.owner.phone
+        }, authUserId)
+      }
     }
 
     // 1. Log under Task itself

@@ -13,9 +13,10 @@ import { UserPolicy } from '../user/user.policy';
 import { AiModule } from '../ai/ai.module';
 import { EmailModule } from '../email/email.module';
 import { NotificationModule } from '../notification/notification.module';
+import { WhatsappModule } from '../whatsapp/whatsapp.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, EmailModule, NotificationModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, EmailModule, NotificationModule, WhatsappModule],
   providers: [
     MeetingService,
     PaginationService,

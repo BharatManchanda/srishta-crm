@@ -33,6 +33,7 @@ import { FacebookModule } from './modules/facebook/facebook.module';
 import { LeadSyncChainModule } from './modules/lead-sync-chain/lead-sync-chain.module';
 import { GoogleAdsModule } from './modules/google-ads/google-ads.module';
 import { CronjobModule } from './common/cronjob/cronjob.module';
+import { LinkedinAdsModule } from './modules/linkedin-ads/linkedin-ads.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { CronjobModule } from './common/cronjob/cronjob.module';
     LeadSyncChainModule,
     GoogleAdsModule,
     CronjobModule,
+    LinkedinAdsModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

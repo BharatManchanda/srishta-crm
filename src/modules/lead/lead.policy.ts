@@ -109,7 +109,6 @@ export class LeadPolicy {
   }
 
   async canViewAll(currentUser: any) {
-    console.log(currentUser.roleId,"::roleId")
     return this.hasPermission(currentUser.roleId, 'canView');
   }
 

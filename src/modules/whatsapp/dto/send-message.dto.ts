@@ -5,9 +5,6 @@ export class SendMessageDto {
     @IsString()
     message: string;
 
-    // @IsString()
-    // to: string;
-
     @IsEnum(WhatsappEntityType)
     entityType: WhatsappEntityType;
 

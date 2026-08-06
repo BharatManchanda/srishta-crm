@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { LeadFilterBuilder } from './lead-filter.builder';
 import { LeadCreateDto } from './dto/lead-create.dto';
-import { ActivityEntity, AiEntityType, Prisma } from '@prisma/client';
+import { ActivityEntity, AiEntityType, Prisma, WhatsappEntityType } from '@prisma/client';
 import { LeadUpdateDto } from './dto/lead-update.dto';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
@@ -12,6 +12,7 @@ import { ActivityService } from '../activity/activity.service';
 import { AiService } from '../ai/ai.service';
 import { leadToDocument } from 'src/common/helpers/build-document';
 import { NotificationService } from '../notification/notification.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class LeadService {
@@ -23,6 +24,7 @@ export class LeadService {
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
     private readonly notificationService: NotificationService,
+    private readonly whatsappService: WhatsappService
   ) { }
   async getList(dto: LeadFilterDto, currentUserId: number) {
     const user = await this.prisma.user.findUnique({
@@ -112,6 +114,9 @@ export class LeadService {
         createdById: authUserId,
         ownerId: dto.ownerId || authUserId,
       },
+      include: {
+        owner: true,
+      },
     });
 
     await this.activityService.create({
@@ -143,21 +148,22 @@ export class LeadService {
         createdBy: authUserId,
         userIds: [lead.ownerId],
       });
+
+      if (lead.owner && lead.owner.phone) {
+        await this.whatsappService.sendMessage({
+          message: `Lead "${lead.name}" has been assigned to you.`,
+          entityType: WhatsappEntityType.LEAD,
+          entityId: lead.id,
+          to: lead.owner.phone
+        }, authUserId)
+      }
     }
 
     return lead;
   }
 
   async get(id: number) {
-    const [
-      lead,
-      notes,
-      attachments,
-      tasks,
-      calls,
-      meetings,
-      emails,
-    ] = await this.prisma.$transaction([
+    const [lead, notes, attachments, tasks, calls, meetings, emails ] = await this.prisma.$transaction([
       this.prisma.lead.findUnique({
         where: { id },
         include: {
@@ -243,6 +249,15 @@ export class LeadService {
         ...dto,
         budget: dto.budget !== undefined ? (dto.budget ? new Prisma.Decimal(dto.budget) : null) : undefined,
       },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        },
+      },
     });
 
     await this.activityService.create(
@@ -276,6 +291,14 @@ export class LeadService {
         createdBy: authUserId,
         userIds: [lead.ownerId],
       });
+      if (lead.owner && lead.owner.phone) {
+        await this.whatsappService.sendMessage({
+          message: `Lead "${lead.name}" has been assigned to you.`,
+          entityType: WhatsappEntityType.LEAD,
+          entityId: lead.id,
+          to: lead.owner.phone
+        }, authUserId)
+      }
     }
 
     if (lead.isConverted && oldLead && !oldLead.isConverted) {
@@ -288,6 +311,15 @@ export class LeadService {
         createdBy: authUserId,
         userIds: [lead.ownerId || authUserId],
       });
+
+      if (lead.owner && lead.owner.phone) {
+        await this.whatsappService.sendMessage({
+          message: `Lead "${lead.name}" has been assigned to you.`,
+          entityType: WhatsappEntityType.LEAD,
+          entityId: lead.id,
+          to: lead.owner.phone
+        }, authUserId)
+      }
     }
 
     return lead;

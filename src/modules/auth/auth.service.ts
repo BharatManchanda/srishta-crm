@@ -135,7 +135,6 @@ export class AuthService {
   }
 
   async update(dto: UpdateUserDto, authUserId: number, userId: number): Promise<any> {
-    console.log("Testing: ", dto)
     const familyUserIds = await this.userPolicy.getAccessibleUserIds(authUserId);
     if (!familyUserIds.includes(userId)) {
       throw new BadRequestException('User not found');
@@ -342,29 +341,49 @@ export class AuthService {
       const modules = await this.prisma.module.findMany();
 
       // CEO -> Full permissions
+      const CRUD_ACTIONS = ["View", "Create", "Edit", "Delete"];
+
       await this.prisma.rolePermission.createMany({
-        data: modules.map((module) => ({
-          roleId: ceoRole.id,
-          moduleId: module.id,
-          isAllow: true,
-          canView: true,
-          canCreate: true,
-          canEdit: true,
-          canDelete: true,
-        })),
+        data: modules.map((module) => {
+          const actions = Array.isArray(module.availableActions) ? (module.availableActions as string[]) : [];
+
+          return {
+            roleId: ceoRole.id,
+            moduleId: module.id,
+            isAllow: true,
+
+            canView: actions.includes("View"),
+            canCreate: actions.includes("Create"),
+            canEdit: actions.includes("Edit"),
+            canDelete: actions.includes("Delete"),
+
+            actions: actions.filter(
+              (action) => !CRUD_ACTIONS.includes(action),
+            ),
+          };
+        }),
       });
 
       // Manager -> Full permissions by default
       await this.prisma.rolePermission.createMany({
-        data: modules.map((module) => ({
-          roleId: managerRole.id,
-          moduleId: module.id,
-          isAllow: true,
-          canView: true,
-          canCreate: true,
-          canEdit: true,
-          canDelete: true,
-        })),
+        data: modules.map((module) => {
+          const actions = Array.isArray(module.availableActions) ? (module.availableActions as string[]) : [];
+
+          return {
+            roleId: managerRole.id,
+            moduleId: module.id,
+            isAllow: true,
+
+            canView: true,
+            canCreate: true,
+            canEdit: true,
+            canDelete: true,
+
+            actions: actions.filter(
+              (action) => !CRUD_ACTIONS.includes(action),
+            ),
+          };
+        }),
       });
 
       await this.prisma.otpVerification.deleteMany({

@@ -7,9 +7,10 @@ import { OnlineUserService } from './online-user.service';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { NotificationController } from './notification.controller';
 import { FollowUpCronService } from './follow-up-cron.service';
+import { WhatsappModule } from '../whatsapp/whatsapp.module';
 
 @Module({
-  imports: [JwtModule, PrismaModule],
+  imports: [JwtModule, PrismaModule, WhatsappModule],
   controllers: [NotificationController],
   providers: [NotificationGateway, NotificationService, OnlineUserService, PaginationService, FollowUpCronService],
   exports: [

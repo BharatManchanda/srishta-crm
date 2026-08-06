@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from './notification.service';
+import { WhatsappEntityType } from '@prisma/client';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class FollowUpCronService {
@@ -10,6 +12,7 @@ export class FollowUpCronService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
+    private readonly whatsappService: WhatsappService,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -30,6 +33,16 @@ export class FollowUpCronService {
             lte: endOfToday,
           },
           isConverted: false,
+        },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+            },
+          },
+          createdBy: true
         },
       });
 
@@ -57,6 +70,21 @@ export class FollowUpCronService {
             entityId: lead.id,
             userIds: [lead.ownerId],
           });
+
+          let authUserId = lead.createdById;
+
+          if (!lead.createdBy.isSuperAdmin && lead.createdBy.parentId) {
+            authUserId = lead.createdBy.parentId;
+          }
+
+          if (lead.owner && lead.owner.phone) {
+            await this.whatsappService.sendMessage({
+              message: `You have a follow-up scheduled today for lead "${lead.name}".`,
+              entityType: WhatsappEntityType.LEAD,
+              entityId: lead.id,
+              to: lead.owner.phone
+            }, authUserId)
+          }
         }
       }
 
@@ -67,6 +95,16 @@ export class FollowUpCronService {
             lt: now,
           },
           isConverted: false,
+        },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+            },
+          },
+          createdBy: true
         },
       });
 
@@ -91,6 +129,21 @@ export class FollowUpCronService {
             entityId: lead.id,
             userIds: [lead.ownerId],
           });
+
+          if (lead.owner && lead.owner.phone) {
+            let authUserId = lead.createdById;
+
+            if (!lead.createdBy.isSuperAdmin && lead.createdBy.parentId) {
+              authUserId = lead.createdBy.parentId;
+            }
+            
+            await this.whatsappService.sendMessage({
+              message: `Follow-up is overdue for lead "${lead.name}". It was scheduled for ${lead.nextFollowUpDate?.toLocaleDateString()}.`,
+              entityType: WhatsappEntityType.LEAD,
+              entityId: lead.id,
+              to: lead.owner.phone
+            }, authUserId)
+          }
         }
       }
     } catch (err) {

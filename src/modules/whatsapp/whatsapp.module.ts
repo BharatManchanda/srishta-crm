@@ -8,6 +8,7 @@ import { PaginationService } from 'src/common/pagination/pagination.service';
 @Module({
   imports: [JwtModule],
   controllers: [WhatsappController],
-  providers: [WhatsappService, PrismaService, PaginationService]
+  providers: [WhatsappService, PrismaService, PaginationService],
+  exports: [WhatsappService]
 })
 export class WhatsappModule { }

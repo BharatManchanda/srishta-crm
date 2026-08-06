@@ -23,7 +23,13 @@ export const MEETING_MODULE_ID = 24;
 export const IMPORT_MODULE_ID = 25;
 export const EMAIL_MODULE_ID = 26;
 export const WHATSAPP_MODULE_ID = 27;
+export const GOOGLE_MODULE_ID = 28;
+export const LINKEDIN_MODULE_ID = 29;
+export const GOOGLE_ADS_MODULE_ID = 30;
+export const FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID = 31;
+export const ROLE_CONFIG_MODULE_ID = 32;
 
+const crud = ["View", "Create", "Edit", "Delete"];
 
 const modules = [
   {
@@ -35,6 +41,7 @@ const modules = [
     parent_id: null,
     sort_order: 1,
     activeOn: ['/dashboard'],
+    availableActions: ["View"],
     showInNavbar: true,
   },
   {
@@ -46,6 +53,7 @@ const modules = [
     parent_id: null,
     sort_order: 2,
     activeOn: ['/user', '/user/:id', '/user/:id/edit'],
+    availableActions: crud,
     showInNavbar: true,
   },
   {
@@ -57,6 +65,7 @@ const modules = [
     parent_id: null,
     sort_order: 3,
     activeOn: ['/leads', '/leads/:id', '/leads/:id/edit', '/leads/create'],
+    availableActions: crud,
     showInNavbar: true,
   },
   {
@@ -67,6 +76,7 @@ const modules = [
     description: 'Contact management',
     parent_id: null,
     sort_order: 4,
+    availableActions: crud,
     activeOn: [
       '/contacts',
       '/contacts/:id',
@@ -83,6 +93,7 @@ const modules = [
     description: 'Notes management',
     parent_id: null,
     sort_order: 5,
+    availableActions: crud,
     activeOn: [
       '/notes',
       '/notes/:id',
@@ -99,6 +110,7 @@ const modules = [
     description: 'Attachments management',
     parent_id: null,
     sort_order: 6,
+    availableActions: crud,
     activeOn: [
       '/attachments',
       '/attachments/:id',
@@ -115,6 +127,7 @@ const modules = [
     description: 'Account management',
     parent_id: null,
     sort_order: 7,
+    availableActions: crud,
     activeOn: [
       '/accounts',
       '/accounts/:id',
@@ -130,7 +143,8 @@ const modules = [
     icon: 'LayersMinus',
     description: 'Task management',
     parent_id: null,
-    sort_order: 7,
+    sort_order: 8,
+    availableActions: crud,
     activeOn: [
       '/tasks',
       '/tasks/:id',
@@ -146,7 +160,8 @@ const modules = [
     icon: 'PhoneCall',
     description: 'Task management',
     parent_id: null,
-    sort_order: 8,
+    sort_order: 9,
+    availableActions: crud,
     activeOn: [
       '/calls',
       '/calls/:id',
@@ -162,7 +177,8 @@ const modules = [
     icon: 'Handshake',
     description: 'Meeting management',
     parent_id: null,
-    sort_order: 8,
+    sort_order: 10,
+    availableActions: crud,
     activeOn: [
       '/meetings',
       '/meetings/:id',
@@ -178,7 +194,8 @@ const modules = [
     icon: 'GridIcon',
     description: 'Bulk import management',
     parent_id: null,
-    sort_order: 9,
+    sort_order: 11,
+    availableActions: ["Leads", "Contacts", "Accounts"],
     activeOn: ['/imports', '/imports/:id'],
     showInNavbar: true,
   },
@@ -189,7 +206,8 @@ const modules = [
     icon: 'Mail',
     description: 'Email log management',
     parent_id: null,
-    sort_order: 10,
+    sort_order: 12,
+    availableActions: crud,
     activeOn: ['/emails'],
     showInNavbar: true,
   },
@@ -200,9 +218,58 @@ const modules = [
     icon: 'MessageCircleMore',
     description: 'Whatsapp chat management',
     parent_id: null,
-    sort_order: 10,
+    sort_order: 13,
+    availableActions: ["Whatsapp Access"],
     activeOn: ['/whatsapp'],
-    showInNavbar: true,
+    showInNavbar: false,
+  },
+  {
+    id: GOOGLE_MODULE_ID,
+    name: 'Google',
+    path: '/google',
+    icon: 'MessageCircleMore',
+    description: 'Google chat management',
+    parent_id: null,
+    sort_order: 14,
+    activeOn: ['/google'],
+    showInNavbar: false,
+    availableActions: ["Google Ads", "Google Calendar"],
+  },
+  {
+    id: LINKEDIN_MODULE_ID,
+    name: 'Linkedin',
+    path: '/linkedin',
+    icon: 'MessageCircleMore',
+    description: 'Linkedin chat management',
+    parent_id: null,
+    sort_order: 15,
+    activeOn: ['/linkedin'],
+    showInNavbar: false,
+    availableActions: ["Linkedin Ads"],
+  },
+  {
+    id: FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID,
+    name: 'Facebook & Instagram',
+    path: '/facebook-and-instagram',
+    icon: 'MessageCircleMore',
+    description: 'Facebook & Instagram chat management',
+    parent_id: null,
+    sort_order: 16,
+    activeOn: ['/facebook-and-instagram'],
+    showInNavbar: false,
+    availableActions: ["Facebook & Instagram Ads"],
+  },
+  {
+    id: ROLE_CONFIG_MODULE_ID,
+    name: 'Role Configs',
+    path: '/role-configs',
+    icon: 'MessageCircleMore',
+    description: 'Role Configs management',
+    parent_id: null,
+    sort_order: 16,
+    activeOn: ['/role-configs'],
+    showInNavbar: false,
+    availableActions: ["Facebook & Instagram Ads"],
   },
   {
     id: SETTINGS_MODULE_ID,
@@ -211,8 +278,22 @@ const modules = [
     icon: 'PieChartIcon',
     description: 'Application settings',
     parent_id: null,
-    sort_order: 11,
-    activeOn: ['/settings', '/role-configs', '/role-configs/:id/edit', "/connects", "/calendar"],
+    sort_order: 17,
+    activeOn: [
+      '/settings',
+      '/role-configs',
+      '/role-configs/:id/edit',
+      "/connects",
+      "/calendar",
+      "/whatsapp",
+      "/facebook/lead-sync-chains",
+      "/facebook/lead-sync-chains/create",
+      "/google-ads/lead-sync-chains",
+      "/google-ads/lead-sync-chains/create",
+      "/linkedin-ads/lead-sync-chains",
+      "/linkedin-ads/lead-sync-chains/create"
+    ],
+    availableActions: [],
     showInNavbar: true,
   },
 ];
@@ -231,6 +312,7 @@ export default async function seedModules() {
         parent_id: module.parent_id,
         activeOn: module.activeOn,
         showInNavbar: module.showInNavbar,
+        availableActions: module.availableActions,
       },
       create: module,
     });

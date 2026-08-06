@@ -8,10 +8,11 @@ import { UpdateViewSettingDto } from './dto/account-view-setting.dto';
 import { AccountCreateDto } from './dto/account-create.dto';
 import { AccountUpdateDto } from './dto/account-update.dto';
 import { ActivityService } from '../activity/activity.service';
-import { AiEntityType } from '@prisma/client';
+import { AiEntityType, WhatsappEntityType } from '@prisma/client';
 import { AiService } from '../ai/ai.service';
 import { accountToDocument } from 'src/common/helpers/build-document';
 import { NotificationService } from '../notification/notification.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class AccountService {
@@ -22,7 +23,8 @@ export class AccountService {
     private readonly userHierarchyService: UserHierarchyService,
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+    private readonly whatsappService: WhatsappService,
   ) { }
 
   async getList(dto: AccountFilterDto, currentUserId: number) {
@@ -292,6 +294,10 @@ export class AccountService {
           billingAddressId: billingAddressRecord?.id,
           shippingAddressId: shippingAddressRecord?.id,
         },
+        include: {
+          owner: true,
+          createdBy: true,
+        },
       });
 
       await this.activityService.create({
@@ -318,6 +324,15 @@ export class AccountService {
           createdBy: authUserId,
           userIds: [newAccount.ownerId],
         });
+
+        if (newAccount.owner && newAccount.owner.phone) {
+          await this.whatsappService.sendMessage({
+            message: `Account "${newAccount.accountName}" has been assigned to you.`,
+            entityType: WhatsappEntityType.ACCOUNT,
+            entityId: newAccount.id,
+            to: newAccount.owner.phone
+          }, authUserId)
+        }
       }
 
       return newAccount;
@@ -389,6 +404,7 @@ export class AccountService {
         include: {
           billingAddress: true,
           shippingAddress: true,
+          owner: true,
         },
       });
 
@@ -427,6 +443,15 @@ export class AccountService {
           createdBy: authUserId,
           userIds: [updatedAccount.ownerId],
         });
+
+        if (updatedAccount.owner && updatedAccount.owner.phone) {
+          await this.whatsappService.sendMessage({
+            message: `Account "${updatedAccount.accountName}" has been assigned to you.`,
+            entityType: WhatsappEntityType.ACCOUNT,
+            entityId: updatedAccount.id,
+            to: updatedAccount.owner.phone
+          }, authUserId)
+        }
       }
 
       return updatedAccount;

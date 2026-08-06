@@ -49,9 +49,7 @@ export class UserController {
 
   @Get("me")
   async getMe(@Req() req: Request) {
-    console.log(req, "::req")
     const authUserId = req['user'].id;
-    console.log(authUserId, "::authUserId")
     return this.userService.getOne(authUserId);
   }
 

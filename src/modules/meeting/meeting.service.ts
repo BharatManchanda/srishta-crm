@@ -8,13 +8,14 @@ import { MeetingFilterBuilder } from './meeting-filter.builder';
 import { MeetingCreateDto } from './dto/meeting-create.dto';
 import { MeetingUpdateDto } from './dto/meeting-update.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
-import { ActivityEntity, AiEntityType } from '@prisma/client';
+import { ActivityEntity, AiEntityType, WhatsappEntityType } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
 import { UserPolicy } from '../user/user.policy';
 import { AiService } from '../ai/ai.service';
 import { meetingToDocument } from 'src/common/helpers/build-document';
 import { EmailService } from '../email/email.service';
 import { NotificationService } from '../notification/notification.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class MeetingService {
@@ -27,6 +28,7 @@ export class MeetingService {
     private readonly aiService: AiService,
     private readonly emailService: EmailService,
     private readonly notificationService: NotificationService,
+    private readonly whatsappService: WhatsappService,
     @InjectQueue('google-calendar-sync') private readonly calendarSyncQueue: Queue,
   ) {}
 
@@ -132,6 +134,14 @@ export class MeetingService {
           createdBy: authUserId,
           userIds: userIdsToNotify,
         });
+
+        await this.sendWhatsappReminder(meeting.id, authUserId, `Meeting Scheduled
+          Title: ${meeting.title}
+          Start: ${new Date(meeting.startTime).toLocaleString()}
+          End: ${new Date(meeting.endTime).toLocaleString()}
+
+          Please be on time.`
+        );
       }
     }
 
@@ -240,6 +250,14 @@ export class MeetingService {
           createdBy: authUserId,
           userIds: userIdsToNotify,
         });
+
+        await this.sendWhatsappReminder(updatedMeeting.id, authUserId, `Meeting Rescheduled
+          Title: ${updatedMeeting.title}
+          Start: ${new Date(updatedMeeting.startTime).toLocaleString()}
+          End: ${new Date(updatedMeeting.endTime).toLocaleString()}
+
+          Please be on time.`
+        );
       }
     }
 
@@ -619,5 +637,70 @@ export class MeetingService {
       sentCount,
       errors: errors.length > 0 ? errors : undefined,
     };
+  }
+
+  private async sendWhatsappReminder(meetingId: number, authUserId: number, message: string) {
+    const meeting = await this.prisma.meeting.findUnique({
+      where: { id: meetingId },
+      include: {
+        participants: true,
+      },
+    });
+
+    if (!meeting) return;
+
+    for (const participant of meeting.participants) {
+      let phone: string | null = null;
+
+      if (participant.participantId) {
+        switch (participant.participantType) {
+          case 'USER': {
+            const user = await this.prisma.user.findUnique({
+              where: { id: participant.participantId },
+              select: { phone: true },
+            });
+            phone = user?.phone ?? null;
+            break;
+          }
+
+          case 'LEAD': {
+            const lead = await this.prisma.lead.findUnique({
+              where: { id: participant.participantId },
+              select: { phone: true },
+            });
+            phone = lead?.phone ?? null;
+            break;
+          }
+
+          case 'CONTACT': {
+            const contact = await this.prisma.contact.findUnique({
+              where: { id: participant.participantId },
+              select: { phone: true },
+            });
+            phone = contact?.phone ?? null;
+            break;
+          }
+        }
+      }
+
+      if (!phone) continue;
+
+      try {
+        await this.whatsappService.sendMessage(
+          {
+            message,
+            entityType: WhatsappEntityType.MEETING,
+            entityId: meeting.id,
+            to: phone,
+          },
+          authUserId,
+        );
+      } catch (err) {
+        console.error(
+          `Failed to send WhatsApp to ${phone}`,
+          err,
+        );
+      }
+    }
   }
 }

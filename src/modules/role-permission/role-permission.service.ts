@@ -53,29 +53,49 @@ export class RolePermissionService {
   }
 
   async update(dto: CreateRolePermissionDto, authId: number) {
-    let { roleId, moduleId, isAllow, canView, canCreate, canEdit, canDelete } =
-      dto;
+    let {
+      roleId,
+      moduleId,
+      isAllow,
+      canView,
+      canCreate,
+      canEdit,
+      canDelete,
+      actions = [],
+    } = dto;
+
+
     if (roleId) {
-      const isSuperAdminPermission = await this.prismaService.user.findFirst({
-        where: {
-          roleId,
-          isSuperAdmin: true,
-        },
-      });
+
+      const isSuperAdminPermission =
+        await this.prismaService.user.findFirst({
+          where: {
+            roleId,
+            isSuperAdmin: true,
+          },
+        });
+
 
       if (isSuperAdminPermission) {
-        throw new ForbiddenException('Super admin role cannot be updated');
+        throw new ForbiddenException(
+          'Super admin role cannot be updated'
+        );
       }
     }
 
+
     // If module access is disabled
     if (!isAllow || !canView) {
+
       isAllow = false;
       canView = false;
       canCreate = false;
       canEdit = false;
       canDelete = false;
+      actions = [];
+
     }
+
 
     const isExist = await this.prismaService.role.findUnique({
       where: {
@@ -83,6 +103,7 @@ export class RolePermissionService {
         createdById: authId,
       },
     });
+
 
     if (!isExist) {
       throw new NotFoundException('Role not found');
@@ -95,13 +116,16 @@ export class RolePermissionService {
           moduleId,
         },
       },
+
       data: {
         isAllow,
         canView,
         canCreate,
         canEdit,
         canDelete,
+        actions,
       },
+
     });
   }
 }

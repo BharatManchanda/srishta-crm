@@ -310,6 +310,10 @@ enum WhatsappEntityType {
   LEAD
   CONTACT
   ACCOUNT
+  CALL
+  MEETING
+  NOTE
+  TASK
 }
 
 enum LeadSyncModule {
@@ -325,6 +329,7 @@ enum LeadSyncStatus {
 enum LeadSyncChainProvider {
   FACEBOOK_ADS
   GOOGLE_ADS
+  LINKEDIN_ADS
 }
 
 model User {
@@ -424,6 +429,8 @@ model User {
   leadSyncChains LeadSyncChain[]
 
   GoogleAdsConnections GoogleAdsConnection[]
+
+  LinkedinAccounts  LinkedinAccount[]
 }
 
 model OtpVerification {
@@ -484,6 +491,8 @@ model Module {
 
   permissions RolePermission[]
 
+  availableActions Json?
+
   showInNavbar Boolean @default(true)
 
   tableViews UserTableView[]
@@ -500,6 +509,8 @@ model RolePermission {
   canCreate Boolean @default(false)
   canEdit   Boolean @default(false)
   canDelete Boolean @default(false)
+
+  actions Json?
 
   role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
   module     Module @relation(fields: [moduleId], references: [id])
@@ -1283,6 +1294,12 @@ model LeadSyncChain {
 
   googleAdsId Int?
 
+  linkedinAccId String?
+
+  linkedinAdsAccId String?
+
+  linkedinFormId String?
+
   module LeadSyncModule?
 
   mappings LeadSyncMapping[]
@@ -1328,4 +1345,39 @@ model GoogleAdsConnection {
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
+}
+
+model LinkedinAccount {
+  id Int @id @default(autoincrement())
+
+  userId Int @unique
+  user User @relation(fields:[userId], references:[id])
+
+  linkedinUserId String
+
+  name String?
+
+  accessToken String
+
+  refreshToken String?
+
+  expiresAt DateTime?
+
+  adAccounts LinkedinAdAccount[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model LinkedinAdAccount {
+  id Int @id @default(autoincrement())
+
+  linkedinAccountId Int
+
+  accountId String
+
+  name String?
+
+  linkedinAccount LinkedinAccount @relation(fields:[linkedinAccountId], references:[id])
 }

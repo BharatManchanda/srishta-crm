@@ -29,6 +29,9 @@ export class LeadSyncChainService {
                 facebookPageId: dto.page,
                 facebookFormId: dto.form,
                 module: dto.module,
+                linkedinAccId: dto.linkedinAccId,
+                linkedinAdsAccId: dto.linkedinAdsAccId,
+                linkedinFormId: dto.linkedinFormId,
                 mappings: {
                     create: mappings
                 }

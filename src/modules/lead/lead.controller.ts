@@ -22,7 +22,6 @@ export class LeadController {
   async getList(@Query() dto: LeadFilterDto, @Req() req: Request) {
     await this.leadPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
-    console.log("Leads---")
     return this.leadService.getList(dto, authUserId);
   }
 

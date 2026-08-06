@@ -1,4 +1,4 @@
-import { IsNumber, IsBoolean } from 'class-validator';
+import { IsNumber, IsBoolean, IsOptional, IsArray, IsString } from 'class-validator';
 
 export class UpdateRolePermissionDto {
   @IsNumber()
@@ -21,4 +21,9 @@ export class UpdateRolePermissionDto {
 
   @IsBoolean()
   canDelete: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  actions?: string[];
 }

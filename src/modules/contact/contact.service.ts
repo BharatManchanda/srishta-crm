@@ -7,11 +7,12 @@ import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UpdateViewSettingDto } from './dto/contact-view-setting.dto';
 import { ContactCreateDto } from './dto/contact-create.dto';
 import { ContactUpdateDto } from './dto/contact-update.dto';
-import { ActivityEntity, AiEntityType } from '@prisma/client';
+import { ActivityEntity, AiEntityType, WhatsappEntityType } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
 import { AiService } from '../ai/ai.service';
 import { contactToDocument } from 'src/common/helpers/build-document';
 import { NotificationService } from '../notification/notification.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class ContactService {
@@ -23,6 +24,7 @@ export class ContactService {
     private readonly activityService: ActivityService,
     private readonly aiService: AiService,
     private readonly notificationService: NotificationService,
+    private readonly whatsappService: WhatsappService,
   ) { }
 
   async getList(dto: ContactFilterDto, currentUserId: number) {
@@ -294,6 +296,9 @@ export class ContactService {
           otherAddressId: otherAddressRecord?.id,
           dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
         },
+        include: {
+          owner: true,
+        },
       });
 
       await this.activityService.create({
@@ -327,6 +332,15 @@ export class ContactService {
         });
       }
 
+      if (contact.owner && contact.owner.phone) {
+        await this.whatsappService.sendMessage({
+          message: `Contact "${contact.name}" has been assigned to you.`,
+          entityType: WhatsappEntityType.CONTACT,
+          entityId: contact.id,
+          to: contact.owner.phone
+        }, authUserId)
+      }
+
       return contact;
     } catch (error) {
     }
@@ -337,7 +351,7 @@ export class ContactService {
       const { mailingAddress, otherAddress, ...contactData } = dto;
       const existingContact = await this.prisma.contact.findUnique({
         where: { id },
-        include: { mailingAddress: true, otherAddress: true },
+        include: { mailingAddress: true, otherAddress: true, owner: true },
       });
 
       if (!existingContact) {
@@ -384,6 +398,9 @@ export class ContactService {
           otherAddressId,
           dateOfBirth: dto.dateOfBirth !== undefined ? (dto.dateOfBirth ? new Date(dto.dateOfBirth) : null) : undefined,
         },
+        include: {
+          owner: true,
+        },
       });
 
       await this.activityService.create({
@@ -414,6 +431,15 @@ export class ContactService {
           createdBy: authUserId,
           userIds: [contact.ownerId],
         });
+
+        if (contact.owner && contact.owner.phone) {
+          await this.whatsappService.sendMessage({
+            message: `Contact "${contact.name}" has been reassigned to you.`,
+            entityType: WhatsappEntityType.CONTACT,
+            entityId: contact.id,
+            to: contact.owner.phone
+          }, authUserId)
+        }
       }
 
       return contact;

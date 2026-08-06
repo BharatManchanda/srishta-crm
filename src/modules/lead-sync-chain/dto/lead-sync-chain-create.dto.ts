@@ -37,6 +37,18 @@ export class LeadSyncChainCreateDto {
     @IsInt()
     googleAdsId?: number;
 
+    @IsOptional()
+    @IsString()
+    linkedinAccId?: string;
+
+    @IsOptional()
+    @IsString()
+    linkedinAdsAccId?: string;
+
+    @IsOptional()
+    @IsString()
+    linkedinFormId?: string;
+
     @IsEnum(LeadSyncModule)
     module: LeadSyncModule;
 

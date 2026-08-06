@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolePermissionService } from './role-permission.service';
-import { RolePermissionFilterDto } from './dto/role-permission-filter.dto';
 import { CreateRolePermissionDto } from './dto/create-role-permission.dto';
 import { UpdateRolePermissionDto } from './dto/update-role-permission.dto';
 
