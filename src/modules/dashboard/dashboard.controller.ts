@@ -5,7 +5,7 @@ import { DashboardService } from './dashboard.service';
 @UseGuards(AuthGuard)
 @Controller('dashboard')
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: DashboardService) { }
 
   @Get()
   async getDashboardData(
@@ -15,10 +15,12 @@ export class DashboardController {
     @Query('endDate') endDate?: string,
   ) {
     const authUserId = req['user'].id;
-    return this.dashboardService.getDashboardData(authUserId, {
-      interval,
-      startDate,
-      endDate,
-    });
+    return this.dashboardService.getDashboardData(authUserId, { interval, startDate, endDate });
+  }
+
+  @Get('open-activities')
+  async getOpenActivities(@Req() req: Request) {
+    const authUserId = req['user'].id;
+    return this.dashboardService.getOpenActivities(authUserId);
   }
 }

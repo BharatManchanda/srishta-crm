@@ -66,36 +66,24 @@ export class RolePermissionService {
 
 
     if (roleId) {
-
-      const isSuperAdminPermission =
-        await this.prismaService.user.findFirst({
-          where: {
-            roleId,
-            isSuperAdmin: true,
-          },
-        });
-
+      const isSuperAdminPermission = await this.prismaService.user.findFirst({
+        where: {
+          roleId,
+          isSuperAdmin: true,
+        },
+      });
 
       if (isSuperAdminPermission) {
-        throw new ForbiddenException(
-          'Super admin role cannot be updated'
-        );
+        throw new ForbiddenException('Super admin role cannot be updated');
       }
     }
 
-
-    // If module access is disabled
     if (!isAllow || !canView) {
-
-      isAllow = false;
       canView = false;
       canCreate = false;
       canEdit = false;
       canDelete = false;
-      actions = [];
-
     }
-
 
     const isExist = await this.prismaService.role.findUnique({
       where: {
@@ -125,7 +113,6 @@ export class RolePermissionService {
         canDelete,
         actions,
       },
-
     });
   }
 }

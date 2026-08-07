@@ -25,7 +25,6 @@ export const EMAIL_MODULE_ID = 26;
 export const WHATSAPP_MODULE_ID = 27;
 export const GOOGLE_MODULE_ID = 28;
 export const LINKEDIN_MODULE_ID = 29;
-export const GOOGLE_ADS_MODULE_ID = 30;
 export const FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID = 31;
 export const ROLE_CONFIG_MODULE_ID = 32;
 
@@ -43,6 +42,7 @@ const modules = [
     activeOn: ['/dashboard'],
     availableActions: ["View"],
     showInNavbar: true,
+    showActions: false,
   },
   {
     id: USER_MODULE_ID,
@@ -55,6 +55,7 @@ const modules = [
     activeOn: ['/user', '/user/:id', '/user/:id/edit'],
     availableActions: crud,
     showInNavbar: true,
+    showActions: false,
   },
   {
     id: LEAD_MODULE_ID,
@@ -67,6 +68,7 @@ const modules = [
     activeOn: ['/leads', '/leads/:id', '/leads/:id/edit', '/leads/create'],
     availableActions: crud,
     showInNavbar: true,
+    showActions: true,
   },
   {
     id: CONTACT_MODULE_ID,
@@ -84,6 +86,7 @@ const modules = [
       '/contacts/create',
     ],
     showInNavbar: true,
+    showActions: true,
   },
   {
     id: NOTE_MODULE_ID,
@@ -101,6 +104,7 @@ const modules = [
       '/notes/create',
     ],
     showInNavbar: false,
+    showActions: true,
   },
   {
     id: ATTACHMENT_MODULE_ID,
@@ -118,6 +122,7 @@ const modules = [
       '/attachments/create',
     ],
     showInNavbar: false,
+    showActions: true,
   },
   {
     id: ACCOUNT_MODULE_ID,
@@ -135,6 +140,7 @@ const modules = [
       '/accounts/create',
     ],
     showInNavbar: true,
+    showActions: true,
   },
   {
     id: TASK_MODULE_ID,
@@ -152,6 +158,7 @@ const modules = [
       '/tasks/create',
     ],
     showInNavbar: true,
+    showActions: true,
   },
   {
     id: CALL_MODULE_ID,
@@ -169,6 +176,7 @@ const modules = [
       '/calls/create',
     ],
     showInNavbar: true,
+    showActions: true,
   },
   {
     id: MEETING_MODULE_ID,
@@ -186,6 +194,7 @@ const modules = [
       '/meetings/create',
     ],
     showInNavbar: true,
+    showActions: true,
   },
   {
     id: IMPORT_MODULE_ID,
@@ -198,6 +207,7 @@ const modules = [
     availableActions: ["Leads", "Contacts", "Accounts"],
     activeOn: ['/imports', '/imports/:id'],
     showInNavbar: true,
+    showActions: true,
   },
   {
     id: EMAIL_MODULE_ID,
@@ -234,6 +244,7 @@ const modules = [
     activeOn: ['/google'],
     showInNavbar: false,
     availableActions: ["Google Ads", "Google Calendar"],
+    showActions: false,
   },
   {
     id: LINKEDIN_MODULE_ID,
@@ -246,6 +257,7 @@ const modules = [
     activeOn: ['/linkedin'],
     showInNavbar: false,
     availableActions: ["Linkedin Ads"],
+    showActions: false,
   },
   {
     id: FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID,
@@ -258,6 +270,7 @@ const modules = [
     activeOn: ['/facebook-and-instagram'],
     showInNavbar: false,
     availableActions: ["Facebook & Instagram Ads"],
+    showActions: false,
   },
   {
     id: ROLE_CONFIG_MODULE_ID,
@@ -269,7 +282,8 @@ const modules = [
     sort_order: 16,
     activeOn: ['/role-configs'],
     showInNavbar: false,
-    availableActions: ["Facebook & Instagram Ads"],
+    availableActions: [],
+    showActions: false,
   },
   {
     id: SETTINGS_MODULE_ID,
@@ -295,6 +309,7 @@ const modules = [
     ],
     availableActions: [],
     showInNavbar: true,
+    showActions: false,
   },
 ];
 
@@ -313,6 +328,7 @@ export default async function seedModules() {
         activeOn: module.activeOn,
         showInNavbar: module.showInNavbar,
         availableActions: module.availableActions,
+        showActions: module.showActions,
       },
       create: module,
     });

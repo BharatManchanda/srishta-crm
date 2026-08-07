@@ -7,7 +7,7 @@ export class DashboardService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userHierarchyService: UserHierarchyService,
-  ) {}
+  ) { }
 
   private async getScopeFilter(currentUserId: number) {
     const user = await this.prisma.user.findUnique({
@@ -297,6 +297,64 @@ export class DashboardService {
       trend,
       recentLeads,
       demographics,
+    };
+  }
+
+  public async getOpenActivities(userId: number) {
+    const scopeFilter = await this.getScopeFilter(userId);
+    const now = new Date();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const accessibleUserIds = await this.userHierarchyService.getFamilyUserIds(userId);
+
+    const [tasks, meetings, calls] = await Promise.all([
+      this.prisma.task.findMany({
+        where: {
+          ...scopeFilter,
+          status: { not: 'COMPLETED' },
+          dueDate: { lte: now },
+        },
+        orderBy: { dueDate: 'asc' },
+        take: 10,
+      }),
+
+      await this.prisma.meeting.findMany({
+        where: {
+          createdById: {
+            in: accessibleUserIds,
+          },
+          status: {
+            not: "COMPLETED",
+          },
+          startTime: {
+            lte: new Date(),
+          },
+          endTime: {
+            gte: new Date(),
+          },
+        },
+        orderBy: {
+          startTime: "asc",
+        },
+        take: 10,
+      }),
+
+      this.prisma.call.findMany({
+        where: {
+          ...scopeFilter,
+          status: { not: 'COMPLETED' },
+          callStartTime: { lte: now },
+        },
+        orderBy: { callStartTime: 'asc' },
+        take: 10,
+      }),
+    ]);
+
+    return {
+      tasks,
+      meetings,
+      calls,
+      total: tasks.length + meetings.length + calls.length,
     };
   }
 }

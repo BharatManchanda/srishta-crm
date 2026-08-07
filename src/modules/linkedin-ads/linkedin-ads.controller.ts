@@ -2,19 +2,22 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, Req, R
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { LinkedinAdsService } from './linkedin-ads.service';
 import type { Response } from 'express';
+import { LinkedinAdsPolicy } from './linkedin-ads.policy';
 
 @Controller('linkedin-ads')
 export class LinkedinAdsController {
 
     constructor(
-        private readonly linkedinAdsService: LinkedinAdsService
+        private readonly linkedinAdsService: LinkedinAdsService,
+        private readonly linkedinAdsPolicy: LinkedinAdsPolicy
     ) { }
 
     @UseGuards(AuthGuard)
     @Get('auth')
     async auth(@Req() req: Request) {
-        const userId = req['user'].id;
-        const url = await this.linkedinAdsService.generateAuthUrl(userId);
+        const currentUser = req['user'];
+        await this.linkedinAdsPolicy.authorizeLinkedinAds(currentUser);
+        const url = await this.linkedinAdsService.generateAuthUrl(currentUser.id);
         return { url };
     }
     
@@ -31,29 +34,33 @@ export class LinkedinAdsController {
     @UseGuards(AuthGuard)
     @Get()
     async get(@Query("code") code:string, @Req() req) {
-        const userId = req['user'].id;
-        return this.linkedinAdsService.get(code, userId);
+        const currentUser = req['user'];
+        await this.linkedinAdsPolicy.authorizeLinkedinAds(currentUser);
+        return this.linkedinAdsService.get(code, currentUser.id);
     }
 
     @UseGuards(AuthGuard)
     @Delete(":id")
     async disconnect(@Req() req: Request, @Param('id', ParseIntPipe) id: number) {
-        const userId = req['user'].id;
-        return this.linkedinAdsService.disconnect(id, userId);
+        const currentUser = req['user'];
+        await this.linkedinAdsPolicy.authorizeLinkedinAds(currentUser);
+        return this.linkedinAdsService.disconnect(id, currentUser.id);
     }
 
     @UseGuards(AuthGuard)
     @Get("ad-accounts")
     async getAdAccounts(@Req() req: Request) {
-        const userId = req['user'].id;
-        return await this.linkedinAdsService.getAdAccounts(userId);
+        const currentUser = req['user'];
+        await this.linkedinAdsPolicy.authorizeLinkedinAds(currentUser);
+        return await this.linkedinAdsService.getAdAccounts(currentUser.id);
     }
 
     @UseGuards(AuthGuard)
     @Get("/:adAccountId/get-lead-form")
     async getLeadForms(@Req() req: Request, @Param('adAccountId') adAccountId: string) {
-        const userId = req['user'].id;
-        return await this.linkedinAdsService.getLinkedinLeadForms(adAccountId, userId);
+        const currentUser = req['user'];
+        await this.linkedinAdsPolicy.authorizeLinkedinAds(currentUser);
+        return await this.linkedinAdsService.getLinkedinLeadForms(adAccountId, currentUser.id);
     }
 
     @UseGuards(AuthGuard)

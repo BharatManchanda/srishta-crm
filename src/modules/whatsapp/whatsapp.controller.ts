@@ -5,30 +5,36 @@ import type { Response } from 'express';
 import { SendMessageDto } from './dto/send-message.dto';
 import { WhatsappEntityType } from '@prisma/client';
 import { WhatsappConversationFilterDto } from './dto/conversation-filter.dto';
+import { WhatsappPolicy } from './whatsapp.policy';
 
 @Controller('whatsapp')
 export class WhatsappController {
 
-    constructor(private readonly whatsappService: WhatsappService) { }
+    constructor(
+        private readonly whatsappService: WhatsappService,
+        private readonly whatsappPolicy: WhatsappPolicy,
+    ) { }
 
     @UseGuards(AuthGuard)
     @Get()
     async get(@Req() req: Request) {
-        const userId = req['user'].id;
-        const account = await this.whatsappService.get(userId);
+        const currentUser = req['user'];
+        await this.whatsappPolicy.authorizeWhatsapp(currentUser);
+        const account = await this.whatsappService.get(currentUser.id);
         return account;
     }
 
     @UseGuards(AuthGuard)
     @Get("auth")
-    connect(@Req() req: Request) {
-        const userId = req['user'].id;
+    async connect(@Req() req: Request) {
+        const currentUser = req['user'];
+        await this.whatsappPolicy.authorizeWhatsapp(currentUser);
         const url = `https://www.facebook.com/v23.0/dialog/oauth` +
             `?client_id=${process.env.META_APP_ID}` +
             `&redirect_uri=${process.env.META_REDIRECT_URI}` +
             `&scope=whatsapp_business_management,business_management,whatsapp_business_messaging` +
             `&response_type=code` +
-            `&state=${userId.toString()}`;
+            `&state=${currentUser.id.toString()}`;
         return { url };
     }
 
@@ -48,8 +54,6 @@ export class WhatsappController {
         throw new ForbiddenException();
     }
 
-
-    // Receive messages
     @Post("webhook")
     async receiveWebhook(
         @Body() payload: any
@@ -82,27 +86,31 @@ export class WhatsappController {
         @Query("entityId") entityId: number,
         @Req() req,
     ) {
-        const authUserId = req['user'].id;
-        return this.whatsappService.getMessageList(entityType, Number(entityId), authUserId);
+        const currentUser = req['user'];
+        await this.whatsappPolicy.authorizeWhatsapp(currentUser);
+        return this.whatsappService.getMessageList(entityType, Number(entityId), currentUser.id);
     }
 
     @UseGuards(AuthGuard)
     @Post("send-message")
     async sendMessage(@Req() req: Request, @Body() dto: SendMessageDto) {
-        const userId = req['user'].id;
-        return await this.whatsappService.sendMessage(dto, userId);
+        const currentUser = req['user'];
+        await this.whatsappPolicy.authorizeWhatsapp(currentUser);
+        return await this.whatsappService.sendMessage(dto, currentUser.id);
     }
 
     @Get("get-own-whatasapp-business-account")
     async getOwnWhatasappBusinessAccount(@Req() req: Request) {
-        const userId = 1;
-        return await this.whatsappService.getOwnWhatasappBusinessAccount(userId);
+        const currentUser = req['user'];
+        await this.whatsappPolicy.authorizeWhatsapp(currentUser);
+        return await this.whatsappService.getOwnWhatasappBusinessAccount(currentUser.id);
     }
 
     @UseGuards(AuthGuard)
     @Get("get-conversation")
     async getConversationList(@Query() dto: WhatsappConversationFilterDto, @Req() req: Request) {
-        const userId = req['user'].id;
-        return await this.whatsappService.getConversationList(dto, userId);
+        const currentUser = req['user'];
+        await this.whatsappPolicy.authorizeWhatsapp(currentUser);
+        return await this.whatsappService.getConversationList(dto, currentUser.id);
     }
 }

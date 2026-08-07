@@ -2,17 +2,23 @@ import { Controller, Get, Post, Query, Req, Res, UseGuards, Delete } from '@nest
 import { GoogleCalendarService } from './google-calendar.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import type { Response } from 'express';
+import { GoogleCalendarPolicy } from './google-calendar.policy';
 
 @Controller('google-calendar')
 export class GoogleCalendarController {
-    constructor(private readonly googleService: GoogleCalendarService) { }
+    constructor(
+        private readonly googleService: GoogleCalendarService,
+        private readonly googleCalendarPolicy: GoogleCalendarPolicy,
+    ) { }
 
     @UseGuards(AuthGuard)
     @Get('auth')
     async auth(@Req() req: Request) {
-        const authUserId = req['user'].id;
+        const currentUser = req['user'];
+        await this.googleCalendarPolicy.authorizeGoogleCalendar(currentUser);
+        
         return {
-            url: this.googleService.generateAuthUrl(authUserId),
+            url: this.googleService.generateAuthUrl(currentUser.id),
         };
     }
 
@@ -26,28 +32,32 @@ export class GoogleCalendarController {
     @UseGuards(AuthGuard)
     @Get('events')
     async events(@Req() req: Request) {
-        const authUserId = req['user'].id;
-        return this.googleService.getEvents(authUserId);
+        const currentUser = req['user'];
+        await this.googleCalendarPolicy.authorizeGoogleCalendar(currentUser);
+        return this.googleService.getEvents(currentUser.id);
     }
 
     @UseGuards(AuthGuard)
     @Get()
     async get(@Req() req: Request) {
-        const authUserId = req['user'].id;
-        return this.googleService.getCalendar(authUserId);
+        const currentUser = req['user'];
+        await this.googleCalendarPolicy.authorizeGoogleCalendar(currentUser);
+        return this.googleService.getCalendar(currentUser.id);
     }
 
     @UseGuards(AuthGuard)
     @Post('sync')
     async sync(@Req() req: Request) {
-        const authUserId = req['user'].id;
-        return this.googleService.manualSync(authUserId);
+        const currentUser = req['user'];
+        await this.googleCalendarPolicy.authorizeGoogleCalendar(currentUser);
+        return this.googleService.manualSync(currentUser.id);
     }
 
     @UseGuards(AuthGuard)
     @Delete()
     async disconnect(@Req() req: Request) {
-        const authUserId = req['user'].id;
-        return this.googleService.disconnect(authUserId);
+        const currentUser = req['user'];
+        await this.googleCalendarPolicy.authorizeGoogleCalendar(currentUser);
+        return this.googleService.disconnect(currentUser.id);
     }
 }

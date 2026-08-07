@@ -77,6 +77,7 @@ export class ModuleService {
         path: m.path ?? undefined,
         subItems: [],
         activeOn: m.activeOn ?? [],
+        showActions: m.showActions,
       };
 
       if (m.parent_id) {
@@ -102,7 +103,7 @@ export class ModuleService {
           name: sub.name,
           path: sub.path,
           pro: false,
-          activeOn: sub.activeOn ?? [],
+          activeOn: sub.activeOn ?? [], 
         }));
       }
     });

@@ -332,6 +332,33 @@ enum LeadSyncChainProvider {
   LINKEDIN_ADS
 }
 
+enum FieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  DECIMAL
+  EMAIL
+  PHONE
+  URL
+
+  DATE
+  DATETIME
+  TIME
+
+  BOOLEAN
+
+  SELECT
+  MULTI_SELECT
+
+  RELATION
+
+  ENUM
+
+  JSON
+
+  FILE
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -431,6 +458,8 @@ model User {
   GoogleAdsConnections GoogleAdsConnection[]
 
   LinkedinAccounts  LinkedinAccount[]
+
+  ModuleFields ModuleField[]
 }
 
 model OtpVerification {
@@ -496,6 +525,54 @@ model Module {
   showInNavbar Boolean @default(true)
 
   tableViews UserTableView[]
+  
+  showActions      Boolean  @default(false)
+
+  fields      ModuleField[]
+  rules       ValidationRule[]
+
+}
+
+model ModuleField {
+  id Int @id @default(autoincrement())
+
+  createdById Int
+  createdBy User @relation(fields:[createdById], references: [id])
+
+  moduleId Int
+  module Module @relation(fields:[moduleId], references:[id])
+
+  name String
+  label String
+
+  type FieldType
+
+  required Boolean @default(false)
+
+  options Json?
+
+  createdAt DateTime @default(now())
+
+  @@unique([moduleId, name, createdById])
+}
+
+model ValidationRule {
+  id String @id @default(uuid())
+
+  moduleId Int
+  module Module @relation(fields:[moduleId], references:[id])
+
+  name String
+
+  description String?
+
+  condition Json
+
+  errorMessage String
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
 }
 
 model RolePermission {
@@ -527,9 +604,9 @@ model Lead {
   
 
   // Basic Information
-  name String
+  name String?
   title String?
-  email String?   @unique
+  email String?
   phone String?
   website String?
 

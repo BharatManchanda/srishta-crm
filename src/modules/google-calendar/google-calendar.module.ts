@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtModule } from '../jwt/jwt.module';
 import { BullModule } from '@nestjs/bullmq';
 import { GoogleCalendarSyncProcessor } from './google-calendar-sync.processor';
+import { GoogleCalendarPolicy } from './google-calendar.policy';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { GoogleCalendarSyncProcessor } from './google-calendar-sync.processor';
     GoogleCalendarService,
     PrismaService,
     GoogleCalendarSyncProcessor,
+    GoogleCalendarPolicy,
   ],
   exports: [GoogleCalendarService, BullModule],
 })

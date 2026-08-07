@@ -1,0 +1,102 @@
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { GOOGLE_MODULE_ID } from 'src/seeders/module.seeder';
+
+@Injectable()
+export class GoogleAdsPolicy {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private async hasGoogleAdsAccess(roleId: number) {
+    const permission = await this.prisma.rolePermission.findFirst({
+      where: {
+        roleId,
+        moduleId: GOOGLE_MODULE_ID,
+        isAllow: true,
+      },
+      select: {
+        actions: true,
+      },
+    });
+    if (!permission?.actions) {
+      return false;
+    }
+    const actions = permission.actions as string[];
+    return actions.includes("Google Ads");
+  }
+
+  private async getRootUserId(userId: number): Promise<number> {
+
+    let user = await this.prisma.user.findUnique({
+      where:{
+        id:userId
+      },
+      select:{
+        id:true,
+        parentId:true
+      }
+    });
+
+    while(user?.parentId){
+      user = await this.prisma.user.findUnique({
+        where:{
+          id:user.parentId
+        },
+        select:{
+          id:true,
+          parentId:true
+        }
+      });
+    }
+
+    return user!.id;
+  }
+
+  private async getAccessibleUserIds(userId:number){
+    const rootId = await this.getRootUserId(userId);
+    const users = await this.prisma.user.findMany({
+      select:{
+        id:true,
+        parentId:true
+      }
+    });
+
+    const allowedIds=[rootId];
+
+    const collectChildren=(parentId:number)=>{
+      const children = users.filter(
+        user=>user.parentId===parentId
+      );
+
+      for(const child of children){
+        allowedIds.push(child.id);
+        collectChildren(child.id);
+      }
+    };
+
+    collectChildren(rootId);
+
+    return [...new Set(allowedIds)];
+  }
+
+  async canAccessGoogleAds(currentUser:any){
+    return this.hasGoogleAdsAccess(currentUser.roleId);
+  }
+  async authorizeGoogleAds(currentUser:any){
+    const allowed = await this.canAccessGoogleAds(currentUser);
+
+    if(!allowed){
+      throw new ForbiddenException('You do not have access to Google Ads');
+    }
+    return true;
+  }
+
+  async getLeadScope(currentUser:any){
+    return this.getAccessibleUserIds(
+      currentUser.id
+    );
+  }
+}

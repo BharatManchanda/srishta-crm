@@ -34,6 +34,7 @@ import { LeadSyncChainModule } from './modules/lead-sync-chain/lead-sync-chain.m
 import { GoogleAdsModule } from './modules/google-ads/google-ads.module';
 import { CronjobModule } from './common/cronjob/cronjob.module';
 import { LinkedinAdsModule } from './modules/linkedin-ads/linkedin-ads.module';
+import { ModuleFieldModule } from './modules/module-field/module-field.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { LinkedinAdsModule } from './modules/linkedin-ads/linkedin-ads.module';
     GoogleAdsModule,
     CronjobModule,
     LinkedinAdsModule,
+    ModuleFieldModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

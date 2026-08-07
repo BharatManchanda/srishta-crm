@@ -8,6 +8,9 @@ import { LeadPolicy } from './lead.policy';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
 import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
+import { ModuleFieldService } from '../module-field/module-field.service';
+import { ModuleEnum } from '../module-field/dto/module-field-create.dto';
+import { LEAD_MODULE_ID } from 'src/seeders/module.seeder';
 
 
 @UseGuards(AuthGuard)
@@ -16,10 +19,13 @@ export class LeadController {
   constructor(
     private readonly leadService: LeadService,
     private readonly leadPolicy: LeadPolicy,
-  ) { }
-
+    private readonly moduleFieldService: ModuleFieldService,
+  ) {
+  }
+  
   @Get()
   async getList(@Query() dto: LeadFilterDto, @Req() req: Request) {
+    await this.moduleFieldService.createDefault(LEAD_MODULE_ID, ModuleEnum.LEAD, 1);
     await this.leadPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
     return this.leadService.getList(dto, authUserId);

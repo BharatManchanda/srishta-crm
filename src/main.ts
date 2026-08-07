@@ -12,6 +12,15 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
+    }),
+  );
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
 
       exceptionFactory(errors) {
         const formattedErrors = {};

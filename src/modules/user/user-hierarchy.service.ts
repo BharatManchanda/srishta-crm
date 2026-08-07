@@ -69,4 +69,36 @@ export class UserHierarchyService {
 
     return [...result];
   }
+
+  async getMainParent(userId: number) {
+    let currentUserId = userId;
+    while (true) {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: currentUserId,
+        },
+        select: {
+          id: true,
+          name: true,
+          parentId: true,
+        },
+      });
+
+
+      if (!user) {
+        return null;
+      }
+
+
+      // reached root parent
+      if (!user.parentId) {
+        return user;
+      }
+
+
+      currentUserId = user.parentId;
+
+    }
+
+  }
 }

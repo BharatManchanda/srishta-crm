@@ -2,39 +2,44 @@ import { Body, Controller, ForbiddenException, Get, Param, ParseIntPipe, Post, Q
 import { FacebookService } from './facebook.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import type { Response } from 'express';
+import { FacebookPolicy } from './facebook.policy';
 
 @Controller('facebook')
 export class FacebookController {
-    constructor(private readonly facebookService: FacebookService) { }
+    constructor(
+        private readonly facebookService: FacebookService,
+        private readonly facebookPolicy: FacebookPolicy,
+    ) { }
 
     @UseGuards(AuthGuard)
     @Get()
     async get(@Req() req: Request) {
-        const userId = req['user'].id;
-        const account = await this.facebookService.get(userId);
+        const currentUser = req['user'];
+        await this.facebookPolicy.authorizeFacebook(currentUser);
+        const account = await this.facebookService.get(currentUser.id);
         return account;
     }
 
     @UseGuards(AuthGuard)
     @Get("auth")
-    connect(@Req() req: Request) {
-        const userId = req['user'].id;
+    async connect(@Req() req: Request) {
+        const currentUser = req['user'];
+        await this.facebookPolicy.authorizeFacebook(currentUser);
+
         const url = `https://www.facebook.com/v23.0/dialog/oauth` +
             `?client_id=${process.env.META_APP_ID}` +
             `&redirect_uri=${process.env.META_FACEBOOK_REDIRECT_URI}` +
             `&scope=pages_manage_ads,pages_manage_metadata,pages_read_engagement,pages_read_user_content,read_insights,pages_manage_posts,pages_manage_engagement,leads_retrieval,business_management,ads_read,ads_management` +
             `&response_type=code` +
-            `&state=${userId.toString()}`;
+            `&state=${currentUser.id.toString()}`;
         return { url };
     }
 
     @Get("callback")
     async callback(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
         try {
-            console.log("Facebook OAuth callback hit with code:", code, "state/userId:", state);
             const userId = parseInt(state, 10);
             await this.facebookService.callback(userId, code);
-            console.log("WhatsApp successfully connected for user:", userId);
             return res.redirect(`${process.env.FRONTEND_URL}/connects`);
         } catch (error) {
             console.error("Error in WhatsApp callback:", error);
@@ -46,8 +51,9 @@ export class FacebookController {
     @UseGuards(AuthGuard)
     @Get("ad-accounts")
     async getAdAccounts(@Req() req: Request) {
-        const userId = req['user'].id;
-        const account = await this.facebookService.get(userId);
+        const currentUser = req['user'];
+        await this.facebookPolicy.authorizeFacebook(currentUser);
+        const account = await this.facebookService.get(currentUser.id);
         if (!account) {
             throw new ForbiddenException("Account not found");
         }
@@ -56,15 +62,18 @@ export class FacebookController {
 
     @UseGuards(AuthGuard)
     @Get("pages/:facebookAccountId")
-    async pages(@Param('facebookAccountId', ParseIntPipe) facebookAccountId: number,) {
+    async pages(@Param('facebookAccountId', ParseIntPipe) facebookAccountId: number, @Req() req: Request) {
+        const currentUser = req['user'];
+        await this.facebookPolicy.authorizeFacebook(currentUser);
         return await this.facebookService.getAccountPages(facebookAccountId);
     }
 
     @UseGuards(AuthGuard)
     @Get("leadgen-forms/:pageId")
     async getLeadgenForms(@Param('pageId', ParseIntPipe) pageId: number, @Req() req: Request) {
-        const userId = req['user'].id;
-        return await this.facebookService.getLeadgenForms(pageId, userId);
+        const currentUser = req['user'];
+        await this.facebookPolicy.authorizeFacebook(currentUser);
+        return await this.facebookService.getLeadgenForms(pageId, currentUser.id);
     }
 
     @Get("webhook")
@@ -76,7 +85,6 @@ export class FacebookController {
         const VERIFY_TOKEN = process.env.META_FACEBOOK_VERIFY_TOKEN;
 
         if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-            console.log("Facebook webhook verified");
             return challenge;
         }
 
