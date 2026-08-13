@@ -48,7 +48,7 @@ export class BulkImportProcessor extends WorkerHost {
                     status: ImportStatus.PROCESSING,
                 },
             });
-            const rows = await this.csvParserService.parse(importJob.storageKey);
+            const rows = await this.csvParserService.parse(importJob.storageKey, importJob.mimeType);
             this.logger.log(`Import Job ${importJob.id} started processing.`);
 
             let result = {
@@ -107,8 +107,8 @@ export class BulkImportProcessor extends WorkerHost {
                 );
 
                 await this.notificationService.create({
-                    title: 'CSV Import Completed',
-                    message: `The CSV import job for ${importJob.entity.toLowerCase()} completed successfully. Success: ${result.success}, Failed: ${result.failed}.`,
+                    title: 'Bulk Import Completed',
+                    message: `The bulk import job for ${importJob.entity.toLowerCase()} completed successfully. Success: ${result.success}, Failed: ${result.failed}.`,
                     type: NotificationType.SUCCESS,
                     module: 'IMPORT',
                     entityId: importJob.id,
@@ -151,8 +151,8 @@ export class BulkImportProcessor extends WorkerHost {
                 );
 
                 await this.notificationService.create({
-                    title: 'CSV Import Failed',
-                    message: `The CSV import job for ${importJob.entity.toLowerCase()} failed due to an error: ${error instanceof Error ? error.message : 'Unknown error'}.`,
+                    title: 'Bulk Import Failed',
+                    message: `The bulk import job for ${importJob.entity.toLowerCase()} failed due to an error: ${error instanceof Error ? error.message : 'Unknown error'}.`,
                     type: NotificationType.ERROR,
                     module: 'IMPORT',
                     entityId: importJob.id,
