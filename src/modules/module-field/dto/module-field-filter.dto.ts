@@ -1,10 +1,11 @@
 import { IsBoolean, IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 import { FieldType } from '@prisma/client';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
 
 export class ModuleFieldFilterDto extends PaginationDto{
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   moduleId?: number;
 

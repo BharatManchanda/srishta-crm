@@ -15,7 +15,11 @@ export class PaginationDto {
   perPage?: number = 10;
 
   @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => {
+    if (value === 'false') return false;
+    if (value === 'true') return true;
+    return value;
+  })
   @IsBoolean()
   paginate?: boolean;
 }

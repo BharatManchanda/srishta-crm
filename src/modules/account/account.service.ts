@@ -27,7 +27,7 @@ export class AccountService {
     private readonly whatsappService: WhatsappService,
   ) { }
 
-  async getList(dto: AccountFilterDto, currentUserId: number) {
+  async getList(dto: any, currentUserId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: currentUserId },
       select: { accessLevel: true },
@@ -50,13 +50,12 @@ export class AccountService {
       ];
     }
 
-    const orderBy = dto.sortBy
-      ? { [dto.sortBy]: dto.sortOrder || 'desc' }
-      : { id: 'desc' };
+    const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
 
     const result = await this.paginationService.paginate(this.prisma.account, {
       page: dto.page,
       perPage: dto.perPage,
+      paginate: dto?.paginate,
       where,
       include: {
         billingAddress: true,

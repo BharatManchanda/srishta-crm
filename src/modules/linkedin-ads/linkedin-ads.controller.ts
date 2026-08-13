@@ -3,6 +3,7 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { LinkedinAdsService } from './linkedin-ads.service';
 import type { Response } from 'express';
 import { LinkedinAdsPolicy } from './linkedin-ads.policy';
+import * as crypto from 'crypto';
 
 @Controller('linkedin-ads')
 export class LinkedinAdsController {
@@ -63,9 +64,101 @@ export class LinkedinAdsController {
         return await this.linkedinAdsService.getLinkedinLeadForms(adAccountId, currentUser.id);
     }
 
+    // @UseGuards(AuthGuard)
+    // @Post('webhook')
+    // async receiveWebhook(@Body() body: any) {
+    //     console.log('LinkedIn webhook:', body);
+
+    //     return {
+    //     success: true,
+    //     };
+    // }
+
+    // @Get('webhook')
+    // async validateWebhook(@Query('challengeCode') challengeCode: string) {
+    //     const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+    //     console.log(challengeCode,":::challengeCode")
+    //     if (!challengeCode) {
+    //         return {
+    //             error: 'challengeCode is required',
+    //         };
+    //     }
+
+    //     if (!clientSecret) {
+    //         throw new Error('LINKEDIN_CLIENT_SECRET is not configured');
+    //     }
+
+    //     const challengeResponse = crypto
+    //         .createHmac('sha256', clientSecret)
+    //         .update(challengeCode, 'utf8')
+    //         .digest('hex');
+
+    //     return {
+    //         challengeCode,
+    //         challengeResponse,
+    //     };
+    // }
+
     @UseGuards(AuthGuard)
-    @Post("/webhook")
-    async webhook(@Body() dto: any) {
-        return await this.linkedinAdsService.webhook(dto);
+    @Get("/:formId/lead-form-fields")
+    async linkedinLeadFormFields(@Req() req: Request, @Param('formId') formId: string) {
+        return await this.linkedinAdsService.getLinkedinLeadFormFields(formId, req['user'].id);
+    }
+
+
+    @Post('webhook')
+    async receiveWebhook(@Body() body: any) {
+        console.log('LinkedIn webhook:', JSON.stringify(body, null, 2));
+
+        // Ignore anything other than lead notifications
+        if (body?.type !== 'LEAD_ACTION') {
+            return { success: true };
+        }
+
+        // Handle deleted lead
+        if (body.leadAction === 'DELETED') {
+            // await this.linkedinAdsService.handleLeadDeleted(body);
+
+            return { success: true };
+        }
+
+        // Handle created lead
+        if (body.leadAction === 'CREATED') {
+            await this.linkedinAdsService.handleLeadCreated(body);
+            return { success: true };
+        }
+
+        return {
+            success: true,
+        };
+    }
+
+    @Get('webhook')
+    async validateWebhook(
+        @Query('challengeCode') challengeCode: string,
+    ) {
+        const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+
+        console.log('challengeCode:', challengeCode);
+
+        if (!challengeCode) {
+            return {
+                error: 'challengeCode is required',
+            };
+        }
+
+        if (!clientSecret) {
+            throw new Error('LINKEDIN_CLIENT_SECRET is not configured');
+        }
+
+        const challengeResponse = crypto
+            .createHmac('sha256', clientSecret)
+            .update(challengeCode, 'utf8')
+            .digest('hex');
+
+        return {
+            challengeCode,
+            challengeResponse,
+        };
     }
 }

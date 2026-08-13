@@ -1,8 +1,6 @@
 import { BadRequestException, ForbiddenException, Get, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ModuleEnum, ModuleFieldCreateDto } from './dto/module-field-create.dto';
-import { ModuleFieldUpdateDto } from './dto/module-field-update.dto';
-import { ModuleFieldFilterDto } from './dto/module-field-filter.dto';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { ModuleFieldFilterBuilder } from './module-field-filter.builder';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
