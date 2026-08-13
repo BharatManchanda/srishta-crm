@@ -26,8 +26,6 @@ enum OtpPurpose {
 enum UserStatus {
   ACTIVE
   INACTIVE
-  SUSPENDED
-  INVITED
 }
 
 enum LeadStatus {
@@ -364,7 +362,7 @@ model User {
 
   name      String?
   email     String   @unique
-  phone     String?  @unique
+  phone     String?
   password  String?
 
   googleId  String?        @unique
@@ -383,7 +381,6 @@ model User {
   instagramLink String?
   websiteLink String?
 
-
   parentId  Int?
   parent    User?    @relation("UserTree", fields: [parentId], references: [id])
   children  User[]   @relation("UserTree")
@@ -401,6 +398,26 @@ model User {
   isEmailVerified Boolean @default(false)
 
   status UserStatus   @default(INACTIVE)
+
+  companyName String?
+
+  companyWebsite String?
+
+  industry String?
+
+  companyPhone String?
+
+  companyEmail String?
+
+  employees Int?
+
+  companyCountry String?
+
+  companyCity String?
+
+  companyPincode Int?
+
+  annualRevenue Decimal? @db.Decimal(15, 2)
 
   tableViews UserTableView[]
 
@@ -551,6 +568,8 @@ model ModuleField {
 
   options Json?
 
+  canEdit Boolean @default(false)
+
   createdAt DateTime @default(now())
 
   @@unique([moduleId, name, createdById])
@@ -601,7 +620,6 @@ model Lead {
   id               Int       @id @default(autoincrement())
   createdById Int
   createdBy   User @relation("LeadCreator", fields: [createdById], references: [id])
-  
 
   // Basic Information
   name String?
@@ -696,10 +714,10 @@ model Contact {
   createdById Int
   createdBy   User  @relation("ContactCreator", fields: [createdById], references: [id])
 
-  name         String
-  title         String
-  email             String?   @unique
-  phone             String?   @unique
+  name         String?
+  title         String?
+  email             String?
+  phone             String?
 
   source LeadSource?
   
@@ -762,14 +780,14 @@ model Account {
   createdBy       User     @relation("AccountCreator", fields: [createdById], references: [id])
 
   // Basic Information
-  accountName     String
+  accountName     String?
   accountSite     String?
 
   parentAccountId Int?
   parentAccount   Account? @relation("ParentAccount", fields: [parentAccountId], references: [id])
   childAccounts   Account[] @relation("ParentAccount")
 
-  accountNumber   String?  @unique
+  accountNumber   String?
 
   accountType     AccountType?
 
@@ -877,11 +895,11 @@ model Task {
   createdById Int
   createdBy   User @relation("TaskCreator", fields: [createdById], references: [id])
 
-  subject String
+  subject String?
   dueDate DateTime? @db.Date
 
-  priority PriorityType
-  status TaskStatus
+  priority PriorityType?
+  status TaskStatus?
 
   description String?
 
@@ -905,7 +923,7 @@ model Call {
   createdById Int
   createdBy   User @relation("CallCreator", fields: [createdById], references: [id])
 
-  subject String
+  subject String?
 
   purpose CallPurpose?
 
@@ -941,7 +959,7 @@ model Meeting {
   createdById Int
   createdBy   User @relation("MeetingCreator", fields: [createdById], references: [id])
 
-  title String
+  title String?
   description String?  @db.Text
 
   location String?
@@ -949,8 +967,8 @@ model Meeting {
 
   status MeetingStatus @default(SCHEDULED)
 
-  startTime   DateTime
-  endTime     DateTime
+  startTime   DateTime?
+  endTime     DateTime?
 
   participants MeetingParticipant[]
 
@@ -965,15 +983,13 @@ model Meeting {
 model MeetingParticipant {
   id Int @id @default(autoincrement())
 
-  meetingId Int
-  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  meetingId Int?
+  meeting Meeting? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   participantType MeetingParticipantType
 
-  // LEAD / CONTACT / ACCOUNT / USER
   participantId Int?
 
-  // Manual participant
   name String?
   email String?
 

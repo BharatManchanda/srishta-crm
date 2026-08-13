@@ -227,7 +227,7 @@ export class ContactService {
       },
     });
   }
-  async get(id: number) {
+  async get(id: number, authUserId: number) {
     const contact = await this.prisma.contact.findFirst({
       where: {
         id: id,
@@ -252,6 +252,16 @@ export class ContactService {
       },
     });
 
+    let ownerId: number | undefined = undefined;
+    const user = await this.prisma.user.findUnique({
+      where: { id: authUserId },
+      select: { accessLevel: true },
+    })
+
+    if (user?.accessLevel === 'STANDARD') {
+      ownerId = authUserId;
+    }
+
     if (!contact) {
       throw new NotFoundException('Contact not found');
     }
@@ -259,8 +269,8 @@ export class ContactService {
     const [notes, attachments, tasks, calls, meetings, emails] = await Promise.all([
       this.prisma.note.count({ where: { entityType: 'CONTACT', entityId: id } }),
       this.prisma.attachment.count({ where: { entityType: 'CONTACT', entityId: id } }),
-      this.prisma.task.count({ where: { entityType: 'CONTACT', entityId: id } }),
-      this.prisma.call.count({ where: { entityType: 'CONTACT', entityId: id } }),
+      this.prisma.task.count({ where: { entityType: 'CONTACT', entityId: id, ownerId } }),
+      this.prisma.call.count({ where: { entityType: 'CONTACT', entityId: id, ownerId } }),
       this.prisma.meeting.count({ where: { entityType: 'CONTACT', entityId: id } }),
       this.prisma.email.count({ where: { entityType: 'CONTACT', entityId: id } }),
     ]);
@@ -291,9 +301,9 @@ export class ContactService {
         data: {
           ...contactData,
           createdById: authUserId,
-          ownerId: dto.ownerId || authUserId,
-          mailingAddressId: mailAddressRecord?.id,
-          otherAddressId: otherAddressRecord?.id,
+          ownerId: dto.ownerId ?? authUserId,
+          mailingAddressId: mailAddressRecord?.id ?? null,
+          otherAddressId: otherAddressRecord?.id ?? null,
           dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
         },
         include: {
@@ -332,7 +342,7 @@ export class ContactService {
         });
       }
 
-      if (contact.owner && contact.owner.phone) {
+      if (contact?.owner && contact?.owner.phone) {
         await this.whatsappService.sendMessage({
           message: `Contact "${contact.name}" has been assigned to you.`,
           entityType: WhatsappEntityType.CONTACT,

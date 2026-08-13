@@ -17,6 +17,7 @@ export class CallUpdateDto {
   subject?: string;
 
   @IsOptional()
+  @IsNotEmpty()
   @IsEnum(CallPurpose)
   purpose?: CallPurpose;
 
@@ -29,6 +30,7 @@ export class CallUpdateDto {
   description?: string;
 
   @IsOptional()
+  @IsNotEmpty()
   @IsEnum(CallResult)
   result?: CallResult;
 

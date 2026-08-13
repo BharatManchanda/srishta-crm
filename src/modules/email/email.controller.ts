@@ -9,6 +9,7 @@ import { EmailFilterDto } from './dto/email-filter.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { ActivityEntity, EmailEntityType } from '@prisma/client';
 import { PaginationService } from 'src/common/pagination/pagination.service';
+import { UserPolicy } from '../user/user.policy';
 
 @UseGuards(AuthGuard)
 @Controller('email')
@@ -18,6 +19,7 @@ export class EmailController {
     private readonly prisma: PrismaService,
     private readonly activityService: ActivityService,
     private readonly paginationService: PaginationService,
+    private readonly userPolicy: UserPolicy,
   ) {}
 
   @Get('view-setting')
@@ -33,12 +35,34 @@ export class EmailController {
   }
 
   @Get()
-  async getEmails(@Query() dto: EmailFilterDto) {
+  async getEmails(@Query() dto: EmailFilterDto, @Req() req: Request) {
+    const authUserId = req['user'].id;
+    const user = await this.prisma.user.findUnique({
+      where: { id: authUserId },
+      select: { accessLevel: true },
+    });
+
+    let whereId: any = { createdById: undefined };
+    if (user?.accessLevel === 'STANDARD') {
+      whereId = { createdById: authUserId };
+    } else {
+      const accessibleUserIds = await this.userPolicy.getAccessibleUserIds(authUserId);
+      if (accessibleUserIds.length === 0) {
+        return { data: [], total: 0 };
+      }
+      whereId = {
+        createdById: {
+          in: accessibleUserIds,
+        },
+      }
+    }
+
     const orderBy = { id: 'desc' as const };
     const where: any = {
       entityType: dto.entityType || undefined,
       entityId: dto.entityId || undefined,
       status: dto.status || undefined,
+      createdById: whereId.createdById,
     };
 
     if (dto.search) {

@@ -14,6 +14,8 @@ import { AiModule } from '../ai/ai.module';
 import { EmailModule } from '../email/email.module';
 import { NotificationModule } from '../notification/notification.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
+import { ModuleFieldService } from '../module-field/module-field.service';
+import { ModuleFieldFilterBuilder } from '../module-field/module-field-filter.builder';
 
 @Module({
   imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, EmailModule, NotificationModule, WhatsappModule],
@@ -24,6 +26,8 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     MeetingFilterBuilder,
     MeetingPolicy,
     UserPolicy,
+    ModuleFieldService,
+    ModuleFieldFilterBuilder,
   ],
   controllers: [MeetingController],
 })

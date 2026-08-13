@@ -21,12 +21,9 @@ export class GoogleLeadSyncService {
         for (const connection of connections) {
             try {
                 // const leads = await this.googleAdsService.getLeads(connection);
-                // console.log(leads,"::leads")
             } catch (e) {
                 // console.log(e);
             }
         }
-
-        // console.log("Syncing leads");7464584745
     }
 }

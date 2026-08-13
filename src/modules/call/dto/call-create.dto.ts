@@ -11,8 +11,8 @@ export class CallCreateDto {
   @IsInt()
   entityId?: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   subject: string;
 
   @IsOptional()

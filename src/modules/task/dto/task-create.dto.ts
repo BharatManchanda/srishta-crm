@@ -11,8 +11,8 @@ export class TaskCreateDto {
   @IsInt()
   entityId?: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   subject: string;
 
   @IsOptional()

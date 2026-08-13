@@ -168,7 +168,7 @@ export class TaskService {
     this.aiService.create({
       entityType: AiEntityType.TASK,
       entityId: newTask.id,
-      title: newTask.subject,
+      title: newTask.subject ?? "Task",
       content: taskToDocument(newTask.description),
     }, authUserId);
 
@@ -247,7 +247,7 @@ export class TaskService {
     await this.aiService.update({
       entityType: AiEntityType.TASK,
       entityId: updatedTask.id,
-      title: updatedTask.subject,
+      title: updatedTask.subject ?? "",
       content: taskToDocument(updatedTask),
     }, authUserId);
 

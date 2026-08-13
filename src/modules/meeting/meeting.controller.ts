@@ -8,6 +8,9 @@ import { MeetingPolicy } from './meeting.policy';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
 import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
+import { ModuleFieldService } from '../module-field/module-field.service';
+import { MEETING_MODULE_ID } from 'src/seeders/module.seeder';
+import { ModuleEnum } from '../module-field/dto/module-field-create.dto';
 
 @UseGuards(AuthGuard)
 @Controller('meeting')
@@ -15,17 +18,20 @@ export class MeetingController {
   constructor(
     private readonly meetingService: MeetingService,
     private readonly meetingPolicy: MeetingPolicy,
+    private readonly moduleFieldService: ModuleFieldService,
   ) {}
 
   @Get()
   async getList(@Query() dto: MeetingFilterDto, @Req() req: Request) {
     await this.meetingPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
+    await this.moduleFieldService.createDefault(MEETING_MODULE_ID, ModuleEnum.MEETING, authUserId);
     return this.meetingService.getList(dto, authUserId);
   }
 
   @Post()
   async create(@Body() dto: MeetingCreateDto, @Req() req: Request) {
+    await this.moduleFieldService.validateRequiredFields(MEETING_MODULE_ID, req['user'].id, dto);
     await this.meetingPolicy.authorize(req['user'], 'create');
     const authUserId = req['user'].id;
     return this.meetingService.create(dto, authUserId);

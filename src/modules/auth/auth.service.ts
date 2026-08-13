@@ -56,7 +56,6 @@ export class AuthService {
       throw new BadRequestException('Account is deactivated');
     }
     const isPasswordValid = await bcrypt.compare(dto.password, existingUser.password ?? "");
-    console.log(isPasswordValid, "::isPasswordValid")
     if (!isPasswordValid) {
       throw new BadRequestException('Invalid credentials');
     }
@@ -83,8 +82,20 @@ export class AuthService {
         OR: [{ email: dto.email }],
       },
     });
+
     if (existingUser) {
-      throw new BadRequestException('User already exists');
+      throw new BadRequestException('User email already exists');
+    }
+
+    if (dto.phone) {
+      const existingUserPhone = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ phone: dto.phone }],
+        },
+      });
+      if (existingUserPhone) {
+        throw new BadRequestException('User phone already exists');
+      }
     }
 
     let roleId = dto.roleId;
@@ -124,6 +135,7 @@ export class AuthService {
         linkdinLink: dto.linkdinLink,
         instagramLink: dto.instagramLink,
         websiteLink: dto.websiteLink,
+        isEmailVerified: true,
       },
     });
 
@@ -158,6 +170,7 @@ export class AuthService {
         id: existingUser.id,
       },
       data: {
+        ...dto,
         name: dto.name,
         phone: dto.phone,
         bio: dto.bio,
@@ -198,12 +211,11 @@ export class AuthService {
     if (purpose === OtpPurpose.EMAIL_VERIFICATION) {
       const user = await this.prisma.user.findUnique({
         where: {
-          email,
-          isEmailVerified: true,
+          email
         },
       });
       if (user) {
-        throw new BadRequestException('User with this email already exists and is verified');
+        throw new BadRequestException('User with this email already exists');
       }
     } else if (purpose === OtpPurpose.FORGOT_PASSWORD) {
       const user = await this.prisma.user.findUnique({

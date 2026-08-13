@@ -20,6 +20,9 @@ import { ContactUpdateDto } from './dto/contact-update.dto';
 import { ContactPolicy } from './contact.policy';
 import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
 import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
+import { ModuleFieldService } from '../module-field/module-field.service';
+import { ModuleEnum } from '../module-field/dto/module-field-create.dto';
+import { CONTACT_MODULE_ID } from 'src/seeders/module.seeder';
 
 
 @UseGuards(AuthGuard)
@@ -28,17 +31,20 @@ export class ContactController {
   constructor(
     private readonly contactService: ContactService,
     private readonly contactPolicy: ContactPolicy,
+    private readonly moduleFieldService: ModuleFieldService,
   ) {}
 
   @Get()
   async getList(@Query() dto: ContactFilterDto, @Req() req: Request) {
     await this.contactPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
+    await this.moduleFieldService.createDefault(CONTACT_MODULE_ID, ModuleEnum.CONTACT, authUserId);
     return this.contactService.getList(dto, authUserId);
   }
 
   @Post()
   async create(@Body() dto: ContactCreateDto, @Req() req: Request) {
+    await this.moduleFieldService.validateRequiredFields(CONTACT_MODULE_ID, req['user'].id, dto);
     await this.contactPolicy.authorize(req['user'], 'create');
     const authUserId = req['user'].id;
     return this.contactService.create(dto, authUserId);
@@ -59,7 +65,8 @@ export class ContactController {
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.contactPolicy.authorize(req['user'], 'view', id);
-    return this.contactService.get(id);
+    const authUserId = req['user'].id;
+    return this.contactService.get(id, authUserId);
   }
 
   @Put(':id')

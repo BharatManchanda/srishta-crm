@@ -19,6 +19,9 @@ import { TaskUpdateDto } from './dto/task-update.dto';
 import { TaskPolicy } from './task.policy';
 import { BulkTaskCreateDto } from './dto/bulk-task-create.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { TASK_MODULE_ID } from 'src/seeders/module.seeder';
+import { ModuleEnum } from '../module-field/dto/module-field-create.dto';
+import { ModuleFieldService } from '../module-field/module-field.service';
 
 
 @UseGuards(AuthGuard)
@@ -27,6 +30,7 @@ export class TaskController {
   constructor(
     private readonly taskService: TaskService,
     private readonly taskPolicy: TaskPolicy,
+    private readonly moduleFieldService: ModuleFieldService,
   ) {}
 
   @Get('view-setting')
@@ -45,11 +49,13 @@ export class TaskController {
   async getList(@Query() dto: TaskFilterDto, @Req() req: Request) {
     await this.taskPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
+    await this.moduleFieldService.createDefault(TASK_MODULE_ID, ModuleEnum.TASK, authUserId);
     return this.taskService.getList(dto, authUserId);
   }
 
   @Post()
   async create(@Body() dto: TaskCreateDto, @Req() req: Request) {
+    await this.moduleFieldService.validateRequiredFields(TASK_MODULE_ID, req['user'].id, dto);
     await this.taskPolicy.authorize(req['user'], 'create');
     const authUserId = req['user'].id;
     return this.taskService.create(dto, authUserId);

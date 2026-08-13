@@ -118,7 +118,6 @@ export class WhatsappService {
     }
 
     async sendMessage(dto: SendMessageDto, userId: number) {
-        // return true;
         const connection = await this.prisma.whatsappConnection.findUnique({
             where: {
                 connectedById: userId,
@@ -129,7 +128,7 @@ export class WhatsappService {
         });
 
         if (!connection) {
-            return true;
+            return true
             throw new BadRequestException("WhatsApp is not connected.");
         }
 
@@ -207,6 +206,8 @@ export class WhatsappService {
 
         const result = await response.json();
         if (result.error) {
+            console.log(result.error.message,"::result.error.message")
+            return true;
             throw new BadRequestException(result.error.message);
         }
 
@@ -296,6 +297,7 @@ export class WhatsappService {
         });
 
         if (!connection) {
+            return true
             throw new BadRequestException("WhatsApp is not connected.");
         }
 

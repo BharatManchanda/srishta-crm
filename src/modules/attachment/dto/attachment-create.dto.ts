@@ -43,6 +43,10 @@ export class AttachmentCreateDto {
   @Min(1)
   size?: number;
 
+  @ValidateIf((o) => o.type === AttachmentType.FILE)
+  @IsString()
+  storageKey?: string;
+
   @IsOptional()
   @IsString()
   title?: string;

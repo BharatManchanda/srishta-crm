@@ -21,6 +21,7 @@ export class LeadCreateDto {
   @IsString()
   title: string;
 
+  @IsOptional()
   @IsString()
   email: string;
 

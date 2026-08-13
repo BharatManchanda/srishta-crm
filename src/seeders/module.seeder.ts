@@ -207,7 +207,7 @@ const modules = [
     availableActions: ["Leads", "Contacts", "Accounts"],
     activeOn: ['/imports', '/imports/:id'],
     showInNavbar: true,
-    showActions: true,
+    showActions: false,
   },
   {
     id: EMAIL_MODULE_ID,

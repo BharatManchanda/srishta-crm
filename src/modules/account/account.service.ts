@@ -216,7 +216,7 @@ export class AccountService {
     });
   }
 
-  async get(id: number) {
+  async get(id: number, authUserId: number) {
     const account = await this.prisma.account.findFirst({
       where: {
         id: id,
@@ -243,6 +243,16 @@ export class AccountService {
       },
     });
 
+    let ownerId: number | undefined = undefined;
+    const user = await this.prisma.user.findUnique({
+      where: { id: authUserId },
+      select: { accessLevel: true },
+    })
+
+    if (user?.accessLevel === 'STANDARD') {
+      ownerId = authUserId;
+    }
+
     if (!account) {
       throw new NotFoundException('Account not found');
     }
@@ -250,8 +260,8 @@ export class AccountService {
     const [notes, attachments, tasks, calls, meetings] = await Promise.all([
       this.prisma.note.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
       this.prisma.attachment.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
-      this.prisma.task.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
-      this.prisma.call.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
+      this.prisma.task.count({ where: { entityType: 'ACCOUNT', entityId: id, ownerId } }),
+      this.prisma.call.count({ where: { entityType: 'ACCOUNT', entityId: id, ownerId } }),
       this.prisma.meeting.count({ where: { entityType: 'ACCOUNT', entityId: id } }),
     ]);
 

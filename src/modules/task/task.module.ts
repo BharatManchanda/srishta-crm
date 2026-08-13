@@ -13,6 +13,8 @@ import { UserPolicy } from '../user/user.policy';
 import { AiModule } from '../ai/ai.module';
 import { NotificationModule } from '../notification/notification.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
+import { ModuleFieldService } from '../module-field/module-field.service';
+import { ModuleFieldFilterBuilder } from '../module-field/module-field-filter.builder';
 
 @Module({
   imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, NotificationModule, WhatsappModule],
@@ -23,6 +25,8 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     TaskFilterBuilder,
     TaskPolicy,
     UserPolicy,
+    ModuleFieldService,
+    ModuleFieldFilterBuilder
   ],
   controllers: [TaskController],
 })

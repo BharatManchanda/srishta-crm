@@ -37,7 +37,7 @@ export class LeadService {
       id: {
         in: dto.id !== undefined && dto.id ? [dto?.id] : undefined,
       },
-    };
+    }
 
     if (user?.accessLevel === 'STANDARD') {
       where.ownerId = currentUserId;
@@ -162,7 +162,18 @@ export class LeadService {
     return lead;
   }
 
-  async get(id: number) {
+  async get(id: number, authUserId: number) {
+    // const createdById = await this.userHierarchyService.getFamilyUserIds(authUserId);
+    const user = await this.prisma.user.findUnique({
+      where: { id: authUserId },
+      select: { accessLevel: true },
+    });
+
+    let ownerId: number | undefined = undefined;
+    if (user?.accessLevel === 'STANDARD') {
+      ownerId = authUserId;
+    }
+
     const [lead, notes, attachments, tasks, calls, meetings, emails ] = await this.prisma.$transaction([
       this.prisma.lead.findUnique({
         where: { id },
@@ -202,6 +213,7 @@ export class LeadService {
         where: {
           entityType: "LEAD",
           entityId: id,
+          ownerId
         },
       }),
 
@@ -209,6 +221,7 @@ export class LeadService {
         where: {
           entityType: "LEAD",
           entityId: id,
+          ownerId
         },
       }),
 

@@ -127,7 +127,7 @@ export class MeetingService {
       if (userIdsToNotify.length > 0) {
         await this.notificationService.create({
           title: 'Meeting Scheduled',
-          message: `You have been scheduled for meeting: "${meeting.title}" on ${new Date(meeting.startTime).toLocaleString()}.`,
+          message: `You have been scheduled for meeting: "${meeting.title}" on ${meeting.startTime ? new Date(meeting.startTime).toLocaleString() : "N/A"}.`,
           type: 'MEETING',
           module: 'MEETING',
           entityId: meeting.id,
@@ -137,9 +137,8 @@ export class MeetingService {
 
         await this.sendWhatsappReminder(meeting.id, authUserId, `Meeting Scheduled
           Title: ${meeting.title}
-          Start: ${new Date(meeting.startTime).toLocaleString()}
-          End: ${new Date(meeting.endTime).toLocaleString()}
-
+          Start: ${meeting.startTime ? new Date(meeting.startTime).toLocaleString() : "N/A"},
+          End: ${meeting.endTime ? new Date(meeting.endTime).toLocaleString(): "N/A"},
           Please be on time.`
         );
       }
@@ -243,7 +242,7 @@ export class MeetingService {
       if (userIdsToNotify.length > 0) {
         await this.notificationService.create({
           title: 'Meeting Scheduled',
-          message: `You have been added to meeting: "${updatedMeeting.title}" scheduled for ${new Date(updatedMeeting.startTime).toLocaleString()}.`,
+          message: `You have been added to meeting: "${updatedMeeting.title}" scheduled for ${updatedMeeting.startTime ? new Date(updatedMeeting.startTime).toLocaleString() : 'N/A'}. Please be on time. Start: ${updatedMeeting.startTime ? new Date(updatedMeeting.startTime).toLocaleString() : 'N/A'}. End: ${updatedMeeting.startTime ? new Date(updatedMeeting.startTime).toLocaleString() : 'N/A'}.`,
           type: 'MEETING',
           module: 'MEETING',
           entityId: updatedMeeting.id,
@@ -253,8 +252,8 @@ export class MeetingService {
 
         await this.sendWhatsappReminder(updatedMeeting.id, authUserId, `Meeting Rescheduled
           Title: ${updatedMeeting.title}
-          Start: ${new Date(updatedMeeting.startTime).toLocaleString()}
-          End: ${new Date(updatedMeeting.endTime).toLocaleString()}
+          Start: ${updatedMeeting.startTime ? new Date(updatedMeeting.startTime).toLocaleString() : 'N/A'},
+          End: ${updatedMeeting.endTime ? new Date(updatedMeeting.endTime).toLocaleString() : 'N/A'},
 
           Please be on time.`
         );
@@ -548,8 +547,8 @@ export class MeetingService {
             
             <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #e5e7eb;">
               <h3 style="margin-top: 0; color: #111827;">${meeting.title}</h3>
-              <p style="margin: 5px 0;"><strong>Start Time:</strong> ${meeting.startTime.toLocaleString()}</p>
-              <p style="margin: 5px 0;"><strong>End Time:</strong> ${meeting.endTime.toLocaleString()}</p>
+              <p style="margin: 5px 0;"><strong>Start Time:</strong> ${meeting.startTime && meeting.startTime.toLocaleString()}</p>
+              <p style="margin: 5px 0;"><strong>End Time:</strong> ${meeting.endTime && meeting.endTime.toLocaleString()}</p>
               ${meeting.location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${meeting.location}</p>` : ''}
               ${meeting.url ? `<p style="margin: 5px 0;"><strong>Join Link:</strong> <a href="${meeting.url}" style="color: #4f46e5; text-decoration: none;">Join Meeting</a></p>` : ''}
             </div>
@@ -591,8 +590,8 @@ export class MeetingService {
               
               <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #e5e7eb;">
                 <h3 style="margin-top: 0; color: #111827;">${meeting.title}</h3>
-                <p style="margin: 5px 0;"><strong>Start Time:</strong> ${meeting.startTime.toLocaleString()}</p>
-                <p style="margin: 5px 0;"><strong>End Time:</strong> ${meeting.endTime.toLocaleString()}</p>
+                <p style="margin: 5px 0;"><strong>Start Time:</strong> ${meeting.startTime && meeting.startTime.toLocaleString()}</p>
+                <p style="margin: 5px 0;"><strong>End Time:</strong> ${meeting.endTime && meeting.endTime.toLocaleString()}</p>
                 ${meeting.location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${meeting.location}</p>` : ''}
                 ${meeting.url ? `<p style="margin: 5px 0;"><strong>Join Link:</strong> <a href="${meeting.url}" style="color: #4f46e5; text-decoration: none;">Join Meeting</a></p>` : ''}
               </div>

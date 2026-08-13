@@ -103,12 +103,16 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
           },
         });
 
+        if (!meeting.startTime || !meeting.endTime) {
+          this.logger.warn(`Meeting ${meetingId} has missing start or end time.`);
+          return;
+        }
         const eventData = {
-          summary: meeting.title,
+          summary: meeting.title ?? "Meeting",
           description: meeting.description ?? '',
           location: meeting.location ?? '',
-          start: meeting.startTime.toISOString(),
-          end: meeting.endTime.toISOString(),
+          start: meeting.startTime ? meeting.startTime.toISOString() : "N/A",
+          end: meeting.endTime ? meeting.endTime.toISOString() : "N/A",
         };
 
         if (syncRecord?.googleEventId) {
@@ -506,7 +510,8 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
         },
         select: { meetingId: true },
       });
-      eligibleMeetingIds = participants.map((p) => p.meetingId);
+      // eligibleMeetingIds = participants.map((p) => p.meetingId);
+      eligibleMeetingIds = participants.map((p) => p.meetingId).filter((id): id is number => id !== null);
     }
 
     const syncedMeetings = await this.prisma.calendarSyncRecord.findMany({

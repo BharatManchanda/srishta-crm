@@ -8,6 +8,9 @@ import { CallPolicy } from './call.policy';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
 import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
 import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
+import { ModuleFieldService } from '../module-field/module-field.service';
+import { CALL_MODULE_ID } from 'src/seeders/module.seeder';
+import { ModuleEnum } from '../module-field/dto/module-field-create.dto';
 
 @UseGuards(AuthGuard)
 @Controller('call')
@@ -15,17 +18,20 @@ export class CallController {
   constructor(
     private readonly callService: CallService,
     private readonly callPolicy: CallPolicy,
+    private readonly moduleFieldService: ModuleFieldService,
   ) { }
 
   @Get()
   async getList(@Query() dto: CallFilterDto, @Req() req: Request) {
     await this.callPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
+    await this.moduleFieldService.createDefault(CALL_MODULE_ID, ModuleEnum.CALL, authUserId);
     return this.callService.getList(dto, authUserId);
   }
 
   @Post()
   async create(@Body() dto: CallCreateDto, @Req() req: Request) {
+    await this.moduleFieldService.validateRequiredFields(CALL_MODULE_ID, req['user'].id, dto);
     await this.callPolicy.authorize(req['user'], 'create');
     const authUserId = req['user'].id;
     return this.callService.create(dto, authUserId);

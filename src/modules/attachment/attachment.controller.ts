@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { StorageService } from 'src/common/storage/storage.service';
 import { AttachmentCreateDto } from './dto/attachment-create.dto';
@@ -40,6 +40,25 @@ export class AttachmentController {
   async get(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.attachmentPolicy.authorize(req['user'], 'view', id);
     return this.attachmentService.get(id);
+  }
+
+  @Get(':id/download-url')
+  async getDownloadUrl(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    await this.attachmentPolicy.authorize(req['user'], 'view', id);
+    const attachment = await this.attachmentService.get(id);
+
+    const storageKey = attachment.storageKey || this.storage.getKeyFromPublicUrl(attachment.url ?? undefined);
+
+    if (attachment.type !== 'FILE' || !storageKey) {
+      throw new BadRequestException('A stored file is required to create a download URL');
+    }
+
+    return {
+      downloadUrl: await this.storage.createDownloadUrl(
+        storageKey,
+        attachment.originalName || attachment.fileName || undefined,
+      ),
+    };
   }
 
   @Put(':id')

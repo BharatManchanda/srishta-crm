@@ -12,8 +12,8 @@ export class MeetingCreateDto {
   @IsInt()
   entityId?: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   title: string;
 
   @IsOptional()

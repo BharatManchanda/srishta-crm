@@ -20,6 +20,9 @@ import { AccountUpdateDto } from './dto/account-update.dto';
 import { AccountPolicy } from './account.policy';
 import { BulkDeleteDto } from '../../common/dto/bulk-delete.dto';
 import { BulkUpdateDto } from '../../common/dto/bulk-update.dto';
+import { ModuleFieldService } from '../module-field/module-field.service';
+import { ACCOUNT_MODULE_ID } from 'src/seeders/module.seeder';
+import { ModuleEnum } from '../module-field/dto/module-field-create.dto';
 
 
 @UseGuards(AuthGuard)
@@ -28,17 +31,20 @@ export class AccountController {
   constructor(
     private readonly accountService: AccountService,
     private readonly accountPolicy: AccountPolicy,
+    private readonly moduleFieldService: ModuleFieldService,
   ) {}
 
   @Get()
   async getList(@Query() dto: AccountFilterDto, @Req() req: Request) {
     await this.accountPolicy.authorize(req['user'], 'viewAll');
     const authUserId = req['user'].id;
+    await this.moduleFieldService.createDefault(ACCOUNT_MODULE_ID, ModuleEnum.ACCOUNT, authUserId);
     return this.accountService.getList(dto, authUserId);
   }
 
   @Post()
   async create(@Body() dto: AccountCreateDto, @Req() req: Request) {
+    await this.moduleFieldService.validateRequiredFields(ACCOUNT_MODULE_ID, req['user'].id, dto);
     await this.accountPolicy.authorize(req['user'], 'create');
     const authUserId = req['user'].id;
     return this.accountService.create(dto, authUserId);
@@ -59,7 +65,8 @@ export class AccountController {
   @Get(':id')
   async get(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     await this.accountPolicy.authorize(req['user'], 'view', id);
-    return this.accountService.get(id);
+    const authUserId = req['user'].id;
+    return this.accountService.get(id, authUserId);
   }
 
   @Put(':id')
@@ -68,6 +75,7 @@ export class AccountController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: Request,
   ) {
+    await this.moduleFieldService.validateRequiredFields(ACCOUNT_MODULE_ID, req['user'].id, dto);
     await this.accountPolicy.authorize(req['user'], 'update', id);
     const authUserId = req['user'].id;
     return this.accountService.update(id, dto, authUserId);

@@ -1,15 +1,19 @@
 import { AccessLevel, UserStatus } from '@prisma/client';
 import {
+  IsDecimal,
   IsEmail,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
+  IsPhoneNumber,
   IsString,
   MinLength,
 } from 'class-validator';
 
 export class RegisterDto {
   @IsString()
+  @MinLength(3)
   name: string;
 
   @IsEmail()
@@ -71,4 +75,44 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   websiteLink?: string;
+
+  @IsOptional()
+  @IsString()
+  companyName?: string;
+
+  @IsOptional()
+  @IsString()
+  companyWebsite?: string;
+
+  @IsOptional()
+  @IsString()
+  industry?: string;
+
+  @IsOptional()
+  @IsString()
+  companyPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  companyEmail?: string;
+
+  @IsOptional()
+  @IsInt()
+  employees?: number;
+
+  @IsOptional()
+  @IsString()
+  companyCountry?: string;
+
+  @IsOptional()
+  @IsString()
+  companyCity?: string;
+
+  @IsOptional()
+  @IsInt()
+  companyPincode?: number;
+
+  @IsOptional()
+  @IsDecimal()
+  annualRevenue?: string;
 }
