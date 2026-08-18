@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
+import { OpenActivityGetDto } from './dto/open-activity.dto';
 
 @Injectable()
 export class DashboardService {
@@ -300,61 +301,213 @@ export class DashboardService {
     };
   }
 
-  public async getOpenActivities(userId: number) {
-    const scopeFilter = await this.getScopeFilter(userId);
-    const now = new Date();
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const accessibleUserIds = await this.userHierarchyService.getFamilyUserIds(userId);
+  // public async getOpenActivities(userId: number) {
+  //   const scopeFilter = await this.getScopeFilter(userId);
+  //   const now = new Date();
+  //   const todayStart = new Date();
+  //   todayStart.setHours(0, 0, 0, 0);
+  //   const accessibleUserIds = await this.userHierarchyService.getFamilyUserIds(userId);
 
-    const [tasks, meetings, calls] = await Promise.all([
-      this.prisma.task.findMany({
-        where: {
-          ...scopeFilter,
-          status: { not: 'COMPLETED' },
-          dueDate: { lte: now },
-        },
-        orderBy: { dueDate: 'asc' },
-        take: 10,
-      }),
+  //   const [tasks, meetings, calls] = await Promise.all([
+  //     this.prisma.task.findMany({
+  //       where: {
+  //         ...scopeFilter,
+  //         status: { not: 'COMPLETED' },
+  //         dueDate: { lte: now },
+  //       },
+  //       orderBy: { dueDate: 'asc' },
+  //       take: 10,
+  //     }),
+  //     await this.prisma.meeting.findMany({
+  //       where: {
+  //         createdById: {
+  //           in: accessibleUserIds,
+  //         },
+  //         status: {
+  //           not: "COMPLETED",
+  //         },
+  //         startTime: {
+  //           lte: now,
+  //         },
+  //       },
+  //       orderBy: {
+  //         startTime: "asc",
+  //       },
+  //       take: 10,
+  //     }),
 
-      await this.prisma.meeting.findMany({
-        where: {
-          createdById: {
-            in: accessibleUserIds,
-          },
-          status: {
-            not: "COMPLETED",
-          },
-          startTime: {
-            lte: new Date(),
-          },
-          endTime: {
-            gte: new Date(),
-          },
-        },
-        orderBy: {
-          startTime: "asc",
-        },
-        take: 10,
-      }),
+  //     this.prisma.call.findMany({
+  //       where: {
+  //         ...scopeFilter,
+  //         status: { not: 'COMPLETED' },
+  //         callStartTime: { lte: now },
+  //       },
+  //       orderBy: { callStartTime: 'asc' },
+  //       take: 10,
+  //     }),
+  //   ]);
+  //   console.log(meetings,"::meetings")
 
-      this.prisma.call.findMany({
-        where: {
-          ...scopeFilter,
-          status: { not: 'COMPLETED' },
-          callStartTime: { lte: now },
-        },
-        orderBy: { callStartTime: 'asc' },
-        take: 10,
-      }),
-    ]);
+  //   return {
+  //     tasks,
+  //     meetings,
+  //     calls,
+  //     total: tasks.length + meetings.length + calls.length,
+  //   };
+  // }
 
-    return {
-      tasks,
-      meetings,
-      calls,
-      total: tasks.length + meetings.length + calls.length,
-    };
-  }
+  public async getOpenActivities(
+  userId: number,
+  dto: OpenActivityGetDto,
+) {
+  const scopeFilter = await this.getScopeFilter(userId);
+
+  const accessibleUserIds =
+    await this.userHierarchyService.getFamilyUserIds(userId);
+
+  const page = Math.max(Number(dto.page) || 1, 1);
+  const perPage = Math.max(Number(dto.perPage) || 10, 1);
+
+  const skip = (page - 1) * perPage;
+
+  const now = new Date();
+
+  /* ---------------------------------------------------------------- */
+  /* Fetch all open activities                                        */
+  /* ---------------------------------------------------------------- */
+
+  const [tasks, meetings, calls] = await Promise.all([
+    this.prisma.task.findMany({
+      where: {
+        ...scopeFilter,
+
+        status: {
+          not: 'COMPLETED',
+        },
+
+        dueDate: {
+          lte: now,
+        },
+      },
+
+      include: {
+        owner: true,
+      },
+    }),
+
+    this.prisma.meeting.findMany({
+      where: {
+        createdById: {
+          in: accessibleUserIds,
+        },
+
+        status: {
+          not: 'COMPLETED',
+        },
+
+        startTime: {
+          lte: now,
+        },
+      },
+
+      include: {
+        participants: true,
+      },
+    }),
+
+    this.prisma.call.findMany({
+      where: {
+        ...scopeFilter,
+
+        status: {
+          not: 'COMPLETED',
+        },
+
+        callStartTime: {
+          lte: now,
+        },
+      },
+
+      include: {
+        owner: true,
+      },
+    }),
+  ]);
+
+  /* ---------------------------------------------------------------- */
+  /* Combine activities                                               */
+  /* ---------------------------------------------------------------- */
+
+  const activities = [
+    ...tasks
+      .filter((task) => task.dueDate !== null)
+      .map((task) => ({
+        ...task,
+        type: 'task' as const,
+        activityDate: task.dueDate,
+      })),
+
+    ...meetings
+      .filter((meeting) => meeting.startTime !== null)
+      .map((meeting) => ({
+        ...meeting,
+        type: 'meeting' as const,
+        activityDate: meeting.startTime,
+      })),
+
+    ...calls
+      .filter((call) => call.callStartTime !== null)
+      .map((call) => ({
+        ...call,
+        type: 'call' as const,
+        activityDate: call.callStartTime,
+      })),
+  ];
+
+  /* ---------------------------------------------------------------- */
+  /* Sort all activities together                                     */
+  /* ---------------------------------------------------------------- */
+
+  activities.sort((a, b) => {
+    const dateA = a.activityDate?.getTime() ?? 0;
+    const dateB = b.activityDate?.getTime() ?? 0;
+
+    return dateA - dateB;
+  });
+
+  /* ---------------------------------------------------------------- */
+  /* Total before pagination                                          */
+  /* ---------------------------------------------------------------- */
+
+  const total = activities.length;
+
+  const totalPages = Math.ceil(total / perPage);
+
+  /* ---------------------------------------------------------------- */
+  /* Pagination                                                       */
+  /* ---------------------------------------------------------------- */
+
+  const paginatedActivities = activities.slice(
+    skip,
+    skip + perPage,
+  );
+
+  /* ---------------------------------------------------------------- */
+  /* Response                                                         */
+  /* ---------------------------------------------------------------- */
+
+  return {
+    data: paginatedActivities,
+
+    meta: {
+      total,
+      page,
+      perPage,
+      totalPages,
+
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
+  };
+}
 }

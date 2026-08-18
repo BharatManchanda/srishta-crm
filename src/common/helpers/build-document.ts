@@ -1,3 +1,12 @@
+export function dealToDocument(lead: any): string {
+  const lines: string[] = [];
+
+  lines.push("Deal Information");
+  lines.push("================");
+
+  return lines.join("\n");
+
+}
 export function leadToDocument(lead: any): string {
   const lines: string[] = [];
 

@@ -35,6 +35,7 @@ import { GoogleAdsModule } from './modules/google-ads/google-ads.module';
 import { CronjobModule } from './common/cronjob/cronjob.module';
 import { LinkedinAdsModule } from './modules/linkedin-ads/linkedin-ads.module';
 import { ModuleFieldModule } from './modules/module-field/module-field.module';
+import { DealModule } from './modules/deal/deal.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { ModuleFieldModule } from './modules/module-field/module-field.module';
     CronjobModule,
     LinkedinAdsModule,
     ModuleFieldModule,
+    DealModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

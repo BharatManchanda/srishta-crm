@@ -20,6 +20,8 @@ export class UserFilterBuilder {
 
       status: dto.status,
 
+      accessLevel: dto.accessLevel,
+
       phone: PrismaFilter.contains(dto.phone),
 
       bio: PrismaFilter.contains(dto.bio),

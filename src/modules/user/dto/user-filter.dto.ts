@@ -1,4 +1,4 @@
-import { UserStatus } from '@prisma/client';
+import { AccessLevel, UserStatus } from '@prisma/client';
 import { Type, Transform } from 'class-transformer';
 import { IsOptional, IsString, IsEnum, IsNumber, IsIn } from 'class-validator';
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
@@ -42,6 +42,11 @@ export class UserFilterDto extends PaginationDto {
   @IsOptional()
   @IsString()
   country?: string;
+
+  @IsOptional()
+  @IsEnum(AccessLevel)
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  accessLevel?: AccessLevel;
 
   @IsOptional()
   @IsString()

@@ -194,6 +194,7 @@ enum AttachmentOwnerType {
   TASK
   CALL
   MEETING
+  DEAL
 }
 
 enum ImportEntity {
@@ -250,6 +251,7 @@ enum AiEntityType {
   TASK
   CALL
   MEETING
+  DEAL
 }
 
 enum NotificationType {
@@ -264,6 +266,7 @@ enum NotificationType {
   TASK
   MEETING
   CALL
+  DEAL
   SYSTEM
 }
 
@@ -312,11 +315,17 @@ enum WhatsappEntityType {
   MEETING
   NOTE
   TASK
+  DEAL
 }
 
 enum LeadSyncModule {
   LEAD
   CONTACT
+}
+
+enum DealType {
+  EXISTING_BUSINESS
+  NEW_BUSINESS
 }
 
 enum LeadSyncStatus {
@@ -328,6 +337,23 @@ enum LeadSyncChainProvider {
   FACEBOOK_ADS
   GOOGLE_ADS
   LINKEDIN_ADS
+}
+
+enum DealLeadSource {
+  ADVERTISEMENT
+  COLD_CALL
+  EMPLOYEE_REFERRAL
+  EXTERNAL_REFERRAL
+  ONLINE_STORE
+  PARTNER
+  PUBLIC_RELATIONS
+  SALES_EMAIL_ALIAS
+  SEMINAR_PARTNER
+  INTERNAL_SEMINAR
+  TRADE_SHOW
+  WEB_DOWNLOAD
+  WEB_RESEARCH
+  CHAT
 }
 
 enum FieldType {
@@ -355,6 +381,18 @@ enum FieldType {
   JSON
 
   FILE
+}
+
+enum DealStage {
+  QUALIFICATION
+  NEEDS_ANALYSIS
+  VALUE_PROPOSITION
+  IDENTIFY_DECISION_MAKERS
+  PROPOSAL_PRICE_QUOTE
+  NEGOTIATION_REVIEW
+  CLOSED_WON
+  CLOSED_LOST
+  CLOSED_LOST_TO_COMPETITION
 }
 
 model User {
@@ -445,6 +483,8 @@ model User {
   createdImportJob ImportJob[] @relation("ImportJobCreator")
 
   createdActivities Activity[] @relation("ActivityCreator")
+
+  createdDealers Deal[] @relation("DealCreator")
   
   connectedGoogleCalendar GoogleCalendar[] @relation("GoogleConnector")
 
@@ -457,6 +497,8 @@ model User {
   ownedTasks  Task[]  @relation("TaskOwner")
 
   ownedCalls  Call[]  @relation("CallOwner")
+
+  ownedDeals Deal[] @relation("DealOwner")
 
   calendarSyncRecords CalendarSyncRecord[] @relation("UserCalendarSync")
 
@@ -744,6 +786,8 @@ model Contact {
   ownerId           Int?
   owner             User? @relation("ContactOwner", fields: [ownerId], references: [id])
 
+  deals Deal[] @relation("DealContact")
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -822,6 +866,8 @@ model Account {
 
   // Notes
   description     String? @db.Text
+
+  deals Deal[] @relation("DealAccount")
 
   // Audit
   createdAt       DateTime @default(now())
@@ -1473,4 +1519,48 @@ model LinkedinAdAccount {
   name String?
 
   linkedinAccount LinkedinAccount @relation(fields:[linkedinAccountId], references:[id])
+}
+
+model Deal {
+  id Int @id @default(autoincrement())
+
+  name String?
+
+  amount Decimal? @db.Decimal(15, 2)
+
+  leadSource DealLeadSource?
+
+  stage DealStage?
+  probability Int?
+
+  closingDate DateTime?
+
+  socialLeadId String?
+
+  description String?
+
+  ownerId Int?
+  owner   User? @relation("DealOwner", fields: [ownerId], references: [id])
+
+  accountId Int?
+  account   Account? @relation("DealAccount", fields: [accountId], references: [id])
+
+  contactId Int?
+  contact   Contact? @relation("DealContact", fields: [contactId], references: [id])
+
+  createdById Int
+  createdBy   User @relation("DealCreator", fields: [createdById], references: [id])
+
+  type DealType? @default(EXISTING_BUSINESS)
+
+  nextStep String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([accountId])
+  @@index([contactId])
+  @@index([closingDate])
+  @@index([createdById])
 }

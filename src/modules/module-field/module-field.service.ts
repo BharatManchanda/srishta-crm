@@ -108,7 +108,6 @@ export class ModuleFieldService {
                     name: field.name,
                     label: camelCaseToTitle(field.name),
                     type: getEnumValue(FieldType,field.type, FieldType.TEXT),
-                    // required: field.required ?? false,
                     options: [],
                     required: ["name", "email", "accountName", "subject", "title"].includes(field.name),
                     canEdit: ["name", "email", "accountName", "subject", "title"].includes(field.name),
@@ -128,6 +127,7 @@ export class ModuleFieldService {
             [ModuleEnum.MEETING]: "Meeting",
             [ModuleEnum.NOTE]: "Note",
             [ModuleEnum.TASK]: "Task",
+            [ModuleEnum.DEAL]: "Deal",
         };
 
         const modelName = moduleModelMap[module];

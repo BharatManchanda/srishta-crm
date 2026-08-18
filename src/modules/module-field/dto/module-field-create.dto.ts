@@ -40,4 +40,5 @@ export enum ModuleEnum {
   MEETING = 'MEETING',
   NOTE = 'NOTE',
   TASK = 'TASK',
+  DEAL = 'DEAL',
 }

@@ -1,4 +1,5 @@
-import { IsArray, IsBoolean, IsInt, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsInt, IsOptional, ValidateNested } from 'class-validator';
 
 class ColumnDto {
   @IsInt()
@@ -14,5 +15,7 @@ class ColumnDto {
 
 export class UpdateViewSettingDto {
   @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ColumnDto)
   columns: ColumnDto[];
 }

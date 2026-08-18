@@ -1,6 +1,7 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { DashboardService } from './dashboard.service';
+import { OpenActivityGetDto } from './dto/open-activity.dto';
 
 @UseGuards(AuthGuard)
 @Controller('dashboard')
@@ -19,8 +20,8 @@ export class DashboardController {
   }
 
   @Get('open-activities')
-  async getOpenActivities(@Req() req: Request) {
+  async getOpenActivities(@Req() req: Request, @Query() dto: OpenActivityGetDto) {
     const authUserId = req['user'].id;
-    return this.dashboardService.getOpenActivities(authUserId);
+    return this.dashboardService.getOpenActivities(authUserId, dto);
   }
 }
