@@ -2,16 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import { ConfigService } from '@nestjs/config';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const allowedOrigins = configService.get<string>('CORS_ORIGINS')?.split(',') || [];
+
   app.use(cookieParser());
-  // app.enableCors();
   app.enableCors({
-    origin: [
-      'http://localhost:3000', // Next.js
-      'http://localhost:5173', // React
-    ],
+    origin: allowedOrigins,
     credentials: true,
   });
   app.useGlobalPipes(
