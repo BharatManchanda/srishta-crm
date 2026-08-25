@@ -8,6 +8,7 @@ import { UserFilterBuilder } from './user-filter.builder';
 import { UpdateUserDto } from '../auth/dto/update-user.dto';
 import { UserPolicy } from './user.policy';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
+import { UserType } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -19,17 +20,21 @@ export class UserService {
     private readonly userPolicy: UserPolicy,
   ) { }
 
-  async getList(dto: UserFilterDto, currentUserId: number) {
+  async getList(dto: UserFilterDto, currentUser: any) {
     const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
-    const accessibleUserIds = await this.userPolicy.getAccessibleUserIds(currentUserId);
+    const accessibleUserIds = await this.userPolicy.getAccessibleUserIds(currentUser.id);
+    const shouldApplyUserAccessFilter = currentUser.userType !== UserType.ADMIN;
     const result = await this.paginationService.paginate(this.prisma.user, {
       page: dto.page,
       perPage: dto.perPage,
       where: {
         ...this.userFilterBuilder.build(dto),
-        id: {
-          in: dto.id !== undefined && dto.id ? [dto?.id] : accessibleUserIds,
-        },
+        ...(shouldApplyUserAccessFilter ? {
+            id: {
+              in: dto.id ? [dto.id] : accessibleUserIds,
+            },
+          }
+        : {}),
       },
 
       orderBy,
@@ -79,6 +84,7 @@ export class UserService {
         companyCity: true,
         companyPincode: true,
         annualRevenue: true,
+        userType: true,
         createdAt: true,
         updatedAt: true,
         _count: {

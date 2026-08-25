@@ -20,8 +20,7 @@ export class LeadController {
     private readonly leadService: LeadService,
     private readonly leadPolicy: LeadPolicy,
     private readonly moduleFieldService: ModuleFieldService,
-  ) {
-  }
+  ) { }
   
   @Get()
   async getList(@Query() dto: LeadFilterDto, @Req() req: Request) {

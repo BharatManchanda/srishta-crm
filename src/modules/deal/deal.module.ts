@@ -18,9 +18,10 @@ import { ModuleFieldService } from '../module-field/module-field.service';
 import { ModuleFieldFilterBuilder } from '../module-field/module-field-filter.builder';
 import { ActivityFilterBuilder } from '../activity/activity-filter.builder';
 import { DealPolicy } from './deal.policy';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, AiModule, NotificationModule, WhatsappModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, AiModule, NotificationModule, WhatsappModule, PaymentsModule],
   controllers: [DealController],
   providers: [
     DealService,

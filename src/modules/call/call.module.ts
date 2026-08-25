@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { CallService } from './call.service';
 import { CallController } from './call.controller';
 import { JwtModule } from '../jwt/jwt.module';
@@ -9,22 +9,22 @@ import { CallFilterBuilder } from './call-filter.builder';
 import { CallPolicy } from './call.policy';
 import { ActivityModule } from '../activity/activity.module';
 import { GoogleCalendarModule } from '../google-calendar/google-calendar.module';
-import { UserPolicy } from '../user/user.policy';
+import { UserModule } from '../user/user.module';
 import { AiModule } from '../ai/ai.module';
 import { NotificationModule } from '../notification/notification.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { ModuleFieldFilterBuilder } from '../module-field/module-field-filter.builder';
 import { ModuleFieldService } from '../module-field/module-field.service';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, NotificationModule, WhatsappModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, NotificationModule, WhatsappModule, forwardRef(() => UserModule), PaymentsModule],
   providers: [
     CallService,
     PaginationService,
     UserHierarchyService,
     CallFilterBuilder,
     CallPolicy,
-    UserPolicy,
     ModuleFieldService,
     ModuleFieldFilterBuilder
   ],

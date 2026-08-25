@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ModuleName, SearchDto } from './dto/search.dto';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UserPolicy } from '../user/user.policy';
+import { PaymentsService } from '../payments/payments.service';
+import { UserType } from '@prisma/client';
 
 @Injectable()
 export class ModuleService {
@@ -10,17 +12,23 @@ export class ModuleService {
     private readonly prisma: PrismaService,
     private readonly userHierarchyService: UserHierarchyService,
     private readonly userPolicy: UserPolicy,
+    private readonly paymentsService: PaymentsService
   ) {}
 
+  async getAllList() {
+    return this.prisma.module.findMany();
+  }
+  
   async getList(currentUser: any) {
     const roleId = currentUser.roleId;
+    const userType = currentUser.userType
 
     const userDb = await this.prisma.user.findUnique({
       where: { id: currentUser.id },
       include: { role: true },
     });
 
-    const isCEOOrSuperAdmin = userDb?.isSuperAdmin || userDb?.role?.name?.toUpperCase() === 'CEO';
+    const isCEOOrSuperAdmin = userDb?.isSuperAdmin;
 
     let moduleIds: number[] = [];
 
@@ -41,7 +49,6 @@ export class ModuleService {
       });
       moduleIds = permissions.map((p) => p.moduleId);
 
-      // Fallback: If no permissions are set or allowed, show standard CRM modules
       if (moduleIds.length === 0) {
         const standardModules = await this.prisma.module.findMany({
           where: {
@@ -55,13 +62,32 @@ export class ModuleService {
       }
     }
 
+    const allowModules: number[] = [];
+    if (userType === UserType.USER) {
+      const activePlan = await this.paymentsService.getActiveCustomerPlan(currentUser.id)
+      if (!activePlan) {
+        const freePlan = await this.paymentsService.getFreePlan()
+        
+        freePlan?.planModules.forEach((planModule) => {
+          allowModules.push(planModule.moduleId)
+        })
+      } else {
+        activePlan.pricingPlan.planModules.forEach((planModule) => {
+          allowModules.push(planModule.moduleId)
+        })
+      }
+    }
+
     const modules = await this.prisma.module.findMany({
       orderBy: { sort_order: 'asc' },
       where: {
         id: {
-          in: moduleIds,
+          in: userType === UserType.USER ? moduleIds.filter((id) => allowModules.includes(id)) : moduleIds,
         },
         showInNavbar: true,
+        allowedUserTypes: {
+          has: userType,
+        },
       },
     });
 

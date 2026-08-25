@@ -19,6 +19,9 @@ import { LeadService } from '../lead/lead.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UserPolicy } from '../user/user.policy';
+// import { response } from 'express';
+import { Response } from 'express';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -38,7 +41,7 @@ export class AuthService {
     }
     return '123456';
   }
-  async login(dto: LoginDto): Promise<any> {
+  async login(dto: LoginDto, res: Response): Promise<any> {
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: dto.email }, { phone: dto.email }],
@@ -60,8 +63,13 @@ export class AuthService {
 
     const profileMedia: any[] = [];
 
-    const { accessToken, refreshToken } =
-      await this.jwtService.generateTokens(safeUser);
+    const { accessToken, refreshToken } = await this.jwtService.generateTokens(safeUser);
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     return {
       user: {
         ...safeUser,
@@ -197,7 +205,7 @@ export class AuthService {
     };
   }
 
-  async logout(userId: number, accessToken: string, refreshToken: string) {
+  async logout(userId: number, accessToken: string, refreshToken?: string) {
     await this.jwtService.revokeTokens(userId, accessToken, refreshToken); // Revoke the user's tokens.
   }
 
@@ -347,7 +355,7 @@ export class AuthService {
       });
 
       const modules = await this.prisma.module.findMany();
-
+      console.log(modules,"::modules")
       // CEO -> Full permissions
       const CRUD_ACTIONS = ["View", "Create", "Edit", "Delete"];
 
@@ -365,9 +373,7 @@ export class AuthService {
             canEdit: actions.includes("Edit"),
             canDelete: actions.includes("Delete"),
 
-            actions: actions.filter(
-              (action) => !CRUD_ACTIONS.includes(action),
-            ),
+            actions: actions.filter((action) => !CRUD_ACTIONS.includes(action)),
           };
         }),
       });

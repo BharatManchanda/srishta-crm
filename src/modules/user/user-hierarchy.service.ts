@@ -84,21 +84,16 @@ export class UserHierarchyService {
         },
       });
 
-
       if (!user) {
         return null;
       }
-
 
       // reached root parent
       if (!user.parentId) {
         return user;
       }
 
-
       currentUserId = user.parentId;
-
     }
-
   }
 }

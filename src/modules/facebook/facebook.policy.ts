@@ -4,17 +4,23 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID } from 'src/seeders/module.seeder';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class FacebookPolicy {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
-  private async hasFacebookAccess(roleId: number) {
+  private async hasFacebookAccess(currentUser: any) {
+    const isAllow = await this.paymentsService.isAllowedModules(currentUser.id, FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID);
+    if (!isAllow) {
+      throw new ForbiddenException(`You are not allowed to access Facebook & Instagram Ads`);
+    }
     const permission = await this.prisma.rolePermission.findFirst({
       where: {
-        roleId,
+        roleId: currentUser.roleId,
         moduleId: FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID,
         isAllow: true,
       },
@@ -84,7 +90,7 @@ export class FacebookPolicy {
   }
 
   async canAccessFacebook(currentUser:any){
-    return this.hasFacebookAccess(currentUser.roleId);
+    return this.hasFacebookAccess(currentUser);
   }
   async authorizeFacebook(currentUser:any){
     const allowed = await this.canAccessFacebook(currentUser);

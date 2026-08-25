@@ -16,7 +16,6 @@ export class GoogleCalendarController {
     async auth(@Req() req: Request) {
         const currentUser = req['user'];
         await this.googleCalendarPolicy.authorizeGoogleCalendar(currentUser);
-        
         return {
             url: this.googleService.generateAuthUrl(currentUser.id),
         };

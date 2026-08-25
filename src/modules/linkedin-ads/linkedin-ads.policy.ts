@@ -5,17 +5,23 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LINKEDIN_MODULE_ID } from 'src/seeders/module.seeder';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class LinkedinAdsPolicy {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
-  private async hasLinkedinAdsAccess(roleId: number) {
+  private async hasLinkedinAdsAccess(currentUser: any) {
+    const isAllow = await this.paymentsService.isAllowedModules(currentUser.id, LINKEDIN_MODULE_ID);
+    if (!isAllow) {
+      throw new ForbiddenException(`You are not allowed to access Linkedin Ads`);
+    }
     const permission = await this.prisma.rolePermission.findFirst({
       where: {
-        roleId,
+        roleId: currentUser.roleId,
         moduleId: LINKEDIN_MODULE_ID,
         isAllow: true,
       },
@@ -85,7 +91,7 @@ export class LinkedinAdsPolicy {
   }
 
   async canAccessLinkedinAds(currentUser:any){
-    return this.hasLinkedinAdsAccess(currentUser.roleId);
+    return this.hasLinkedinAdsAccess(currentUser);
   }
   async authorizeLinkedinAds(currentUser:any){
     const allowed = await this.canAccessLinkedinAds(currentUser);

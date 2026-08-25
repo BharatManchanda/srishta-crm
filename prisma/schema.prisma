@@ -395,6 +395,64 @@ enum DealStage {
   CLOSED_LOST_TO_COMPETITION
 }
 
+enum UserType {
+  ADMIN
+  USER
+}
+
+enum PricingCategory {
+  CRM
+  COMMUNICATION
+  MARKETING
+  AUTOMATION_ANALYTICS
+  SUPPORT_SECURITY
+  ADMINISTRATION
+  FINANCE
+}
+
+enum PricingPlanStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum CustomerPlanStatus {
+  ACTIVE
+  EXPIRED
+  SCHEDULED
+  CANCELLED
+  UPGRADED
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentStatus {
+  CREATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  UPI
+  NETBANKING
+  WALLET
+  EMI
+  OTHER
+}
+
+enum RazorpayWebhookStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -428,6 +486,8 @@ model User {
   accessLevel AccessLevel @default(ADMINISTRATIVE)
 
   isSuperAdmin Boolean @default(false)
+
+  userType UserType @default(USER)
 
   accessTokens String[] @default([])
 
@@ -519,6 +579,10 @@ model User {
   LinkedinAccounts  LinkedinAccount[]
 
   ModuleFields ModuleField[]
+
+  CustomerPlans CustomerPlan[]
+
+  Payments Payment[]
 }
 
 model OtpVerification {
@@ -589,6 +653,20 @@ model Module {
 
   fields      ModuleField[]
   rules       ValidationRule[]
+
+  pricingEnabled Boolean @default(false)
+
+  pricingCategory PricingCategory?
+
+  pricingLabel String?
+
+  pricingDescription String?
+
+  pricingOrder Int @default(0)
+
+  planModules PlanModule[]
+  
+  allowedUserTypes UserType[] @default([])
 
 }
 
@@ -1563,4 +1641,178 @@ model Deal {
   @@index([contactId])
   @@index([closingDate])
   @@index([createdById])
+}
+
+model PricingPlan {
+  id Int @id @default(autoincrement())
+
+  name String @unique
+
+  slug String @unique
+
+  description String?
+
+  monthlyPrice Decimal @db.Decimal(10, 2)
+
+  yearlyPrice Decimal @db.Decimal(10, 2)
+
+  currency String @default("INR")
+
+  popular Boolean @default(false)
+
+  sortOrder Int @default(0)
+
+  status PricingPlanStatus @default(ACTIVE)
+
+  cta String @default("Get Started")
+
+  planModules PlanModule[]
+
+  customerPlans CustomerPlan[]
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlanModule {
+  id Int @id @default(autoincrement())
+
+  planId Int
+  moduleId Int
+
+  enabled Boolean @default(false)
+  limit Int?
+
+  displayValue String?
+
+  featureLabel String?
+
+  featureDescription String?
+
+  actions Json?
+
+  sortOrder Int @default(0)
+
+  plan PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, moduleId])
+  @@index([planId])
+  @@index([moduleId])
+}
+
+model CustomerPlan {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+
+  pricingPlanId Int
+  pricingPlan PricingPlan @relation(fields: [pricingPlanId], references: [id], onDelete: Restrict)
+
+  billingCycle BillingCycle
+
+  status CustomerPlanStatus @default(ACTIVE)
+
+  amount Decimal @db.Decimal(10, 2)
+  currency String @default("INR")
+
+  startDate DateTime
+  endDate DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([userId])
+  @@index([pricingPlanId])
+  @@index([status])
+  @@index([endDate])
+}
+
+model Payment {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+
+  billingCycle BillingCycle @default(MONTHLY)
+
+  customerPlanId Int?
+  customerPlan CustomerPlan? @relation(fields: [customerPlanId], references: [id], onDelete: SetNull)
+
+  pricingPlanId Int?
+  pricingPlan PricingPlan? @relation(fields: [pricingPlanId], references: [id], onDelete: SetNull)
+
+  razorpayOrderId String @unique
+  razorpayPaymentId String? @unique
+
+  amount Decimal @db.Decimal(10, 2)
+  currency String @default("INR")
+
+  status PaymentStatus @default(CREATED)
+
+  method PaymentMethod?
+
+  durationDays Decimal? @db.Decimal(10, 4)
+
+  upgradeCredit Decimal? @db.Decimal(10, 2)
+
+  isUpgrade Boolean @default(false)
+
+  email String?
+  contact String?
+
+  vpa String?
+
+  cardLast4 String?
+  cardNetwork String?
+  cardType String?
+
+  description String?
+
+  errorCode String?
+  errorDescription String?
+  errorSource String?
+  errorStep String?
+  errorReason String?
+
+  capturedAt DateTime?
+  failedAt DateTime?
+  refundedAt DateTime?
+
+  rawData Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([customerPlanId])
+  @@index([pricingPlanId])
+  @@index([status])
+}
+
+model RazorpayWebhookEvent {
+  id Int @id @default(autoincrement())
+
+  eventId String @unique
+
+  event String
+
+  status RazorpayWebhookStatus @default(RECEIVED)
+
+  payload Json
+
+  error String?
+
+  processedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([status])
 }

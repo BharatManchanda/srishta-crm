@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import { PrismaClient } from '@prisma/client';
+import { PricingCategory, PrismaClient, UserType } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({
@@ -28,6 +28,10 @@ export const LINKEDIN_MODULE_ID = 29;
 export const FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID = 31;
 export const ROLE_CONFIG_MODULE_ID = 32;
 export const DEAL_MODULE_ID = 33;
+export const PRICING_MODULE_ID = 34;
+export const COMPANY_MODULE_ID = 35;
+export const PAYMENT_MODULE_ID = 36;
+export const ROLE_MODULE_ID = 37;
 
 const crud = ["View", "Create", "Edit", "Delete"];
 
@@ -44,6 +48,12 @@ const modules = [
     availableActions: ["View"],
     showInNavbar: true,
     showActions: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.AUTOMATION_ANALYTICS,
+    pricingLabel: 'CRM Dashboard',
+    pricingOrder: 1,
+    allowedUserTypes: [UserType.ADMIN, UserType.USER],
   },
   {
     id: USER_MODULE_ID,
@@ -57,6 +67,41 @@ const modules = [
     availableActions: crud,
     showInNavbar: true,
     showActions: false,
+    allowedUserTypes: [UserType.USER],
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.CRM,
+    pricingLabel: 'User Management',
+    pricingDescription: 'Manage user accounts',
+    pricingOrder: 1,
+  },
+  {
+    id: COMPANY_MODULE_ID,
+    name: 'Company',
+    path: '/companies',
+    icon: 'UserCircleIcon',
+    description: 'Companies management',
+    parent_id: null,
+    sort_order: 2,
+    activeOn: ['/companies', '/companies/:id', '/companies/:id/edit'],
+    availableActions: [],
+    showInNavbar: true,
+    showActions: false,
+    allowedUserTypes: [UserType.ADMIN],
+  },
+  {
+    id: PRICING_MODULE_ID,
+    name: 'Pricing Plan',
+    path: '/pricing-plans',
+    icon: 'BadgeIndianRupee',
+    description: 'Pricing Plan management',
+    parent_id: null,
+    sort_order: 3,
+    activeOn: ['/pricing-plans', '/pricing-plans/:id', '/pricing-plans/:id/edit'],
+    availableActions: [],
+    showInNavbar: true,
+    showActions: false,
+    allowedUserTypes: [UserType.ADMIN],
   },
   {
     id: LEAD_MODULE_ID,
@@ -65,11 +110,18 @@ const modules = [
     icon: 'ListIcon',
     description: 'Lead management',
     parent_id: null,
-    sort_order: 3,
+    sort_order: 4,
     activeOn: ['/leads', '/leads/:id', '/leads/:id/edit', '/leads/create'],
     availableActions: crud,
     showInNavbar: true,
     showActions: true,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.CRM,
+    pricingLabel: 'Lead Management',
+    pricingDescription: 'Manage and track your sales leads',
+    pricingOrder: 1,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: CONTACT_MODULE_ID,
@@ -78,7 +130,7 @@ const modules = [
     icon: 'Contact',
     description: 'Contact management',
     parent_id: null,
-    sort_order: 4,
+    sort_order: 5,
     availableActions: crud,
     activeOn: [
       '/contacts',
@@ -88,6 +140,13 @@ const modules = [
     ],
     showInNavbar: true,
     showActions: true,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.CRM,
+    pricingLabel: 'Contact Management',
+    pricingDescription: 'Manage your customer contacts',
+    pricingOrder: 2,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: NOTE_MODULE_ID,
@@ -96,7 +155,7 @@ const modules = [
     icon: 'NotebookPen',
     description: 'Notes management',
     parent_id: null,
-    sort_order: 5,
+    sort_order: 6,
     availableActions: crud,
     activeOn: [
       '/notes',
@@ -106,6 +165,7 @@ const modules = [
     ],
     showInNavbar: false,
     showActions: true,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: ATTACHMENT_MODULE_ID,
@@ -114,7 +174,7 @@ const modules = [
     icon: 'Paperclip',
     description: 'Attachments management',
     parent_id: null,
-    sort_order: 6,
+    sort_order: 7,
     availableActions: crud,
     activeOn: [
       '/attachments',
@@ -124,6 +184,7 @@ const modules = [
     ],
     showInNavbar: false,
     showActions: true,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: ACCOUNT_MODULE_ID,
@@ -132,7 +193,7 @@ const modules = [
     icon: 'BookUser',
     description: 'Account management',
     parent_id: null,
-    sort_order: 7,
+    sort_order: 8,
     availableActions: crud,
     activeOn: [
       '/accounts',
@@ -142,6 +203,13 @@ const modules = [
     ],
     showInNavbar: true,
     showActions: true,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.CRM,
+    pricingLabel: 'Account Management',
+    pricingDescription: 'Manage customer and business accounts',
+    pricingOrder: 3,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: DEAL_MODULE_ID,
@@ -150,11 +218,18 @@ const modules = [
     icon: 'HeartHandshake',
     description: 'Deal management',
     parent_id: null,
-    sort_order: 8,
+    sort_order: 9,
     activeOn: ['/deals', '/deals/:id', '/deals/:id/edit', '/deals/create'],
     showInNavbar: true,
     availableActions: crud,
     showActions: true,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.CRM,
+    pricingLabel: 'Deal Pipeline',
+    pricingDescription: 'Manage your sales opportunities and pipelines',
+    pricingOrder: 4,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: TASK_MODULE_ID,
@@ -163,7 +238,7 @@ const modules = [
     icon: 'LayersMinus',
     description: 'Task management',
     parent_id: null,
-    sort_order: 9,
+    sort_order: 10,
     availableActions: crud,
     activeOn: [
       '/tasks',
@@ -173,6 +248,12 @@ const modules = [
     ],
     showInNavbar: true,
     showActions: true,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.COMMUNICATION,
+    pricingLabel: 'Tasks & Activities',
+    pricingOrder: 1,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: CALL_MODULE_ID,
@@ -181,7 +262,7 @@ const modules = [
     icon: 'PhoneCall',
     description: 'Task management',
     parent_id: null,
-    sort_order: 10,
+    sort_order: 11,
     availableActions: crud,
     activeOn: [
       '/calls',
@@ -191,6 +272,12 @@ const modules = [
     ],
     showInNavbar: true,
     showActions: true,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.COMMUNICATION,
+    pricingLabel: 'Call Management',
+    pricingOrder: 2,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: MEETING_MODULE_ID,
@@ -199,7 +286,7 @@ const modules = [
     icon: 'Handshake',
     description: 'Meeting management',
     parent_id: null,
-    sort_order: 11,
+    sort_order: 12,
     availableActions: crud,
     activeOn: [
       '/meetings',
@@ -209,6 +296,12 @@ const modules = [
     ],
     showInNavbar: true,
     showActions: true,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.COMMUNICATION,
+    pricingLabel: 'Meeting Management',
+    pricingOrder: 3,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: IMPORT_MODULE_ID,
@@ -217,11 +310,12 @@ const modules = [
     icon: 'GridIcon',
     description: 'Bulk import management',
     parent_id: null,
-    sort_order: 12,
+    sort_order: 13,
     availableActions: ["Leads", "Contacts", "Accounts"],
     activeOn: ['/imports', '/imports/:id'],
     showInNavbar: true,
     showActions: false,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: EMAIL_MODULE_ID,
@@ -230,10 +324,16 @@ const modules = [
     icon: 'Mail',
     description: 'Email log management',
     parent_id: null,
-    sort_order: 13,
+    sort_order: 14,
     availableActions: crud,
     activeOn: ['/emails'],
     showInNavbar: true,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.COMMUNICATION,
+    pricingLabel: 'Email Integration',
+    pricingOrder: 4,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: WHATSAPP_MODULE_ID,
@@ -242,10 +342,16 @@ const modules = [
     icon: 'MessageCircleMore',
     description: 'Whatsapp chat management',
     parent_id: null,
-    sort_order: 14,
+    sort_order: 15,
     availableActions: ["Whatsapp Access"],
     activeOn: ['/whatsapp'],
     showInNavbar: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.COMMUNICATION,
+    pricingLabel: 'WhatsApp Integration',
+    pricingOrder: 5,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: GOOGLE_MODULE_ID,
@@ -254,11 +360,17 @@ const modules = [
     icon: 'MessageCircleMore',
     description: 'Google chat management',
     parent_id: null,
-    sort_order: 15,
+    sort_order: 16,
     activeOn: ['/google'],
     showInNavbar: false,
     availableActions: ["Google Ads", "Google Calendar"],
     showActions: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.MARKETING,
+    pricingLabel: 'Google Ads Lead Sync',
+    pricingOrder: 1,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: LINKEDIN_MODULE_ID,
@@ -267,11 +379,17 @@ const modules = [
     icon: 'MessageCircleMore',
     description: 'Linkedin chat management',
     parent_id: null,
-    sort_order: 16,
+    sort_order: 17,
     activeOn: ['/linkedin'],
     showInNavbar: false,
     availableActions: ["Linkedin Ads"],
     showActions: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.MARKETING,
+    pricingLabel: 'LinkedIn Ads Lead Sync',
+    pricingOrder: 2,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: FACEBOOK_AND_INSTAGRAM_ADS_MODULE_ID,
@@ -280,24 +398,74 @@ const modules = [
     icon: 'MessageCircleMore',
     description: 'Facebook & Instagram chat management',
     parent_id: null,
-    sort_order: 17,
+    sort_order: 18,
     activeOn: ['/facebook-and-instagram'],
     showInNavbar: false,
     availableActions: ["Facebook & Instagram Ads"],
     showActions: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.MARKETING,
+    pricingLabel: 'Facebook & Instagram Ads',
+    pricingOrder: 3,
+    allowedUserTypes: [UserType.USER],
   },
   {
     id: ROLE_CONFIG_MODULE_ID,
     name: 'Role Configs',
-    path: '/role-configs',
+    path: '/role-configs/:id/edit',
     icon: 'MessageCircleMore',
     description: 'Role Configs management',
     parent_id: null,
-    sort_order: 18,
-    activeOn: ['/role-configs'],
+    sort_order: 19,
+    activeOn: ['/role-configs/:id/edit'],
     showInNavbar: false,
     availableActions: [],
     showActions: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.SUPPORT_SECURITY,
+    pricingLabel: 'Role-based Permissions',
+    pricingOrder: 1,
+    allowedUserTypes: [UserType.USER],
+  },
+  {
+    id: PAYMENT_MODULE_ID,
+    name: 'Payments',
+    path: '/payments',
+    icon: 'HandCoins',
+    description: 'Payment management',
+    parent_id: null,
+    sort_order: 20,
+    activeOn: ['/payments', '/payments/:id'],
+    showInNavbar: true,
+    availableActions: ["View"],
+    showActions: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.FINANCE,
+    pricingLabel: 'Role-based Permissions',
+    pricingOrder: 1,
+    allowedUserTypes: [UserType.USER, UserType.ADMIN],
+  },
+  {
+    id: ROLE_MODULE_ID,
+    name: 'Role',
+    path: '/role-configs',
+    icon: 'HandCoins',
+    description: 'User role management',
+    parent_id: null,
+    sort_order: 21,
+    activeOn: ['/role-configs'],
+    showInNavbar: false,
+    availableActions: crud,
+    showActions: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.SUPPORT_SECURITY,
+    pricingLabel: 'Role-based Permissions',
+    pricingOrder: 1,
+    allowedUserTypes: [],
   },
   {
     id: SETTINGS_MODULE_ID,
@@ -306,7 +474,7 @@ const modules = [
     icon: 'PieChartIcon',
     description: 'Application settings',
     parent_id: null,
-    sort_order: 19,
+    sort_order: 22,
     activeOn: [
       '/settings',
       '/role-configs',
@@ -324,6 +492,7 @@ const modules = [
     availableActions: [],
     showInNavbar: true,
     showActions: false,
+    allowedUserTypes: [UserType.USER],
   },
 ];
 
@@ -343,6 +512,11 @@ export default async function seedModules() {
         showInNavbar: module.showInNavbar,
         availableActions: module.availableActions,
         showActions: module.showActions,
+        pricingEnabled: module.pricingEnabled,
+        pricingCategory: module.pricingCategory,
+        pricingLabel: module.pricingLabel,
+        pricingOrder: module.pricingOrder,
+        allowedUserTypes: module.allowedUserTypes,
       },
       create: module,
     });

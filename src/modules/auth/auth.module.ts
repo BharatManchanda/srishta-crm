@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -7,7 +7,7 @@ import { EmailModule } from '../email/email.module';
 import { GoogleService } from './google.service';
 import { LeadModule } from '../lead/lead.module';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
-import { UserPolicy } from '../user/user.policy';
+import { UserModule } from '../user/user.module';
 import { BullModule } from '@nestjs/bullmq';
 
 @Module({
@@ -16,11 +16,11 @@ import { BullModule } from '@nestjs/bullmq';
     JwtModule,
     EmailModule,
     LeadModule,
+    forwardRef(() => UserModule),
     BullModule.registerQueue({ name: 'google-calendar-sync' })
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleService, UserHierarchyService, UserPolicy],
+  providers: [AuthService, GoogleService, UserHierarchyService],
   exports: [AuthService, GoogleService],
 })
 export class AuthModule {}
-

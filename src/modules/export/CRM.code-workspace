@@ -1,10 +1,16 @@
 {
 	"folders": [
 		{
+			"name": "srishta-crm",
+			"path": "../../.."
+		},
+		{
+			"name": "srishta-crm-frontend",
 			"path": "../../../../../../Downloads/srishta-crm-frontend"
 		},
 		{
-			"path": "../../.."
+			"name": "srishta-crm-landing",
+			"path": "../../../../srishta-crm-landing"
 		}
 	],
 	"settings": {}

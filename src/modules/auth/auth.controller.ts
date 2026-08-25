@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import type { Request } from 'express';
@@ -9,7 +9,8 @@ import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
-import { OtpPurpose, Role } from '@prisma/client';
+import { OtpPurpose } from '@prisma/client';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -18,16 +19,27 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.login(dto, res);
   }
 
   @UseGuards(AuthGuard)
   @Post('logout')
-  async logout(@Req() req: Request, @Body() body: LogoutDto) {
+  async logout(
+    @Req() req: Request, @Body() body: LogoutDto,
+    @Res({ passthrough: true }) response: Response
+  ) {
     const accessToken = req.headers.authorization as string;
     const refreshToken = body.refreshToken;
     const userId = (req['user'] as any).id;
+    response.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    });
     return this.authService.logout(userId, accessToken, refreshToken);
   }
 

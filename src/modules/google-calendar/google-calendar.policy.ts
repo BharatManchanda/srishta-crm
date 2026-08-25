@@ -5,15 +5,25 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GOOGLE_MODULE_ID } from 'src/seeders/module.seeder';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class GoogleCalendarPolicy {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService
+  ) {}
 
-  private async hasGoogleCalendarAccess(roleId: number) {
+  private async hasGoogleCalendarAccess(currentUser: any) {
+
+    const isAllow = await this.paymentsService.isAllowedModules(currentUser.id, GOOGLE_MODULE_ID);
+    if (!isAllow) {
+      throw new ForbiddenException(`You do not have access to Google Calendar`);
+    }
+
     const permission = await this.prisma.rolePermission.findFirst({
       where: {
-        roleId,
+        roleId: currentUser.roleId,
         moduleId: GOOGLE_MODULE_ID,
         isAllow: true,
       },
@@ -83,7 +93,7 @@ export class GoogleCalendarPolicy {
   }
 
   async canAccessGoogleCalendar(currentUser:any){
-    return this.hasGoogleCalendarAccess(currentUser.roleId);
+    return this.hasGoogleCalendarAccess(currentUser);
   }
   async authorizeGoogleCalendar(currentUser:any){
     const allowed = await this.canAccessGoogleCalendar(currentUser);

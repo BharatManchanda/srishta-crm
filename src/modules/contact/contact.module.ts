@@ -13,9 +13,10 @@ import { NotificationModule } from '../notification/notification.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { ModuleFieldService } from '../module-field/module-field.service';
 import { ModuleFieldFilterBuilder } from '../module-field/module-field-filter.builder';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, AiModule, NotificationModule, WhatsappModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, AiModule, NotificationModule, WhatsappModule, PaymentsModule],
   providers: [
     ContactService,
     PaginationService,
@@ -23,8 +24,7 @@ import { ModuleFieldFilterBuilder } from '../module-field/module-field-filter.bu
     ContactFilterBuilder,
     ContactPolicy,
     ModuleFieldService,
-    ModuleFieldFilterBuilder
-    
+    ModuleFieldFilterBuilder,
   ],
   controllers: [ContactController],
   exports: [ContactService],

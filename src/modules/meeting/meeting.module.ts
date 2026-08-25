@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MeetingService } from './meeting.service';
 import { MeetingController } from './meeting.controller';
 import { JwtModule } from '../jwt/jwt.module';
@@ -9,23 +9,23 @@ import { MeetingFilterBuilder } from './meeting-filter.builder';
 import { MeetingPolicy } from './meeting.policy';
 import { ActivityModule } from '../activity/activity.module';
 import { GoogleCalendarModule } from '../google-calendar/google-calendar.module';
-import { UserPolicy } from '../user/user.policy';
+import { UserModule } from '../user/user.module';
 import { AiModule } from '../ai/ai.module';
 import { EmailModule } from '../email/email.module';
 import { NotificationModule } from '../notification/notification.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { ModuleFieldService } from '../module-field/module-field.service';
 import { ModuleFieldFilterBuilder } from '../module-field/module-field-filter.builder';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, EmailModule, NotificationModule, WhatsappModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, GoogleCalendarModule, AiModule, EmailModule, NotificationModule, WhatsappModule, forwardRef(() => UserModule), PaymentsModule],
   providers: [
     MeetingService,
     PaginationService,
     UserHierarchyService,
     MeetingFilterBuilder,
     MeetingPolicy,
-    UserPolicy,
     ModuleFieldService,
     ModuleFieldFilterBuilder,
   ],

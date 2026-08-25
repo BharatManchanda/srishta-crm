@@ -1,17 +1,23 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { WHATSAPP_MODULE_ID } from 'src/seeders/module.seeder';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class WhatsappPolicy {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
-  private async hasWhatsappAccess(roleId: number) {
+  private async hasWhatsappAccess(currentUser: any) {
+    const isAllow = await this.paymentsService.isAllowedModules(currentUser.id, WHATSAPP_MODULE_ID);
+    if (!isAllow) {
+      throw new ForbiddenException(`You are not allowed to access Whatsapp`);
+    }
     const permission = await this.prisma.rolePermission.findFirst({
       where: {
-        roleId,
+        roleId: currentUser.roleId,
         moduleId: WHATSAPP_MODULE_ID,
         isAllow: true,
       },
@@ -81,7 +87,7 @@ export class WhatsappPolicy {
   }
 
   async canAccessWhatsapp(currentUser:any){
-    return this.hasWhatsappAccess(currentUser.roleId);
+    return this.hasWhatsappAccess(currentUser);
   }
   async authorizeWhatsapp(currentUser:any){
     const allowed = await this.canAccessWhatsapp(currentUser);

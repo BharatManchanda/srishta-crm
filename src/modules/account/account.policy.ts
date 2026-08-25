@@ -5,18 +5,26 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ACCOUNT_MODULE_ID } from 'src/seeders/module.seeder';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class AccountPolicy {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService,
+  ) {}
 
   private async hasPermission(
-    roleId: number,
+    currentUser: any,
     action: 'canView' | 'canCreate' | 'canEdit' | 'canDelete',
   ) {
+    const isAllow = await this.paymentsService.isAllowedModules(currentUser.id, ACCOUNT_MODULE_ID);
+    if (!isAllow) {
+      throw new ForbiddenException(`You are not allowed to ${action} account`);
+    }
     const permission = await this.prisma.rolePermission.findFirst({
       where: {
-        roleId,
+        roleId: currentUser.roleId,
         moduleId: ACCOUNT_MODULE_ID,
         isAllow: true,
         [action]: true,
@@ -109,11 +117,11 @@ export class AccountPolicy {
   }
 
   async canViewAll(currentUser: any) {
-    return this.hasPermission(currentUser.roleId, 'canView');
+    return this.hasPermission(currentUser, 'canView');
   }
 
   async canView(currentUser: any, accountId: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canView');
+    const allowed = await this.hasPermission(currentUser, 'canView');
 
     if (!allowed) {
       return false;
@@ -123,11 +131,11 @@ export class AccountPolicy {
   }
 
   async canCreate(currentUser: any) {
-    return this.hasPermission(currentUser.roleId, 'canCreate');
+    return this.hasPermission(currentUser, 'canCreate');
   }
 
   async canUpdate(currentUser: any, accountId: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canEdit');
+    const allowed = await this.hasPermission(currentUser, 'canEdit');
 
     if (!allowed) {
       return false;
@@ -137,7 +145,7 @@ export class AccountPolicy {
   }
 
   async canDelete(currentUser: any, accountId: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canDelete');
+    const allowed = await this.hasPermission(currentUser, 'canDelete');
 
     if (!allowed) {
       return false;

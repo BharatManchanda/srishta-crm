@@ -6,9 +6,10 @@ import { JwtModule } from '../jwt/jwt.module';
 import { LeadService } from '../lead/lead.service';
 import { LeadModule } from '../lead/lead.module';
 import { FacebookPolicy } from './facebook.policy';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, LeadModule],
+  imports: [PrismaModule, JwtModule, LeadModule, PaymentsModule],
   controllers: [FacebookController],
   providers: [FacebookService, FacebookPolicy]
 })

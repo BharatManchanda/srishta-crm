@@ -53,6 +53,8 @@ export class JwtService {
       id: user.id,
       email: user.email,
       roleId: user.roleId,
+      isSuperAdmin: user.isSuperAdmin,
+      userType: user.userType,
     };
 
     const accessToken = await this.generateAccessToken(payload);
@@ -134,7 +136,7 @@ export class JwtService {
   async revokeTokens(
     userId: number,
     accessToken: string,
-    refreshToken: string,
+    refreshToken?: string,
   ) {
     const user = await this.prisma.user.findUnique({
       where: {
@@ -142,18 +144,20 @@ export class JwtService {
       },
     });
     if (!user) return;
-    await this.prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        accessTokens: user.accessTokens.filter(
-          (token) => token !== accessToken,
-        ),
-        refreshTokens: user.refreshTokens.filter(
-          (token) => token !== refreshToken,
-        ),
-      },
-    });
+    if (refreshToken) {
+      await this.prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          accessTokens: user.accessTokens.filter(
+            (token) => token !== accessToken,
+          ),
+          refreshTokens: user.refreshTokens.filter(
+            (token) => token !== refreshToken,
+          ),
+        },
+      });
+    }
   }
 }

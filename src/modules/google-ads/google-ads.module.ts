@@ -6,9 +6,10 @@ import { JwtModule } from '../jwt/jwt.module';
 import { LeadService } from '../lead/lead.service';
 import { LeadModule } from '../lead/lead.module';
 import { GoogleAdsPolicy } from './google-ads.policy';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, LeadModule],
+  imports: [PrismaModule, JwtModule, LeadModule, PaymentsModule],
   controllers: [GoogleAdsController],
   providers: [GoogleAdsService, GoogleAdsPolicy],
   exports: [GoogleAdsService],

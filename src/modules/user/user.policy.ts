@@ -1,29 +1,39 @@
 import {
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { USER_MODULE_ID } from 'src/seeders/module.seeder';
+import { UserType } from '@prisma/client';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class UserPolicy {
     constructor(
-        private readonly prisma: PrismaService,
+      private readonly prisma: PrismaService,
+      @Inject(forwardRef(() => PaymentsService))
+      private readonly paymentsService: PaymentsService,
     ) {}
 
-    private async hasPermission(roleId: number, action: 'canView' | 'canCreate' | 'canEdit' | 'canDelete') {
-    const permission = await this.prisma.rolePermission.findFirst({
-      where: {
-        roleId,
-        moduleId: USER_MODULE_ID,
-        isAllow: true,
-        [action]: true,
-      },
-    });
+    private async hasPermission(currentUser: any, action: 'canView' | 'canCreate' | 'canEdit' | 'canDelete') {
+      const isAllow = await this.paymentsService.isAllowedModules(currentUser.id, USER_MODULE_ID);
+      if (!isAllow) {
+        throw new ForbiddenException(`You are not allowed to ${action} user`);
+      }
+      const permission = await this.prisma.rolePermission.findFirst({
+        where: {
+          roleId: currentUser.roleId,
+          moduleId: USER_MODULE_ID,
+          isAllow: true,
+          [action]: true,
+        },
+      });
 
-    return !!permission;
-  }
+      return !!permission;
+    }
 
     async getAccessibleUserIds(
         currentUserId: number,
@@ -37,12 +47,12 @@ export class UserPolicy {
 
     const accessibleIds = new Set<number>();
 
-        const collectParents = (
-            userId: number,
-        ) => {
-            const user = users.find(
-                (u) => u.id === userId,
-            );
+    const collectParents = (
+        userId: number,
+    ) => {
+      const user = users.find(
+          (u) => u.id === userId,
+      );
 
       if (!user) {
         return;
@@ -96,7 +106,7 @@ export class UserPolicy {
   }
 
   async canView(currentUser: any, userId?: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canView');
+    const allowed = await this.hasPermission(currentUser, 'canView');
 
     if (!allowed) {
       return false;
@@ -110,11 +120,11 @@ export class UserPolicy {
   }
 
   async canCreate(currentUser: any) {
-    return this.hasPermission(currentUser.roleId, 'canCreate');
+    return this.hasPermission(currentUser, 'canCreate');
   }
 
   async canUpdate(currentUser: any, userId: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canEdit');
+    const allowed = await this.hasPermission(currentUser, 'canEdit');
 
     if (!allowed) {
       return false;
@@ -124,7 +134,7 @@ export class UserPolicy {
   }
 
   async canDelete(currentUser: any, userId: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canDelete');
+    const allowed = await this.hasPermission(currentUser, 'canDelete');
 
     if (!allowed) {
       return false;
@@ -139,7 +149,9 @@ export class UserPolicy {
     userId?: number,
   ) {
     let allowed = false;
-
+    if (currentUser.userType == UserType.ADMIN) {
+      return true
+    }
     switch (action) {
       case 'view':
         allowed = await this.canView(currentUser, userId);

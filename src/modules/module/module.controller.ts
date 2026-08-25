@@ -23,6 +23,12 @@ export class ModuleController {
   }
 
   @UseGuards(AuthGuard)
+  @Get("all")
+  async getAllList() {
+    return await this.moduleService.getAllList();
+  }
+
+  @UseGuards(AuthGuard)
   @Get('straight-list')
   async getStraightList() {
     return this.moduleService.getStraightList();

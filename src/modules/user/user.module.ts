@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -7,11 +7,12 @@ import { AuthModule } from '../auth/auth.module';
 import { PaginationService } from 'src/common/pagination/pagination.service';
 import { UserFilterBuilder } from './user-filter.builder';
 import { UserPolicy } from './user.policy';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, AuthModule],
+  imports: [PrismaModule, JwtModule, forwardRef(() => AuthModule), forwardRef(() => PaymentsModule)],
   controllers: [UserController],
   providers: [UserService, PaginationService, UserFilterBuilder, UserPolicy],
-  exports: [UserService],
+  exports: [UserService, UserPolicy],
 })
 export class UserModule {}

@@ -176,9 +176,7 @@ export class CallService {
       throw new NotFoundException('Call not found');
     }
 
-    console.log(
-      ["", undefined].includes(dto.purpose) ? dto.purpose : null,"TESTING"
-    )
+    console.log(["", undefined].includes(dto.purpose) ? dto.purpose : null,"TESTING")
     const updatedCall = await this.prisma.call.update({
       where: { id },
       data: {

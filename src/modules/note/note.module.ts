@@ -9,9 +9,10 @@ import { NoteFilterBuilder } from './note-filter.builder';
 import { NotePolicy } from './note.policy';
 import { ActivityModule } from '../activity/activity.module';
 import { NotificationModule } from '../notification/notification.module';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, ActivityModule, NotificationModule],
+  imports: [PrismaModule, JwtModule, ActivityModule, NotificationModule, PaymentsModule],
   providers: [
     NoteService,
     PaginationService,

@@ -5,18 +5,27 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CALL_MODULE_ID } from 'src/seeders/module.seeder';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class CallPolicy {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService,
+  ) {}
 
   private async hasPermission(
-    roleId: number,
+    currentUser: any,
     action: 'canView' | 'canCreate' | 'canEdit' | 'canDelete',
   ) {
+
+    const isAllow = await this.paymentsService.isAllowedModules(currentUser.id, CALL_MODULE_ID);
+    if (!isAllow) {
+      throw new ForbiddenException(`You are not allowed to ${action} call`);
+    }
     const permission = await this.prisma.rolePermission.findFirst({
       where: {
-        roleId,
+        roleId: currentUser.roleId,
         moduleId: CALL_MODULE_ID,
         isAllow: true,
         [action]: true,
@@ -109,11 +118,11 @@ export class CallPolicy {
   }
 
   async canViewAll(currentUser: any) {
-    return this.hasPermission(currentUser.roleId, 'canView');
+    return this.hasPermission(currentUser, 'canView');
   }
 
   async canView(currentUser: any, callId: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canView');
+    const allowed = await this.hasPermission(currentUser, 'canView');
 
     if (!allowed) {
       return false;
@@ -123,11 +132,11 @@ export class CallPolicy {
   }
 
   async canCreate(currentUser: any) {
-    return this.hasPermission(currentUser.roleId, 'canCreate');
+    return this.hasPermission(currentUser, 'canCreate');
   }
 
   async canUpdate(currentUser: any, callId: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canEdit');
+    const allowed = await this.hasPermission(currentUser, 'canEdit');
 
     if (!allowed) {
       return false;
@@ -137,7 +146,7 @@ export class CallPolicy {
   }
 
   async canDelete(currentUser: any, callId: number) {
-    const allowed = await this.hasPermission(currentUser.roleId, 'canDelete');
+    const allowed = await this.hasPermission(currentUser, 'canDelete');
 
     if (!allowed) {
       return false;

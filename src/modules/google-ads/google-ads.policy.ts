@@ -5,15 +5,23 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GOOGLE_MODULE_ID } from 'src/seeders/module.seeder';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class GoogleAdsPolicy {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService,
+  ) {}
 
-  private async hasGoogleAdsAccess(roleId: number) {
+  private async hasGoogleAdsAccess(currentUser: any) {
+    const isAllow = await this.paymentsService.isAllowedModules(currentUser.id, GOOGLE_MODULE_ID);
+    if (!isAllow) {
+      throw new ForbiddenException(`You do not have access to Google Ads`);
+    }
     const permission = await this.prisma.rolePermission.findFirst({
       where: {
-        roleId,
+        roleId: currentUser.roleId,
         moduleId: GOOGLE_MODULE_ID,
         isAllow: true,
       },
@@ -83,7 +91,7 @@ export class GoogleAdsPolicy {
   }
 
   async canAccessGoogleAds(currentUser:any){
-    return this.hasGoogleAdsAccess(currentUser.roleId);
+    return this.hasGoogleAdsAccess(currentUser);
   }
   async authorizeGoogleAds(currentUser:any){
     const allowed = await this.canAccessGoogleAds(currentUser);

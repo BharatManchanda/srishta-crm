@@ -36,6 +36,9 @@ import { CronjobModule } from './common/cronjob/cronjob.module';
 import { LinkedinAdsModule } from './modules/linkedin-ads/linkedin-ads.module';
 import { ModuleFieldModule } from './modules/module-field/module-field.module';
 import { DealModule } from './modules/deal/deal.module';
+import { PricingModule } from './modules/pricing/pricing.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
   imports: [
@@ -78,6 +81,9 @@ import { DealModule } from './modules/deal/deal.module';
     LinkedinAdsModule,
     ModuleFieldModule,
     DealModule,
+    PricingModule,
+    PaymentsModule,
+    RedisModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

@@ -19,6 +19,7 @@ import { UpdateUserDto } from '../auth/dto/update-user.dto';
 import { UserPolicy } from './user.policy';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { UpdateViewSettingDto } from './dto/update-view-setting.dto';
+import { PaymentsService } from '../payments/payments.service';
 
 @UseGuards(AuthGuard)
 @Controller('user')
@@ -26,6 +27,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly userPolicy: UserPolicy,
+    private readonly paymentsService: PaymentsService,
   ) { }
 
   @Get('view-setting')
@@ -43,14 +45,21 @@ export class UserController {
   @Get()
   async getList(@Query() dto: UserFilterDto, @Req() req: Request) {
     await this.userPolicy.authorize(req['user'], 'view');
-    const authUserId = req['user'].id;
-    return this.userService.getList(dto, authUserId);
+    const authUser = req['user'];
+    return this.userService.getList(dto, authUser);
   }
 
   @Get("me")
   async getMe(@Req() req: Request) {
     const authUserId = req['user'].id;
-    return this.userService.getOne(authUserId);
+    const [me, plan] = await Promise.all([
+      this.userService.getOne(authUserId),
+      this.paymentsService.getActiveCustomerPlan(authUserId),
+    ]);
+    return {
+      ...me,
+      customerPlan: plan ?? null,
+    };
   }
 
   @Post()
