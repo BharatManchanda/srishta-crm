@@ -32,6 +32,9 @@ export const PRICING_MODULE_ID = 34;
 export const COMPANY_MODULE_ID = 35;
 export const PAYMENT_MODULE_ID = 36;
 export const ROLE_MODULE_ID = 37;
+export const CONTACTUS_INQUIRY_MODULE_ID = 38;
+export const BLOG_MODULE_ID = 39;
+export const BOOK_DEMO_MODULE_ID = 40;
 
 const crud = ["View", "Create", "Edit", "Delete"];
 
@@ -79,7 +82,7 @@ const modules = [
     id: COMPANY_MODULE_ID,
     name: 'Company',
     path: '/companies',
-    icon: 'UserCircleIcon',
+    icon: 'Building2',
     description: 'Companies management',
     parent_id: null,
     sort_order: 2,
@@ -98,6 +101,34 @@ const modules = [
     parent_id: null,
     sort_order: 3,
     activeOn: ['/pricing-plans', '/pricing-plans/:id', '/pricing-plans/:id/edit'],
+    availableActions: [],
+    showInNavbar: true,
+    showActions: false,
+    allowedUserTypes: [UserType.ADMIN],
+  },
+  {
+    id: BLOG_MODULE_ID,
+    name: 'Blogs',
+    path: '/blogs',
+    icon: 'NotebookPen',
+    description: 'Blogs management',
+    parent_id: null,
+    sort_order: 3,
+    activeOn: ['/blogs', '/blogs/:id', '/blogs/:id/edit'],
+    availableActions: [],
+    showInNavbar: true,
+    showActions: false,
+    allowedUserTypes: [UserType.ADMIN],
+  },
+  {
+    id: BOOK_DEMO_MODULE_ID,
+    name: 'Book Demo',
+    path: '/book-demos',
+    icon: 'SwatchBook',
+    description: 'Book Demo management',
+    parent_id: null,
+    sort_order: 3,
+    activeOn: ['/book-demos', '/book-demos/:id', '/book-demos/:id/edit'],
     availableActions: [],
     showInNavbar: true,
     showActions: false,
@@ -466,6 +497,25 @@ const modules = [
     pricingLabel: 'Role-based Permissions',
     pricingOrder: 1,
     allowedUserTypes: [],
+  },
+  {
+    id: CONTACTUS_INQUIRY_MODULE_ID,
+    name: 'Contact Us Inquiry',
+    path: '/contact-inquiry',
+    icon: 'UserStar',
+    description: 'Contact Us Inquiry management',
+    parent_id: null,
+    sort_order: 21,
+    activeOn: ['/contact-inquiry', '/contact-inquiry/:id', '/contact-inquiry/:id/edit'],
+    showInNavbar: true,
+    availableActions: crud,
+    showActions: false,
+
+    pricingEnabled: true,
+    pricingCategory: PricingCategory.CRM,
+    pricingLabel: 'Contact Us Inquiry',
+    pricingOrder: 1,
+    allowedUserTypes: [UserType.ADMIN],
   },
   {
     id: SETTINGS_MODULE_ID,

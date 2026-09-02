@@ -21,11 +21,4 @@ export class ImportRowFilterDto extends PaginationDto {
   @IsEnum(ImportEntity)
   entity?: ImportEntity;
 
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
 }

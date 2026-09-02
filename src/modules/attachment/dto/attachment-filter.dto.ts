@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsString,
   IsEnum,
-  IsIn,
   IsInt,
   IsDate,
 } from 'class-validator';
@@ -59,12 +58,4 @@ export class AttachmentFilterDto extends PaginationDto {
   @IsOptional()
   @IsString()
   createdById?: string;
-
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
 }

@@ -4,6 +4,7 @@ import {
   LeadSource,
   LeadStatus,
 } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
@@ -90,10 +91,12 @@ export class LeadCreateDto {
   isConverted: boolean;
 
   @IsOptional()
+  @Type(() => Date)
   @IsDate()
   nextFollowUpDate?: Date;
 
   @IsOptional()
+  @Type(() => Date)
   @IsDate()
   lastFollowUpDate?: Date;
 

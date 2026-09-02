@@ -15,11 +15,4 @@ export class ImportJobFilterDto extends PaginationDto {
   @IsEnum(ImportStatus)
   status?: ImportStatus;
 
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
 }

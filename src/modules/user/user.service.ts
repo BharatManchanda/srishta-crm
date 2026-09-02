@@ -21,20 +21,21 @@ export class UserService {
   ) { }
 
   async getList(dto: UserFilterDto, currentUser: any) {
+    console.log(dto,"::dto")
     const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };
-    const accessibleUserIds = await this.userPolicy.getAccessibleUserIds(currentUser.id);
-    const shouldApplyUserAccessFilter = currentUser.userType !== UserType.ADMIN;
+    const accessibleUserIds = await this.userPolicy.getAccessibleUserIds(currentUser.userType !== UserType.ADMIN ? currentUser.id : dto.companyId);
+    // const shouldApplyUserAccessFilter = currentUser.userType !== UserType.ADMIN;
     const result = await this.paginationService.paginate(this.prisma.user, {
       page: dto.page,
       perPage: dto.perPage,
       where: {
         ...this.userFilterBuilder.build(dto),
-        ...(shouldApplyUserAccessFilter ? {
+        // ...(shouldApplyUserAccessFilter ? {
             id: {
               in: dto.id ? [dto.id] : accessibleUserIds,
             },
-          }
-        : {}),
+          // }
+        // : {}),
       },
 
       orderBy,

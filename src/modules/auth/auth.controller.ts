@@ -56,9 +56,9 @@ export class AuthController {
   }
 
   @Post('verify-otp')
-  async verifyOtp(@Body() dto: VerifyOtpDto) {
+  async verifyOtp(@Body() dto: VerifyOtpDto, @Res({ passthrough: true }) res: Response) {
     if (dto.purpose === OtpPurpose.EMAIL_VERIFICATION) {
-      const result = await this.authService.verifyOtp(dto) as any;
+      const result = await this.authService.verifyOtp(dto, res) as any;
       if (result) {
         return {
           message: 'Email verified successfully',
@@ -78,7 +78,7 @@ export class AuthController {
   }
 
   @Post('google')
-  async googleLogin(@Body() dto: GoogleLoginDto) {
-    return this.authService.googleLogin(dto.idToken);
+  async googleLogin(@Body() dto: GoogleLoginDto, @Res({ passthrough: true }) res: Response) {
+    return this.authService.googleLogin(dto.idToken, res);
   }
 }

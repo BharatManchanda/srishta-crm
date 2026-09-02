@@ -7,6 +7,7 @@ import {
   IsInt,
   IsDate,
   IsBoolean,
+  IsNumber,
 } from 'class-validator';
 
 import { PaginationDto } from 'src/common/pagination/dto/pagination.dto';
@@ -32,10 +33,9 @@ export class PaymentFilterDto extends PaginationDto {
   createdById?: string;
 
   @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
+  @IsNumber()
+  @Transform(({ value }) =>
+    value !== undefined && value !== '' ? Number(value) : undefined,
+  )
+  companyId?: number;
 }

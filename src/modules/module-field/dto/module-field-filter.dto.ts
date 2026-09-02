@@ -29,12 +29,4 @@ export class ModuleFieldFilterDto extends PaginationDto{
   @IsBoolean()
   required?: boolean;
 
-
-  @IsOptional()
-  sortBy?: string;
-
-
-  @IsOptional()
-  sortOrder?: 'asc' | 'desc';
-
 }

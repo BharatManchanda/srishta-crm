@@ -39,6 +39,10 @@ import { DealModule } from './modules/deal/deal.module';
 import { PricingModule } from './modules/pricing/pricing.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { RedisModule } from './modules/redis/redis.module';
+import { CompaniesModule } from './modules/companies/companies.module';
+import { ContactInquiryModule } from './modules/contact-inquiry/contact-inquiry.module';
+import { BlogsModule } from './modules/blogs/blogs.module';
+import { BookDemoModule } from './modules/book-demo/book-demo.module';
 
 @Module({
   imports: [
@@ -84,6 +88,10 @@ import { RedisModule } from './modules/redis/redis.module';
     PricingModule,
     PaymentsModule,
     RedisModule,
+    CompaniesModule,
+    ContactInquiryModule,
+    BlogsModule,
+    BookDemoModule,
   ],
   controllers: [AppController, ModuleController],
   providers: [AppService],

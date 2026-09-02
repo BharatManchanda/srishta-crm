@@ -174,6 +174,7 @@ export class LeadService {
       ownerId = authUserId;
     }
 
+    // /*
     const [lead, notes, attachments, tasks, calls, meetings, emails ] = await this.prisma.$transaction([
       this.prisma.lead.findUnique({
         where: { id },

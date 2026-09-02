@@ -206,7 +206,6 @@ export class WhatsappService {
 
         const result = await response.json();
         if (result.error) {
-            console.log(result.error.message,"::result.error.message")
             return true;
             throw new BadRequestException(result.error.message);
         }

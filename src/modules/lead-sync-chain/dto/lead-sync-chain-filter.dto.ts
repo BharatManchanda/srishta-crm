@@ -35,14 +35,6 @@ export class LeadSyncChainFilterDto extends PaginationDto {
 
     @IsOptional()
     @IsString()
-    sortBy?: string;
-
-    @IsOptional()
-    @IsIn(['asc', 'desc'])
-    sortOrder?: 'asc' | 'desc';
-
-    @IsOptional()
-    @IsString()
     crmField?: string;
 
     @IsOptional()

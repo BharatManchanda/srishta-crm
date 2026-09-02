@@ -24,9 +24,7 @@ export class StorageService {
             ContentType: mimeType,
         });
 
-        const uploadUrl = await getSignedUrl(this.s3, command, {
-            expiresIn: 300,
-        });
+        const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 300 });
 
         return {
             uploadUrl,

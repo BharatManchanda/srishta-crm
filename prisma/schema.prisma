@@ -108,6 +108,7 @@ enum NoteEntityType {
   OPPORTUNITY
   CALL
   MEETING
+  CONTACT_INQUIRY
 }
 
 enum TaskEntityType {
@@ -453,6 +454,44 @@ enum RazorpayWebhookStatus {
   FAILED
 }
 
+enum ContactInquiryType {
+  PRODUCT_INFORMATION
+  DEMO
+  SUPPORT
+  PARTNERSHIP
+  OTHER
+}
+
+enum ContactInquiryStatus {
+  NEW
+  IN_PROGRESS
+  WAITING_FOR_CUSTOMER
+  RESOLVED
+  CLOSED
+  SPAM
+}
+
+enum ContactInquiryPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BookDemoStatus {
+  PENDING
+  CONTACTED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
 
@@ -544,7 +583,7 @@ model User {
 
   createdActivities Activity[] @relation("ActivityCreator")
 
-  createdDealers Deal[] @relation("DealCreator")
+  createdDeales Deal[] @relation("DealCreator")
   
   connectedGoogleCalendar GoogleCalendar[] @relation("GoogleConnector")
 
@@ -583,6 +622,9 @@ model User {
   CustomerPlans CustomerPlan[]
 
   Payments Payment[]
+
+  blogPosts BlogPost[]
+  
 }
 
 model OtpVerification {
@@ -1815,4 +1857,105 @@ model RazorpayWebhookEvent {
 
   @@index([event])
   @@index([status])
+}
+
+model ContactInquiry {
+  id                Int                    @id @default(autoincrement())
+
+  name              String
+  email             String
+  phone             String?
+  company           String?
+  website           String?
+
+  inquiryType       ContactInquiryType
+  message           String?
+
+  status            ContactInquiryStatus   @default(NEW)
+  priority          ContactInquiryPriority @default(MEDIUM)
+
+  source            String?                @default("website")
+
+  resolvedAt        DateTime?
+  closedAt          DateTime?
+
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([inquiryType])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([source])
+}
+
+model BlogPost {
+  id               Int        @id @default(autoincrement())
+
+  title            String
+  slug             String     @unique
+  content          String?
+  
+  isFeatured       Boolean    @default(false)
+
+  featuredImage    String?
+  featuredImageAlt String?
+
+  metaTitle        String?
+  metaDescription  String?
+  canonicalUrl     String?
+  keywords         Json?
+
+  status           BlogStatus @default(DRAFT)
+  publishedAt      DateTime?
+
+  authorId         Int
+  author           User       @relation(fields: [authorId], references: [id])
+
+  categoryId       Int?
+  category         BlogCategory? @relation(fields: [categoryId], references: [id])
+
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
+  @@index([categoryId])
+}
+
+model BlogCategory {
+  id          Int        @id @default(autoincrement())
+  name        String
+  slug        String     @unique
+  description String?
+
+  posts       BlogPost[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model BookDemo {
+  id        Int      @id @default(autoincrement())
+
+  name      String
+  email     String
+  phone     String
+  company   String
+  
+  teamSize  String
+  industry  String
+  message   String?
+
+  status    BookDemoStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([phone])
+  @@index([status])
+  @@index([createdAt])
+  @@map("book_demos")
 }

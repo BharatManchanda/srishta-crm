@@ -18,11 +18,4 @@ export class WhatsappConversationFilterDto extends PaginationDto {
     @IsInt()
     contactId?: number;
 
-    @IsOptional()
-    @IsString()
-    sortBy?: string;
-
-    @IsOptional()
-    @IsIn(['asc', 'desc'])
-    sortOrder?: 'asc' | 'desc';
 }

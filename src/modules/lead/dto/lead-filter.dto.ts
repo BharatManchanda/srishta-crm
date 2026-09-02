@@ -134,11 +134,4 @@ export class LeadFilterDto extends PaginationDto {
   @IsString()
   lastFollowUpDate?: string;
 
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
 }

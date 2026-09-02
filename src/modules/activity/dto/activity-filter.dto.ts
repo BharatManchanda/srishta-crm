@@ -31,12 +31,4 @@ export class ActivityFilterDto extends PaginationDto {
     @IsOptional()
     @IsString()
     description?: string;
-
-    @IsOptional()
-    @IsString()
-    sortBy?: string;
-  
-    @IsOptional()
-    @IsIn(['asc', 'desc'])
-    sortOrder?: 'asc' | 'desc';
 }

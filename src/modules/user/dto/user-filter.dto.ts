@@ -61,10 +61,10 @@ export class UserFilterDto extends PaginationDto {
   tax_id?: string;
 
   @IsOptional()
-  @IsString()
-  sortBy?: string;
+  @IsNumber()
+  @Transform(({ value }) =>
+    value !== undefined && value !== '' ? Number(value) : undefined,
+  )
+  companyId?: number;
 
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
 }

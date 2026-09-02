@@ -25,7 +25,6 @@ import { PaymentsModule } from '../payments/payments.module';
     AccountPolicy,
     ModuleFieldService,
     ModuleFieldFilterBuilder
-
   ],
   controllers: [AccountController],
   exports: [AccountService],

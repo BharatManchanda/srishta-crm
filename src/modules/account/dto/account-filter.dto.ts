@@ -153,11 +153,11 @@ export class AccountFilterDto extends PaginationDto {
   @IsString()
   createdById?: string;
 
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
+  // @IsOptional()
+  // @IsString()
+  // sortBy?: string;
 
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
+  // @IsOptional()
+  // @IsIn(['asc', 'desc'])
+  // sortOrder?: 'asc' | 'desc';
 }

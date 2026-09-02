@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()
@@ -11,8 +11,9 @@ export class PaginationDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
+  @IsIn([2, 5, 10, 12, 20, 50])
   perPage?: number = 10;
+
 
   @IsOptional()
   @Transform(({ value }) => {
@@ -22,4 +23,12 @@ export class PaginationDto {
   })
   @IsBoolean()
   paginate?: boolean;
+
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc';
 }

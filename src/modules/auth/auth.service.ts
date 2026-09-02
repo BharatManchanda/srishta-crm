@@ -19,7 +19,6 @@ import { LeadService } from '../lead/lead.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserHierarchyService } from '../user/user-hierarchy.service';
 import { UserPolicy } from '../user/user.policy';
-// import { response } from 'express';
 import { Response } from 'express';
 
 @Injectable()
@@ -282,7 +281,7 @@ export class AuthService {
     }
   }
 
-  async verifyOtp(dto: VerifyOtpDto) {
+  async verifyOtp(dto: VerifyOtpDto, res: Response) {
     const { name, password, confirmPassword, email, otp, purpose } = dto;
     const record = await this.prisma.otpVerification.findFirst({
       where: {
@@ -355,7 +354,7 @@ export class AuthService {
       });
 
       const modules = await this.prisma.module.findMany();
-      console.log(modules,"::modules")
+
       // CEO -> Full permissions
       const CRUD_ACTIONS = ["View", "Create", "Edit", "Delete"];
 
@@ -409,6 +408,14 @@ export class AuthService {
 
       const { password: hashedPassword, accessTokens, refreshTokens, ...safeUser } = user;
       const { accessToken, refreshToken } = await this.jwtService.generateTokens(safeUser);
+
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
       return {
         user: {
           ...safeUser,
@@ -484,7 +491,7 @@ export class AuthService {
     };
   }
 
-  async googleLogin(idToken: string) {
+  async googleLogin(idToken: string, res: Response) {
     const payload = await this.googleService.verifyToken(idToken);
 
     if (!payload?.email) {
@@ -590,6 +597,13 @@ export class AuthService {
 
     const { password, accessTokens, refreshTokens, ...safeUser } = user;
     const { accessToken, refreshToken } = await this.jwtService.generateTokens(safeUser);
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     return {
       accessToken,

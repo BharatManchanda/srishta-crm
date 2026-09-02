@@ -1,4 +1,5 @@
 import { AccessLevel, UserStatus } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   IsDecimal,
   IsEmail,
@@ -74,7 +75,7 @@ export class UpdateUserDto {
   @IsString()
   websiteLink?: string;
 
-   @IsOptional()
+  @IsOptional()
   @IsString()
   companyName?: string;
 
@@ -107,6 +108,7 @@ export class UpdateUserDto {
   companyCity?: string;
 
   @IsOptional()
+  @Transform(({ value }) => (value !== undefined && value !== '' ? Number(value) : undefined))
   @IsInt()
   companyPincode?: number;
 

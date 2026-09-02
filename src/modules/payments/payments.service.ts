@@ -51,6 +51,9 @@ export class PaymentsService {
                     { userId: { in: userIds } },
                 ];
             }
+        } else if (user?.userType === UserType.ADMIN && dto?.companyId) {
+            const companyUserIds = await this.userHierarchyService.getFamilyUserIds(dto.companyId);
+            where.userId = { in: companyUserIds };
         }
     
         const orderBy = dto.sortBy ? { [dto.sortBy]: dto.sortOrder || 'desc' } : { id: 'desc' };

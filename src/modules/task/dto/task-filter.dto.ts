@@ -81,11 +81,4 @@ export class TaskFilterDto extends PaginationDto {
   @IsString()
   createdById?: string;
 
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
 }

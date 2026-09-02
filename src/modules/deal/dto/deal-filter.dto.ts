@@ -92,11 +92,4 @@ export class DealFilterDto extends PaginationDto {
   @IsString()
   updatedAt?: string;
 
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc';
 }

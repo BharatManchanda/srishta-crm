@@ -32,10 +32,12 @@ export class MeetingCreateDto {
   @IsEnum(MeetingStatus)
   status?: MeetingStatus;
 
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
   startTime: Date;
 
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
   endTime: Date;
